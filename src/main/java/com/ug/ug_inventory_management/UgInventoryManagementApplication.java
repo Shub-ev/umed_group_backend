@@ -10,4 +10,5 @@ public class UgInventoryManagementApplication {
 		SpringApplication.run(UgInventoryManagementApplication.class, args);
 	}
 
+
 }
