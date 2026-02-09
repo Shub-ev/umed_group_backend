@@ -1,7 +1,11 @@
 package com.ug.ug_inventory_management.repositories;
 
+import com.ug.ug_inventory_management.models.Employee;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserRepository extends JpaRepository<> {
+import java.util.Optional;
 
+public interface EmployeeRepository extends JpaRepository<Employee,Long> {
+    @Override
+    Optional<Employee> findById(Long l);
 }
