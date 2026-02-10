@@ -6,15 +6,16 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 @Service
-public class AminServices {
+public class AdminServices {
     @Autowired
     AdminRepository adminRepository;
 
-    public void createAdmin( @NonNull Admin admin){
+    public Admin createAdmin( @NonNull Admin admin){
         if(admin.getName()==null || admin.getName().trim().isEmpty()){
-            return;
+            return null;
         }
         admin=adminRepository.save(admin);
+        return admin;
 
     }
 }
