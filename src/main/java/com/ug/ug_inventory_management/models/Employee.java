@@ -9,13 +9,17 @@ import java.time.LocalDate;
 @Entity
 @Table(name="employees")
 public class Employee {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long eid;
+
     @Column(nullable = false)
     private String unit_name;
+
     @Column(nullable=false)
     private String password;
+
     @Column(nullable=false)
     private LocalDate allocation;
 
