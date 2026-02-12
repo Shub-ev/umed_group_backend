@@ -1,5 +1,6 @@
 package com.ug.ug_inventory_management.controllers;
 
+import com.ug.ug_inventory_management.common.dtos.AdminDTO;
 import com.ug.ug_inventory_management.models.Admin;
 import com.ug.ug_inventory_management.services.AdminServices;
 import org.springframework.http.ResponseEntity;
@@ -17,8 +18,8 @@ public class AdminController {
 
     // Create admin controller
     @PostMapping("/")
-    public ResponseEntity<Admin> createAdmin(@RequestBody Admin admin) {
-        Admin admin_res = adminServices.createAdmin(admin);
+    public ResponseEntity<AdminDTO> createAdmin(@RequestBody Admin admin) {
+        AdminDTO admin_res = adminServices.createAdmin(admin);
         System.out.println(admin_res);
 
         return ResponseEntity.ok(admin_res);
