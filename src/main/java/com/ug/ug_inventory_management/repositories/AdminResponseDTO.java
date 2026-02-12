@@ -1,13 +1,10 @@
 package com.ug.ug_inventory_management.dtos;
 
-public class AdminResponseDTO {
+public class AdminDTO {
     private Long id;
     private String name;
 
-    public AdminResponseDTO() {
-    }
-
-    public AdminResponseDTO(Long id, String name) {
+    public AdminDTO(Long id, String name) {
         this.id = id;
         this.name = name;
     }
