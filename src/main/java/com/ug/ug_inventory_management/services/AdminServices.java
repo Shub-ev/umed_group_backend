@@ -1,5 +1,6 @@
 package com.ug.ug_inventory_management.services;
 
+import com.ug.ug_inventory_management.common.dtos.AdminDTO;
 import com.ug.ug_inventory_management.models.Admin;
 import com.ug.ug_inventory_management.repositories.AdminRepository;
 import org.jspecify.annotations.NonNull;
@@ -15,13 +16,15 @@ public class AdminServices {
         this.adminRepository = adminRepository;
     }
 
-    public Admin createAdmin(@NonNull Admin admin){
-        if((admin.getName() == null) || (admin.getName().trim().isEmpty())){
+    public AdminDTO createAdmin(@NonNull Admin admin){
+        // Check if admin input have required fields
+        if((admin.getName() == null) || (admin.getName().trim().isEmpty())) {
             return null;
         }
         admin = adminRepository.save(admin);
-        // -> Replace this response with DTO (remove password from object)
-        // -> Replace this response with DTO (remove password from object)
-        return admin;
+
+        // Create AdminDTO and return
+        AdminDTO adminDto = new AdminDTO(admin.getId(), admin.getName());
+        return adminDto;
     }
 }
