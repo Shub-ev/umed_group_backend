@@ -24,4 +24,20 @@ public class AdminController {
 
         return ResponseEntity.ok(admin_res);
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<AdminDTO> loginAdmin(@RequestBody Admin admin) {
+        AdminDTO admin_res = adminServices.loginAdmin(admin);
+        System.out.println(admin_res);
+
+        return ResponseEntity.ok(admin_res);
+    }
+
+    @PatchMapping("/update")
+    public ResponseEntity<AdminDTO> updateAdminName(@RequestBody Admin admin) {
+        AdminDTO adminDTO = adminServices.updateAdminName(admin);
+        System.out.println(adminDTO);
+
+        return ResponseEntity.ok(adminDTO);
+    }
 }
