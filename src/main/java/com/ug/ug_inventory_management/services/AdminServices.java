@@ -1,6 +1,7 @@
 package com.ug.ug_inventory_management.services;
 
 import com.ug.ug_inventory_management.common.dtos.AdminDTO;
+import com.ug.ug_inventory_management.common.dtos.AdminPasswordUpdateDTO;
 import com.ug.ug_inventory_management.models.Admin;
 import com.ug.ug_inventory_management.repositories.AdminRepository;
 import org.jspecify.annotations.NonNull;
@@ -36,7 +37,7 @@ public class AdminServices {
         if((admin.getName() == null) || (admin.getName().trim().isEmpty())) {
             // return appropriate server response
             return null;
-        } else if((admin.getPassword() == null) || (admin.getName().trim().isEmpty())) {
+        } else if((admin.getPassword() == null) || (admin.getPassword().trim().isEmpty())) {
             // return appropriate server response
             return null;
         }
@@ -64,7 +65,7 @@ public class AdminServices {
         if((admin.getName() == null) || (admin.getName().trim().isEmpty())) {
             // return appropriate server response
             return null;
-        } else if((admin.getPassword() == null) || (admin.getName().trim().isEmpty())) {
+        } else if((admin.getPassword() == null) || (admin.getPassword().trim().isEmpty())) {
             // return appropriate server response
             return null;
         }
@@ -78,6 +79,44 @@ public class AdminServices {
                 foundAdmin.setName(admin.getName());
                 Admin saveRes = adminRepository.save(foundAdmin);
                 if (saveRes != null) {
+                    AdminDTO adminDTO = new AdminDTO(saveRes.getId(), saveRes.getName());
+                    return adminDTO;
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
+    public AdminDTO updateAdminPassword(@NonNull AdminPasswordUpdateDTO adminpass) {
+        // Check if admin input have required fields
+        if((adminpass.getName() == null) || (adminpass.getName().trim().isEmpty())) {
+            // return appropriate server response
+            return null;
+        } else if((adminpass.getPasswordPre() == null) || (adminpass.getPasswordPre().trim().isEmpty())) {
+            // return appropriate server response
+            return null;
+        } else if((adminpass.getPasswordNew() == null) || (adminpass.getPasswordNew().trim().isEmpty())) {
+            // return appropriate server response
+            return null;
+        }
+
+        // get the admin entity
+        Optional<Admin> repoResponse = adminRepository.findByName(adminpass.getName());
+        if(repoResponse.isPresent()) {
+            Admin foundAdmin = repoResponse.get();
+
+            // verify password
+            if(foundAdmin.getPassword().equals(adminpass.getPasswordPre())) {
+                foundAdmin.setPassword(adminpass.getPasswordNew());
+                Admin saveRes = adminRepository.save(foundAdmin);
+                if(saveRes != null) {
+                    // **** No need to send back the admin DTO as we didnt change anything meaningfull
+                    // **** for client side
                     AdminDTO adminDTO = new AdminDTO(saveRes.getId(), saveRes.getName());
                     return adminDTO;
                 } else {
