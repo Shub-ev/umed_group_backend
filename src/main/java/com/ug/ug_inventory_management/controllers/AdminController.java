@@ -1,6 +1,7 @@
 package com.ug.ug_inventory_management.controllers;
 
 import com.ug.ug_inventory_management.common.dtos.AdminDTO;
+import com.ug.ug_inventory_management.common.dtos.AdminPasswordUpdateDTO;
 import com.ug.ug_inventory_management.models.Admin;
 import com.ug.ug_inventory_management.services.AdminServices;
 import org.springframework.http.ResponseEntity;
@@ -33,9 +34,17 @@ public class AdminController {
         return ResponseEntity.ok(admin_res);
     }
 
-    @PatchMapping("/update")
+    @PatchMapping("/update/name")
     public ResponseEntity<AdminDTO> updateAdminName(@RequestBody Admin admin) {
         AdminDTO adminDTO = adminServices.updateAdminName(admin);
+        System.out.println(adminDTO);
+
+        return ResponseEntity.ok(adminDTO);
+    }
+
+    @PatchMapping("/update/password")
+    public ResponseEntity<AdminDTO> updateAdminPassword(@RequestBody AdminPasswordUpdateDTO adminpass) {
+        AdminDTO adminDTO = adminServices.updateAdminPassword(adminpass);
         System.out.println(adminDTO);
 
         return ResponseEntity.ok(adminDTO);
