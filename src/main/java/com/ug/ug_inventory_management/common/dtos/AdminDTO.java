@@ -15,4 +15,10 @@ public class AdminDTO {
     public String getName() {
         return name;
     }
+
+    // Override to string to return custom object data string
+    @Override
+    public String toString() {
+        return "Id : " + this.id + "\tName: " + name;
+    }
 }
