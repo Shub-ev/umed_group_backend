@@ -46,4 +46,8 @@ public class Employee {
     public LocalDate getAllocation() {
         return allocation;
     }
+
+    public void setAllocation(LocalDate allocation) {
+        this.allocation = allocation;
+    }
 }
