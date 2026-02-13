@@ -50,4 +50,8 @@ public class Employee {
     public void setAllocation(LocalDate allocation) {
         this.allocation = allocation;
     }
+
+    public void setUnit_name(String unit_name) {
+        this.unit_name = unit_name;
+    }
 }
