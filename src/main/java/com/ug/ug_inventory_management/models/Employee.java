@@ -11,7 +11,7 @@ import java.time.LocalDate;
 public class Employee {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(nullable = false)
     private Long eid;
 
     @Column(nullable = false)
@@ -53,5 +53,9 @@ public class Employee {
 
     public void setUnit_name(String unit_name) {
         this.unit_name = unit_name;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }
