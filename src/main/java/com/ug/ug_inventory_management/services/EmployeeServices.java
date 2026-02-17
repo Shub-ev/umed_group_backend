@@ -40,7 +40,6 @@ public class EmployeeServices {
             return  null;
         } else if (employee.getPassword()==null ||employee.getPassword().trim().isEmpty()) {
             return  null;
-
         }
 
         Optional<Employee> repoResponse = employeeRepository.findById(employee.getEid());
@@ -48,7 +47,7 @@ public class EmployeeServices {
             Employee foundEmployee = repoResponse.get();
 
             // check the password
-            if(employee.getEid().equals(foundEmployee.getEid())) {
+            if(employee.getPassword().equals(foundEmployee.getPassword())) {
                 EmployeeDTO employeeDTO= new EmployeeDTO(foundEmployee.getEid(), foundEmployee.getUnit_name(),foundEmployee.getAllocation());
                 return employeeDTO;
             } else {
@@ -78,7 +77,7 @@ public class EmployeeServices {
                 foundEmployee.setUnit_name(employee.getUnit_name());
                 Employee saveRes = employeeRepository.save(foundEmployee);
                 if (saveRes != null) {
-                    EmployeeDTO employeeDTO = new EmployeeDTO(saveRes.getEid(), saveRes.getPassword(),saveRes.getAllocation());
+                    EmployeeDTO employeeDTO = new EmployeeDTO(saveRes.getEid(), saveRes.getUnit_name(),saveRes.getAllocation());
                     return employeeDTO;
                 } else {
                     return null;
@@ -109,8 +108,8 @@ public class EmployeeServices {
             Employee foundEmployee = repoResponse.get();
 
             // verify password before updating the admin entity
-            if(foundEmployee.getPassword().equals(employeepass.getPasswordNew())) {
-                foundEmployee.setUnit_name(employeepass.getUnit_name());
+            if(foundEmployee.getPassword().equals(employeepass.getPasswordPre())) {
+                foundEmployee.setPassword(employeepass.getPasswordNew());
                 Employee saveRes = employeeRepository.save(foundEmployee);
                 if (saveRes != null) {
                     EmployeeDTO employeeDTO = new EmployeeDTO(saveRes.getEid(), saveRes.getPassword(),saveRes.getAllocation());
