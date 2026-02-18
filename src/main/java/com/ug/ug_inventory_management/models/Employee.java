@@ -4,14 +4,15 @@ import jakarta.persistence.Column;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
-
-
 @Entity
 @Table(name="employees")
 public class Employee {
 
     @Id
-    @Column(nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true)
     private Long eid;
 
     @Column(nullable = false)
