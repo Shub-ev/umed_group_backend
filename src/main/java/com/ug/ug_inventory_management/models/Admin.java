@@ -3,7 +3,7 @@ package com.ug.ug_inventory_management.models;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name="admin")
+@Table(name="admins")
 public class Admin {
 
     @Id
