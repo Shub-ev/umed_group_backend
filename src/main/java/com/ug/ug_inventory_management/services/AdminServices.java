@@ -6,6 +6,7 @@ import com.ug.ug_inventory_management.models.Admin;
 import com.ug.ug_inventory_management.repositories.AdminRepository;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -119,6 +120,32 @@ public class AdminServices {
                     // **** for client side
                     AdminDTO adminDTO = new AdminDTO(saveRes.getId(), saveRes.getName());
                     return adminDTO;
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
+    @Transactional
+    public AdminDTO deleteAdmin(@NonNull Admin admin) {
+        if(admin.getName() == null || admin.getName().trim().isEmpty()) {
+            return null;
+        } else if(admin.getPassword() == null || admin.getPassword().trim().isEmpty()) {
+            return null;
+        }
+
+        Optional<Admin> repoResponse = adminRepository.findByName(admin.getName());
+        if(repoResponse.isPresent()) {
+            Admin foundAdmin = repoResponse.get();
+            if(foundAdmin.getPassword().equals(admin.getPassword())) {
+                Optional<Admin> repoResponse2 = adminRepository.deleteByName(admin.getName());
+                if(repoResponse2.isPresent()) {
+                    return new AdminDTO(admin.getId(), admin.getName());
                 } else {
                     return null;
                 }
