@@ -2,6 +2,7 @@ package com.ug.ug_inventory_management.services;
 
 import com.ug.ug_inventory_management.common.dtos.AdminDTO;
 import com.ug.ug_inventory_management.common.dtos.AdminPasswordUpdateDTO;
+import com.ug.ug_inventory_management.common.exceptions.AdminNotFoundException;
 import com.ug.ug_inventory_management.models.Admin;
 import com.ug.ug_inventory_management.repositories.AdminRepository;
 import org.jspecify.annotations.NonNull;
@@ -44,19 +45,14 @@ public class AdminServices {
         }
 
         // Get admin data and send to client
-        Optional<Admin> repoResponse = adminRepository.findByName(admin.getName());
-        if(repoResponse.isPresent()) {
-            Admin foundAdmin = repoResponse.get();
+        Admin foundAdmin = adminRepository.findByName(admin.getName())
+                .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + admin.getName()));
 
-            // check the password
-            if(admin.getPassword().equals(foundAdmin.getPassword())) {
-                AdminDTO adminDto = new AdminDTO(foundAdmin.getId(), foundAdmin.getName());
-                return adminDto;
-            } else {
-                return null;
-            }
+        // check the password
+        if(admin.getPassword().equals(foundAdmin.getPassword())) {
+            AdminDTO adminDto = new AdminDTO(foundAdmin.getId(), foundAdmin.getName());
+            return adminDto;
         } else {
-            // return appropriate server response
             return null;
         }
     }
@@ -71,20 +67,16 @@ public class AdminServices {
             return null;
         }
 
-        Optional<Admin> repoResponse = adminRepository.findById(admin.getId());
-        if(repoResponse.isPresent()) {
-            Admin foundAdmin = repoResponse.get();
+        Admin foundAdmin = adminRepository.findById(admin.getId())
+                .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + admin.getName()));
 
-            // verify password before updating the admin entity
-            if(foundAdmin.getPassword().equals(admin.getPassword())) {
-                foundAdmin.setName(admin.getName());
-                Admin saveRes = adminRepository.save(foundAdmin);
-                if (saveRes != null) {
-                    AdminDTO adminDTO = new AdminDTO(saveRes.getId(), saveRes.getName());
-                    return adminDTO;
-                } else {
-                    return null;
-                }
+        // verify password before updating the admin entity
+        if(foundAdmin.getPassword().equals(admin.getPassword())) {
+            foundAdmin.setName(admin.getName());
+            Admin saveRes = adminRepository.save(foundAdmin);
+            if (saveRes != null) {
+                AdminDTO adminDTO = new AdminDTO(saveRes.getId(), saveRes.getName());
+                return adminDTO;
             } else {
                 return null;
             }
@@ -107,22 +99,18 @@ public class AdminServices {
         }
 
         // get the admin entity
-        Optional<Admin> repoResponse = adminRepository.findByName(adminpass.getName());
-        if(repoResponse.isPresent()) {
-            Admin foundAdmin = repoResponse.get();
+        Admin foundAdmin = adminRepository.findByName(adminpass.getName())
+                .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + adminpass.getName()));
 
-            // verify password
-            if(foundAdmin.getPassword().equals(adminpass.getPasswordPre())) {
-                foundAdmin.setPassword(adminpass.getPasswordNew());
-                Admin saveRes = adminRepository.save(foundAdmin);
-                if(saveRes != null) {
-                    // **** No need to send back the admin DTO as we didnt change anything meaningfull
-                    // **** for client side
-                    AdminDTO adminDTO = new AdminDTO(saveRes.getId(), saveRes.getName());
-                    return adminDTO;
-                } else {
-                    return null;
-                }
+        // verify password
+        if(foundAdmin.getPassword().equals(adminpass.getPasswordPre())) {
+            foundAdmin.setPassword(adminpass.getPasswordNew());
+            Admin saveRes = adminRepository.save(foundAdmin);
+            if(saveRes != null) {
+                // **** No need to send back the admin DTO as we didnt change anything meaningfull
+                // **** for client side
+                AdminDTO adminDTO = new AdminDTO(saveRes.getId(), saveRes.getName());
+                return adminDTO;
             } else {
                 return null;
             }
@@ -139,16 +127,13 @@ public class AdminServices {
             return null;
         }
 
-        Optional<Admin> repoResponse = adminRepository.findByName(admin.getName());
-        if(repoResponse.isPresent()) {
-            Admin foundAdmin = repoResponse.get();
-            if(foundAdmin.getPassword().equals(admin.getPassword())) {
-                Optional<Admin> repoResponse2 = adminRepository.deleteByName(admin.getName());
-                if(repoResponse2.isPresent()) {
-                    return new AdminDTO(admin.getId(), admin.getName());
-                } else {
-                    return null;
-                }
+        Admin foundAdmin = adminRepository.findByName(admin.getName())
+                .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + admin.getName()));
+
+        if(foundAdmin.getPassword().equals(admin.getPassword())) {
+            Optional<Admin> repoResponse2 = adminRepository.deleteByName(admin.getName());
+            if(repoResponse2.isPresent()) {
+                return new AdminDTO(admin.getId(), admin.getName());
             } else {
                 return null;
             }
