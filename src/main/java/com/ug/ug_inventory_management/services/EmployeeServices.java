@@ -4,6 +4,7 @@ package com.ug.ug_inventory_management.services;
 import com.ug.ug_inventory_management.common.dtos.EmployeeDTO;
 import  com.ug.ug_inventory_management.common.dtos.EmployeePasswordUpdateDTO;
 
+import com.ug.ug_inventory_management.common.exceptions.EmployeeNotFoundException;
 import com.ug.ug_inventory_management.models.Employee;
 import com.ug.ug_inventory_management.repositories.EmployeeRepository;
 import org.jspecify.annotations.NonNull;
@@ -31,7 +32,11 @@ public class EmployeeServices {
         employee.setAllocation(LocalDate.now());
         Employee repoResponse = employeeRepository.save(employee);
 
-        EmployeeDTO employeeDTO=new EmployeeDTO(repoResponse.getEid(),repoResponse.getUnit_name(),repoResponse.getAllocation());
+        EmployeeDTO employeeDTO= new EmployeeDTO(
+                repoResponse.getEid(),
+                repoResponse.getUnit_name(),
+                repoResponse.getAllocation()
+        );
         return employeeDTO;
     }
 
@@ -42,19 +47,18 @@ public class EmployeeServices {
             return  null;
         }
 
-        Optional<Employee> repoResponse = employeeRepository.findById(employee.getEid());
-        if(repoResponse.isPresent()) {
-            Employee foundEmployee = repoResponse.get();
+        Employee foundEmployee = employeeRepository.findById(employee.getEid())
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with eid: " + employee.getEid()));
 
-            // check the password
-            if(employee.getPassword().equals(foundEmployee.getPassword())) {
-                EmployeeDTO employeeDTO= new EmployeeDTO(foundEmployee.getEid(), foundEmployee.getUnit_name(),foundEmployee.getAllocation());
-                return employeeDTO;
-            } else {
-                return null;
-            }
+        // check the password
+        if(employee.getPassword().equals(foundEmployee.getPassword())) {
+            EmployeeDTO employeeDTO= new EmployeeDTO(
+                    foundEmployee.getEid(),
+                    foundEmployee.getUnit_name(),
+                    foundEmployee.getAllocation()
+            );
+            return employeeDTO;
         } else {
-            // return appropriate server response
             return null;
         }
     }
@@ -68,20 +72,16 @@ public class EmployeeServices {
             // return appropriate server response
             return null;
         }
-        Optional<Employee> repoResponse = employeeRepository.findById(employee.getEid());
-        if(repoResponse.isPresent()) {
-            Employee foundEmployee = repoResponse.get();
+        Employee foundEmployee = employeeRepository.findById(employee.getEid())
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with eid: " + employee.getEid()));
 
-            // verify password before updating the admin entity
-            if(foundEmployee.getPassword().equals(employee.getPassword())) {
-                foundEmployee.setUnit_name(employee.getUnit_name());
-                Employee saveRes = employeeRepository.save(foundEmployee);
-                if (saveRes != null) {
-                    EmployeeDTO employeeDTO = new EmployeeDTO(saveRes.getEid(), saveRes.getUnit_name(),saveRes.getAllocation());
-                    return employeeDTO;
-                } else {
-                    return null;
-                }
+        // verify password before updating the admin entity
+        if(foundEmployee.getPassword().equals(employee.getPassword())) {
+            foundEmployee.setUnit_name(employee.getUnit_name());
+            Employee saveRes = employeeRepository.save(foundEmployee);
+            if (saveRes != null) {
+                EmployeeDTO employeeDTO = new EmployeeDTO(saveRes.getEid(), saveRes.getUnit_name(),saveRes.getAllocation());
+                return employeeDTO;
             } else {
                 return null;
             }
@@ -103,27 +103,23 @@ public class EmployeeServices {
             // return appropriate server response
             return null;
         }
-        Optional<Employee> repoResponse = employeeRepository.findById(employeepass.getEid());
-        if(repoResponse.isPresent()) {
-            Employee foundEmployee = repoResponse.get();
 
-            // verify password before updating the admin entity
-            if(foundEmployee.getPassword().equals(employeepass.getPasswordPre())) {
-                foundEmployee.setPassword(employeepass.getPasswordNew());
-                Employee saveRes = employeeRepository.save(foundEmployee);
-                if (saveRes != null) {
-                    EmployeeDTO employeeDTO = new EmployeeDTO(saveRes.getEid(), saveRes.getPassword(),saveRes.getAllocation());
-                    return employeeDTO;
-                } else {
-                    return null;
-                }
+        Employee foundEmployee = employeeRepository.findById(employeepass.getEid())
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with eid: " + employeepass.getEid()));
+
+        // verify password before updating the admin entity
+        if(foundEmployee.getPassword().equals(employeepass.getPasswordPre())) {
+            foundEmployee.setPassword(employeepass.getPasswordNew());
+            Employee saveRes = employeeRepository.save(foundEmployee);
+            if (saveRes != null) {
+                EmployeeDTO employeeDTO = new EmployeeDTO(saveRes.getEid(), saveRes.getPassword(),saveRes.getAllocation());
+                return employeeDTO;
             } else {
                 return null;
             }
         } else {
             return null;
         }
-
     }
 
 }
