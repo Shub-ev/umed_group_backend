@@ -49,4 +49,12 @@ public class AdminController {
 
         return ResponseEntity.ok(adminDTO);
     }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<AdminDTO> deleteAdmin(@RequestBody Admin admin) {
+        AdminDTO adminDTO = adminServices.deleteAdmin(admin);
+        System.out.println(adminDTO);
+
+        return ResponseEntity.ok(adminDTO);
+    }
 }
