@@ -4,6 +4,7 @@ import com.ug.ug_inventory_management.common.dtos.AdminDTO;
 import com.ug.ug_inventory_management.common.dtos.AdminPasswordUpdateDTO;
 import com.ug.ug_inventory_management.models.Admin;
 import com.ug.ug_inventory_management.services.AdminServices;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +24,7 @@ public class AdminController {
         AdminDTO admin_res = adminServices.createAdmin(admin);
         System.out.println(admin_res);
 
-        return ResponseEntity.ok(admin_res);
+        return ResponseEntity.status(HttpStatus.CREATED).body(admin_res);
     }
 
     @PostMapping("/login")
