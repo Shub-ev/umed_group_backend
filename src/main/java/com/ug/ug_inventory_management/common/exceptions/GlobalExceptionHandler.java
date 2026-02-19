@@ -27,4 +27,22 @@ public class GlobalExceptionHandler {
                 HttpStatus.NOT_FOUND.value()
         ), HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException exception) {
+        return new ResponseEntity<>(new ErrorResponse(
+                LocalDateTime.now(),
+                exception.getMessage(),
+                HttpStatus.BAD_REQUEST.value()
+        ), HttpStatus.BAD_REQUEST);             // Bad Request is 404 (used for invalid input, missing field)
+    }
+
+    @ExceptionHandler(WrongPasswordException.class)
+    public ResponseEntity<ErrorResponse> handleWrongPasswordException(WrongPasswordException exception) {
+        return new ResponseEntity<>(new ErrorResponse(
+                LocalDateTime.now(),
+                exception.getMessage(),
+                HttpStatus.UNAUTHORIZED.value()
+        ), HttpStatus.UNAUTHORIZED);
+    }
 }
