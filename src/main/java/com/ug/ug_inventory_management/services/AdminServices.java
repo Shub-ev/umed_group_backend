@@ -1,8 +1,11 @@
 package com.ug.ug_inventory_management.services;
 
 import com.ug.ug_inventory_management.common.dtos.AdminDTO;
+import com.ug.ug_inventory_management.common.dtos.AdminNameUpdateDTO;
 import com.ug.ug_inventory_management.common.dtos.AdminPasswordUpdateDTO;
 import com.ug.ug_inventory_management.common.exceptions.AdminNotFoundException;
+import com.ug.ug_inventory_management.common.exceptions.IllegalArgumentException;
+import com.ug.ug_inventory_management.common.exceptions.WrongPasswordException;
 import com.ug.ug_inventory_management.models.Admin;
 import com.ug.ug_inventory_management.repositories.AdminRepository;
 import org.jspecify.annotations.NonNull;
@@ -24,11 +27,9 @@ public class AdminServices {
     public AdminDTO createAdmin(@NonNull Admin admin) {
         // Check if admin input have required fields
         if((admin.getName() == null) || (admin.getName().trim().isEmpty())) {
-            // return appropriate server response
-            return null;
+            throw new IllegalArgumentException("Admin name must not be blank");
         }
         Admin repoResponse = adminRepository.save(admin);
-
         // Create AdminDTO and return
         AdminDTO adminDto = new AdminDTO(repoResponse.getId(), repoResponse.getName());
         return adminDto;
@@ -37,14 +38,11 @@ public class AdminServices {
     public AdminDTO loginAdmin(@NonNull Admin admin) {
         // Check if admin input have required fields
         if((admin.getName() == null) || (admin.getName().trim().isEmpty())) {
-            // return appropriate server response
-            return null;
+            throw new IllegalArgumentException("Admin name must not be blank");
         } else if((admin.getPassword() == null) || (admin.getPassword().trim().isEmpty())) {
-            // return appropriate server response
-            return null;
+            throw new IllegalArgumentException("Admin password must not be blank");
         }
 
-        // Get admin data and send to client
         Admin foundAdmin = adminRepository.findByName(admin.getName())
                 .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + admin.getName()));
 
@@ -53,26 +51,37 @@ public class AdminServices {
             AdminDTO adminDto = new AdminDTO(foundAdmin.getId(), foundAdmin.getName());
             return adminDto;
         } else {
-            return null;
+            throw new WrongPasswordException("Password is incorrect for admin: " + admin.getName());
         }
     }
 
-    public AdminDTO updateAdminName(@NonNull Admin admin) {
+    public AdminDTO updateAdminName(@NonNull AdminNameUpdateDTO admin) {
         // Check if admin input have required fields
-        if((admin.getName() == null) || (admin.getName().trim().isEmpty())) {
-            // return appropriate server response
-            return null;
-        } else if((admin.getPassword() == null) || (admin.getPassword().trim().isEmpty())) {
-            // return appropriate server response
-            return null;
+        if((admin.getOldName() == null) || (admin.getOldName().trim().isEmpty())) {
+            throw new IllegalArgumentException("admin old name must not be blank");
+        }
+        if((admin.getNewName() == null) || (admin.getNewName().trim().isEmpty())) {
+            throw new IllegalArgumentException("admin new name must not be blank");
+        }
+        if((admin.getPassword() == null) || (admin.getPassword().trim().isEmpty())) {
+            throw new IllegalArgumentException("admin password must not be blank");
         }
 
-        Admin foundAdmin = adminRepository.findById(admin.getId())
-                .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + admin.getName()));
+        Admin foundAdmin = adminRepository.findByName(admin.getOldName())
+                .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + admin.getOldName()));
+
+        if(!foundAdmin.getPassword().equals(admin.getPassword())) {
+            throw new WrongPasswordException("Password is incorrect for admin: " + admin.getOldName());
+        }
+        if(adminRepository.exitsByName(admin.getOldName())) {
+            throw new java.lang.IllegalArgumentException("admin with this name already exists");
+        }
+
+        foundAdmin.setName(admin.getNewName());
 
         // verify password before updating the admin entity
         if(foundAdmin.getPassword().equals(admin.getPassword())) {
-            foundAdmin.setName(admin.getName());
+
             Admin saveRes = adminRepository.save(foundAdmin);
             if (saveRes != null) {
                 AdminDTO adminDTO = new AdminDTO(saveRes.getId(), saveRes.getName());
@@ -81,21 +90,18 @@ public class AdminServices {
                 return null;
             }
         } else {
-            return null;
+
         }
     }
 
     public AdminDTO updateAdminPassword(@NonNull AdminPasswordUpdateDTO adminpass) {
         // Check if admin input have required fields
         if((adminpass.getName() == null) || (adminpass.getName().trim().isEmpty())) {
-            // return appropriate server response
-            return null;
+            throw new IllegalArgumentException("admin name must not be blank");
         } else if((adminpass.getPasswordPre() == null) || (adminpass.getPasswordPre().trim().isEmpty())) {
-            // return appropriate server response
-            return null;
+            throw new IllegalArgumentException("Old password must not be blank");
         } else if((adminpass.getPasswordNew() == null) || (adminpass.getPasswordNew().trim().isEmpty())) {
-            // return appropriate server response
-            return null;
+            throw new IllegalArgumentException("New password must not be blank");
         }
 
         // get the admin entity
