@@ -25,38 +25,47 @@ public class AdminServices {
     }
 
     public AdminDTO createAdmin(@NonNull Admin admin) {
-        // Check if admin input have required fields
         if((admin.getName() == null) || (admin.getName().trim().isEmpty())) {
             throw new IllegalArgumentException("Admin name must not be blank");
         }
+        if((admin.getPassword() == null) || (admin.getPassword().trim().isEmpty())) {
+            throw new IllegalArgumentException("Admin password must not be blank");
+        }
+
+        // trim admin name and password before using
+        admin.setName(admin.getName().trim());
+        admin.setPassword(admin.getPassword().trim());
+
+        if(adminRepository.existsByName(admin.getName())) {
+            throw new IllegalArgumentException("Admin already exists with name: " + admin.getName());
+        }
         Admin repoResponse = adminRepository.save(admin);
-        // Create AdminDTO and return
-        AdminDTO adminDto = new AdminDTO(repoResponse.getId(), repoResponse.getName());
-        return adminDto;
+        return new AdminDTO(repoResponse.getId(), repoResponse.getName());
     }
 
     public AdminDTO loginAdmin(@NonNull Admin admin) {
-        // Check if admin input have required fields
         if((admin.getName() == null) || (admin.getName().trim().isEmpty())) {
             throw new IllegalArgumentException("Admin name must not be blank");
-        } else if((admin.getPassword() == null) || (admin.getPassword().trim().isEmpty())) {
+        }
+        if((admin.getPassword() == null) || (admin.getPassword().trim().isEmpty())) {
             throw new IllegalArgumentException("Admin password must not be blank");
         }
+
+        // trim admin name and password before using
+        admin.setName(admin.getName().trim());
+        admin.setPassword(admin.getPassword().trim());
 
         Admin foundAdmin = adminRepository.findByName(admin.getName())
                 .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + admin.getName()));
 
-        // check the password
-        if(admin.getPassword().equals(foundAdmin.getPassword())) {
-            AdminDTO adminDto = new AdminDTO(foundAdmin.getId(), foundAdmin.getName());
-            return adminDto;
-        } else {
-            throw new WrongPasswordException("Password is incorrect for admin: " + admin.getName());
+        if(!admin.getPassword().equals(foundAdmin.getPassword())) {
+            throw new WrongPasswordException("Invalid credentials");
         }
+        return new AdminDTO(foundAdmin.getId(), foundAdmin.getName());
     }
 
+    @Transactional
     public AdminDTO updateAdminName(@NonNull AdminNameUpdateDTO admin) {
-        // Check if admin input have required fields
         if((admin.getOldName() == null) || (admin.getOldName().trim().isEmpty())) {
             throw new IllegalArgumentException("admin old name must not be blank");
         }
@@ -67,62 +76,59 @@ public class AdminServices {
             throw new IllegalArgumentException("admin password must not be blank");
         }
 
-        Admin foundAdmin = adminRepository.findByName(admin.getOldName())
-                .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + admin.getOldName()));
+        // trim admin name and password before use
+        String adminOldName = admin.getOldName().trim();
+        String adminNewName = admin.getNewName().trim();
+        String adminPassword = admin.getPassword().trim();
 
-        if(!foundAdmin.getPassword().equals(admin.getPassword())) {
-            throw new WrongPasswordException("Password is incorrect for admin: " + admin.getOldName());
+        Admin foundAdmin = adminRepository.findByName(adminOldName)
+                .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + adminOldName));
+
+        if(!foundAdmin.getPassword().equals(adminPassword)) {
+            throw new WrongPasswordException("Invalid credentials");
         }
-        if(adminRepository.exitsByName(admin.getOldName())) {
-            throw new java.lang.IllegalArgumentException("admin with this name already exists");
+        if(adminRepository.existsByName(adminNewName)) {
+            throw new java.lang.IllegalArgumentException("admin with name "+ "\'" + adminNewName + "\'" + " already exists");
         }
 
-        foundAdmin.setName(admin.getNewName());
-
-        // verify password before updating the admin entity
-        if(foundAdmin.getPassword().equals(admin.getPassword())) {
-
-            Admin saveRes = adminRepository.save(foundAdmin);
-            if (saveRes != null) {
-                AdminDTO adminDTO = new AdminDTO(saveRes.getId(), saveRes.getName());
-                return adminDTO;
-            } else {
-                return null;
-            }
-        } else {
-
-        }
+        foundAdmin.setName(adminNewName);
+        Admin savedAdmin = adminRepository.save(foundAdmin);
+        return new AdminDTO(savedAdmin.getId(), savedAdmin.getName());
     }
 
+    @Transactional
     public AdminDTO updateAdminPassword(@NonNull AdminPasswordUpdateDTO adminpass) {
-        // Check if admin input have required fields
         if((adminpass.getName() == null) || (adminpass.getName().trim().isEmpty())) {
             throw new IllegalArgumentException("admin name must not be blank");
-        } else if((adminpass.getPasswordPre() == null) || (adminpass.getPasswordPre().trim().isEmpty())) {
+        }
+        if((adminpass.getPasswordPre() == null) || (adminpass.getPasswordPre().trim().isEmpty())) {
             throw new IllegalArgumentException("Old password must not be blank");
-        } else if((adminpass.getPasswordNew() == null) || (adminpass.getPasswordNew().trim().isEmpty())) {
+        }
+        if((adminpass.getPasswordNew() == null) || (adminpass.getPasswordNew().trim().isEmpty())) {
             throw new IllegalArgumentException("New password must not be blank");
         }
 
+        // trim name and password before using
+        String adminName = adminpass.getName().trim();
+        String adminPassPre = adminpass.getPasswordPre().trim();
+        String adminPassNew = adminpass.getPasswordNew().trim();
+
+        // check if old and new password is same
+        if(adminPassPre.equals(adminPassNew)) {
+            throw new IllegalArgumentException("New password must be different from old password");
+        }
+
         // get the admin entity
-        Admin foundAdmin = adminRepository.findByName(adminpass.getName())
-                .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + adminpass.getName()));
+        Admin foundAdmin = adminRepository.findByName(adminName)
+                .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + adminName));
 
         // verify password
-        if(foundAdmin.getPassword().equals(adminpass.getPasswordPre())) {
-            foundAdmin.setPassword(adminpass.getPasswordNew());
-            Admin saveRes = adminRepository.save(foundAdmin);
-            if(saveRes != null) {
-                // **** No need to send back the admin DTO as we didnt change anything meaningfull
-                // **** for client side
-                AdminDTO adminDTO = new AdminDTO(saveRes.getId(), saveRes.getName());
-                return adminDTO;
-            } else {
-                return null;
-            }
-        } else {
-            return null;
+        if(!foundAdmin.getPassword().equals(adminPassPre)) {
+            throw new WrongPasswordException("Invalid credentials");
         }
+        foundAdmin.setPassword(adminPassNew);
+        Admin saveRes = adminRepository.save(foundAdmin);
+        return new AdminDTO(saveRes.getId(), saveRes.getName());
     }
 
     @Transactional
@@ -133,18 +139,17 @@ public class AdminServices {
             return null;
         }
 
-        Admin foundAdmin = adminRepository.findByName(admin.getName())
-                .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + admin.getName()));
+        // trim admin name and password before using
+        String adminName = admin.getName().trim();
+        String adminPassword = admin.getPassword().trim();
 
-        if(foundAdmin.getPassword().equals(admin.getPassword())) {
-            Optional<Admin> repoResponse2 = adminRepository.deleteByName(admin.getName());
-            if(repoResponse2.isPresent()) {
-                return new AdminDTO(admin.getId(), admin.getName());
-            } else {
-                return null;
-            }
-        } else {
-            return null;
+        Admin foundAdmin = adminRepository.findByName(adminName)
+                .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + adminName));
+
+        if(!foundAdmin.getPassword().equals(adminPassword)) {
+            throw new WrongPasswordException("Invalid credentials");
         }
+        adminRepository.delete(foundAdmin);
+        return new AdminDTO(admin.getId(), admin.getName());
     }
 }
