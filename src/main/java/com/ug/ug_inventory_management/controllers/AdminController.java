@@ -1,6 +1,7 @@
 package com.ug.ug_inventory_management.controllers;
 
 import com.ug.ug_inventory_management.common.dtos.AdminDTO;
+import com.ug.ug_inventory_management.common.dtos.AdminNameUpdateDTO;
 import com.ug.ug_inventory_management.common.dtos.AdminPasswordUpdateDTO;
 import com.ug.ug_inventory_management.models.Admin;
 import com.ug.ug_inventory_management.services.AdminServices;
@@ -36,7 +37,7 @@ public class AdminController {
     }
 
     @PatchMapping("/update/name")
-    public ResponseEntity<AdminDTO> updateAdminName(@RequestBody Admin admin) {
+    public ResponseEntity<AdminDTO> updateAdminName(@RequestBody AdminNameUpdateDTO admin) {
         AdminDTO adminDTO = adminServices.updateAdminName(admin);
         System.out.println(adminDTO);
 
