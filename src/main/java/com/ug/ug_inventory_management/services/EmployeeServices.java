@@ -5,9 +5,15 @@ import  com.ug.ug_inventory_management.common.dtos.EmployeePasswordUpdateDTO;
 
 import com.ug.ug_inventory_management.common.exceptions.EmployeeNotFoundException;
 import com.ug.ug_inventory_management.common.exceptions.IllegalArgumentException;
+import com.ug.ug_inventory_management.common.exceptions.WrongPasswordException;
 import com.ug.ug_inventory_management.models.Employee;
 import com.ug.ug_inventory_management.repositories.EmployeeRepository;
 import org.jspecify.annotations.NonNull;
+import com.ug.ug_inventory_management.repositories.EmployeeRepository;
+import org.jspecify.annotations.NonNull;
+import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.stereotype.Service;
 
@@ -18,8 +24,11 @@ public class EmployeeServices {
 
     // Dependency Injection using "constructor injection"
     private final EmployeeRepository employeeRepository;
-    public EmployeeServices(EmployeeRepository employeeRepository) {
+    private final PasswordEncoder passwordEncoder;
+    public EmployeeServices(EmployeeRepository employeeRepository,PasswordEncoder passwordEncoder) {
+
         this.employeeRepository = employeeRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public EmployeeDTO createEmployee(@NonNull Employee employee){
@@ -37,11 +46,14 @@ public class EmployeeServices {
             throw new IllegalArgumentException("Employee already exists with id: " + employee.getEid());
         }
 
+
         employee.setAllocation(LocalDate.now());
         // trim unit name and password before saving
         employee.setUnit_name(employee.getUnit_name().trim());
-        employee.setPassword(employee.getPassword().trim());
+        String trimmedpass = employee.getPassword().trim();
         Employee repoResponse = employeeRepository.save(employee);
+        String hashedPassword=passwordEncoder.encode(trimmedpass);
+        employee.setPassword(hashedPassword);
 
         EmployeeDTO employeeDTO= new EmployeeDTO(
                 repoResponse.getEid(),
@@ -53,25 +65,24 @@ public class EmployeeServices {
 
     public  EmployeeDTO loginEmployee(@NonNull Employee employee){
         if(employee.getEid()==null){
-            return  null;
+            throw new IllegalArgumentException("Employee Id can not be blank");
         } else if (employee.getPassword()==null ||employee.getPassword().trim().isEmpty()) {
-            return  null;
+            throw new IllegalArgumentException("Employee password can not be blank");
         }
 
         Employee foundEmployee = employeeRepository.findById(employee.getEid())
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with eid: " + employee.getEid()));
 
         // check the password
-        if(employee.getPassword().equals(foundEmployee.getPassword())) {
-            EmployeeDTO employeeDTO= new EmployeeDTO(
-                    foundEmployee.getEid(),
-                    foundEmployee.getUnit_name(),
-                    foundEmployee.getAllocation()
-            );
-            return employeeDTO;
-        } else {
-            return null;
+        if(!employee.getPassword().equals(foundEmployee.getPassword())) {
+            throw new WrongPasswordException("Invalid credentials");
         }
+        EmployeeDTO employeeDTO= new EmployeeDTO(
+                foundEmployee.getEid(),
+                foundEmployee.getUnit_name(),
+                foundEmployee.getAllocation()
+        );
+        return employeeDTO;
     }
 
     public EmployeeDTO updateEmployeeUnitName(@NonNull Employee employee) {
