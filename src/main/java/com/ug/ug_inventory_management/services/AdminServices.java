@@ -10,6 +10,7 @@ import com.ug.ug_inventory_management.models.Admin;
 import com.ug.ug_inventory_management.repositories.AdminRepository;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 // @Service marks this class as SprintBean.
@@ -18,49 +19,69 @@ public class AdminServices {
 
     // Dependency injection by Constructor Injection
     private final AdminRepository adminRepository;
-    public AdminServices(AdminRepository adminRepository) {
+    private final PasswordEncoder passwordEncoder;
+    public AdminServices(AdminRepository adminRepository,PasswordEncoder passwordEncoder) {
         this.adminRepository = adminRepository;
+        this.passwordEncoder=passwordEncoder;
     }
 
     public AdminResponseDTO createAdmin(@NonNull Admin admin) {
-        if((admin.getName() == null) || (admin.getName().trim().isEmpty())) {
+
+        if (admin.getName() == null || admin.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Admin name must not be blank");
         }
-        if((admin.getPassword() == null) || (admin.getPassword().trim().isEmpty())) {
+
+        if (admin.getPassword() == null || admin.getPassword().trim().isEmpty()) {
             throw new IllegalArgumentException("Admin password must not be blank");
         }
 
-        // trim admin name and password before using
-        admin.setName(admin.getName().trim());
-        admin.setPassword(admin.getPassword().trim());
+        String trimmedName = admin.getName().trim();
+        String trimmedPassword = admin.getPassword().trim();
 
-        if(adminRepository.existsByName(admin.getName())) {
-            throw new IllegalArgumentException("Admin already exists with name: " + admin.getName());
+        if (adminRepository.existsByName(trimmedName)) {
+            throw new IllegalArgumentException("Admin already exists with name: " + trimmedName);
         }
+
+        //Hash password before saving to database
+        String encodedPassword = passwordEncoder.encode(trimmedPassword);
+
+        admin.setName(trimmedName);
+        admin.setPassword(encodedPassword);
+
         Admin repoResponse = adminRepository.save(admin);
+
         return new AdminResponseDTO(repoResponse.getId(), repoResponse.getName());
     }
 
+
+
     public AdminResponseDTO loginAdmin(@NonNull Admin admin) {
-        if((admin.getName() == null) || (admin.getName().trim().isEmpty())) {
+
+        if (admin.getName() == null || admin.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Admin name must not be blank");
         }
-        if((admin.getPassword() == null) || (admin.getPassword().trim().isEmpty())) {
+
+        if (admin.getPassword() == null || admin.getPassword().trim().isEmpty()) {
             throw new IllegalArgumentException("Admin password must not be blank");
         }
 
-        // trim admin name and password before using
-        admin.setName(admin.getName().trim());
-        admin.setPassword(admin.getPassword().trim());
+        String trimmedName = admin.getName().trim();
+        String trimmedPassword = admin.getPassword().trim();
 
-        Admin foundAdmin = adminRepository.findByName(admin.getName())
-                .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + admin.getName()));
+        Admin foundAdmin = adminRepository.findByName(trimmedName)
+                .orElseThrow(() ->
+                        new AdminNotFoundException("Admin not found with name: " + trimmedName)
+                );
 
-        if(!admin.getPassword().equals(foundAdmin.getPassword())) {
+
+        //checking the password matches with the hashed one or not
+        if (!passwordEncoder.matches(trimmedPassword, foundAdmin.getPassword())) {
             throw new WrongPasswordException("Invalid credentials");
         }
+
         return new AdminResponseDTO(foundAdmin.getId(), foundAdmin.getName());
     }
+
 
     @Transactional
     public AdminResponseDTO updateAdminName(@NonNull AdminNameUpdateDTO admin) {
