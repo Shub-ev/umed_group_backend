@@ -1,6 +1,6 @@
 package com.ug.ug_inventory_management.services;
 
-import com.ug.ug_inventory_management.common.dtos.AdminDTO;
+import com.ug.ug_inventory_management.common.dtos.AdminResponseDTO;
 import com.ug.ug_inventory_management.common.dtos.AdminNameUpdateDTO;
 import com.ug.ug_inventory_management.common.dtos.AdminPasswordUpdateDTO;
 import com.ug.ug_inventory_management.common.exceptions.AdminNotFoundException;
@@ -12,8 +12,6 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-
 // @Service marks this class as SprintBean.
 @Service
 public class AdminServices {
@@ -24,7 +22,7 @@ public class AdminServices {
         this.adminRepository = adminRepository;
     }
 
-    public AdminDTO createAdmin(@NonNull Admin admin) {
+    public AdminResponseDTO createAdmin(@NonNull Admin admin) {
         if((admin.getName() == null) || (admin.getName().trim().isEmpty())) {
             throw new IllegalArgumentException("Admin name must not be blank");
         }
@@ -40,10 +38,10 @@ public class AdminServices {
             throw new IllegalArgumentException("Admin already exists with name: " + admin.getName());
         }
         Admin repoResponse = adminRepository.save(admin);
-        return new AdminDTO(repoResponse.getId(), repoResponse.getName());
+        return new AdminResponseDTO(repoResponse.getId(), repoResponse.getName());
     }
 
-    public AdminDTO loginAdmin(@NonNull Admin admin) {
+    public AdminResponseDTO loginAdmin(@NonNull Admin admin) {
         if((admin.getName() == null) || (admin.getName().trim().isEmpty())) {
             throw new IllegalArgumentException("Admin name must not be blank");
         }
@@ -61,11 +59,11 @@ public class AdminServices {
         if(!admin.getPassword().equals(foundAdmin.getPassword())) {
             throw new WrongPasswordException("Invalid credentials");
         }
-        return new AdminDTO(foundAdmin.getId(), foundAdmin.getName());
+        return new AdminResponseDTO(foundAdmin.getId(), foundAdmin.getName());
     }
 
     @Transactional
-    public AdminDTO updateAdminName(@NonNull AdminNameUpdateDTO admin) {
+    public AdminResponseDTO updateAdminName(@NonNull AdminNameUpdateDTO admin) {
         if((admin.getOldName() == null) || (admin.getOldName().trim().isEmpty())) {
             throw new IllegalArgumentException("admin old name must not be blank");
         }
@@ -93,11 +91,11 @@ public class AdminServices {
 
         foundAdmin.setName(adminNewName);
         Admin savedAdmin = adminRepository.save(foundAdmin);
-        return new AdminDTO(savedAdmin.getId(), savedAdmin.getName());
+        return new AdminResponseDTO(savedAdmin.getId(), savedAdmin.getName());
     }
 
     @Transactional
-    public AdminDTO updateAdminPassword(@NonNull AdminPasswordUpdateDTO adminpass) {
+    public AdminResponseDTO updateAdminPassword(@NonNull AdminPasswordUpdateDTO adminpass) {
         if((adminpass.getName() == null) || (adminpass.getName().trim().isEmpty())) {
             throw new IllegalArgumentException("admin name must not be blank");
         }
@@ -128,11 +126,11 @@ public class AdminServices {
         }
         foundAdmin.setPassword(adminPassNew);
         Admin saveRes = adminRepository.save(foundAdmin);
-        return new AdminDTO(saveRes.getId(), saveRes.getName());
+        return new AdminResponseDTO(saveRes.getId(), saveRes.getName());
     }
 
     @Transactional
-    public AdminDTO deleteAdmin(@NonNull Admin admin) {
+    public AdminResponseDTO deleteAdmin(@NonNull Admin admin) {
         if(admin.getName() == null || admin.getName().trim().isEmpty()) {
             return null;
         } else if(admin.getPassword() == null || admin.getPassword().trim().isEmpty()) {
@@ -150,6 +148,6 @@ public class AdminServices {
             throw new WrongPasswordException("Invalid credentials");
         }
         adminRepository.delete(foundAdmin);
-        return new AdminDTO(admin.getId(), admin.getName());
+        return new AdminResponseDTO(admin.getId(), admin.getName());
     }
 }
