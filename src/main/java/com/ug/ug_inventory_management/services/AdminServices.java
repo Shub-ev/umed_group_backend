@@ -37,6 +37,9 @@ public class AdminServices {
 
         String trimmedName = admin.getName().trim();
         String trimmedPassword = admin.getPassword().trim();
+        if(trimmedPassword.length() <= 4 || trimmedPassword.length() >= 15){
+            throw new IllegalArgumentException("Password must be 5 to  14 characters");
+        }
 
         if (adminRepository.existsByName(trimmedName)) {
             throw new IllegalArgumentException("Admin already exists with name: " + trimmedName);
