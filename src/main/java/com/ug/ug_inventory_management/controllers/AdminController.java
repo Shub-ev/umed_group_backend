@@ -1,6 +1,6 @@
 package com.ug.ug_inventory_management.controllers;
 
-import com.ug.ug_inventory_management.common.dtos.AdminDTO;
+import com.ug.ug_inventory_management.common.dtos.AdminResponseDTO;
 import com.ug.ug_inventory_management.common.dtos.AdminNameUpdateDTO;
 import com.ug.ug_inventory_management.common.dtos.AdminPasswordUpdateDTO;
 import com.ug.ug_inventory_management.models.Admin;
@@ -22,42 +22,42 @@ public class AdminController {
 
     // Create admin controller
     @PostMapping("/")
-    public ResponseEntity<AdminDTO> createAdmin(@RequestBody Admin admin) {
-        AdminDTO admin_res = adminServices.createAdmin(admin);
+    public ResponseEntity<AdminResponseDTO> createAdmin(@RequestBody Admin admin) {
+        AdminResponseDTO admin_res = adminServices.createAdmin(admin);
         System.out.println(admin_res);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(admin_res);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AdminDTO> loginAdmin(@RequestBody Admin admin) {
-        AdminDTO admin_res = adminServices.loginAdmin(admin);
+    public ResponseEntity<AdminResponseDTO> loginAdmin(@RequestBody Admin admin) {
+        AdminResponseDTO admin_res = adminServices.loginAdmin(admin);
         System.out.println(admin_res);
 
         return ResponseEntity.ok(admin_res);
     }
 
     @PatchMapping("/update/name")
-    public ResponseEntity<AdminDTO> updateAdminName(@RequestBody AdminNameUpdateDTO admin) {
-        AdminDTO adminDTO = adminServices.updateAdminName(admin);
-        System.out.println(adminDTO);
+    public ResponseEntity<AdminResponseDTO> updateAdminName(@RequestBody AdminNameUpdateDTO admin) {
+        AdminResponseDTO adminResponseDTO = adminServices.updateAdminName(admin);
+        System.out.println(adminResponseDTO);
 
-        return ResponseEntity.ok(adminDTO);
+        return ResponseEntity.ok(adminResponseDTO);
     }
 
     @PatchMapping("/update/password")
-    public ResponseEntity<AdminDTO> updateAdminPassword(@RequestBody AdminPasswordUpdateDTO adminpass) {
-        AdminDTO adminDTO = adminServices.updateAdminPassword(adminpass);
-        System.out.println(adminDTO);
+    public ResponseEntity<AdminResponseDTO> updateAdminPassword(@RequestBody AdminPasswordUpdateDTO adminpass) {
+        AdminResponseDTO adminResponseDTO = adminServices.updateAdminPassword(adminpass);
+        System.out.println(adminResponseDTO);
 
-        return ResponseEntity.ok(adminDTO);
+        return ResponseEntity.ok(adminResponseDTO);
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<AdminDTO> deleteAdmin(@RequestBody Admin admin) {
-        AdminDTO adminDTO = adminServices.deleteAdmin(admin);
-        System.out.println(adminDTO);
+    public ResponseEntity<AdminResponseDTO> deleteAdmin(@RequestBody Admin admin) {
+        AdminResponseDTO adminResponseDTO = adminServices.deleteAdmin(admin);
+        System.out.println(adminResponseDTO);
 
-        return ResponseEntity.ok(adminDTO);
+        return ResponseEntity.ok(adminResponseDTO);
     }
 }
