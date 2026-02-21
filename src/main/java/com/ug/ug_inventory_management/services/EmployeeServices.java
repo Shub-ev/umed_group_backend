@@ -1,10 +1,10 @@
 package com.ug.ug_inventory_management.services;
 
-
 import com.ug.ug_inventory_management.common.dtos.EmployeeDTO;
 import  com.ug.ug_inventory_management.common.dtos.EmployeePasswordUpdateDTO;
 
 import com.ug.ug_inventory_management.common.exceptions.EmployeeNotFoundException;
+import com.ug.ug_inventory_management.common.exceptions.IllegalArgumentException;
 import com.ug.ug_inventory_management.models.Employee;
 import com.ug.ug_inventory_management.repositories.EmployeeRepository;
 import org.jspecify.annotations.NonNull;
@@ -12,7 +12,6 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Optional;
 
 @Service
 public class EmployeeServices {
@@ -24,12 +23,24 @@ public class EmployeeServices {
     }
 
     public EmployeeDTO createEmployee(@NonNull Employee employee){
-        if(employee.getEid()==null){
-            return null;
-        } else if (employee.getUnit_name()==null ||employee.getUnit_name().trim().isEmpty()) {
-            return  null;
+        if(employee.getEid() == null){
+            throw new IllegalArgumentException("Employee Id can not be blank");
         }
+        if (employee.getUnit_name() == null || employee.getUnit_name().trim().isEmpty()) {
+            throw new IllegalArgumentException("Employee unit name can not be blank");
+        }
+        if((employee.getPassword() == null) || (employee.getPassword().trim().isEmpty())) {
+            throw new IllegalArgumentException("Employee password can not be blank");
+        }
+        // check if employee with same eid exist
+        if(employeeRepository.existsById(employee.getEid())) {
+            throw new IllegalArgumentException("Employee already exists with id: " + employee.getEid());
+        }
+
         employee.setAllocation(LocalDate.now());
+        // trim unit name and password before saving
+        employee.setUnit_name(employee.getUnit_name().trim());
+        employee.setPassword(employee.getPassword().trim());
         Employee repoResponse = employeeRepository.save(employee);
 
         EmployeeDTO employeeDTO= new EmployeeDTO(
