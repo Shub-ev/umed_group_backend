@@ -129,11 +129,14 @@ public class AdminServices {
         if((adminpass.getPasswordNew() == null) || (adminpass.getPasswordNew().trim().isEmpty())) {
             throw new IllegalArgumentException("New password must not be blank");
         }
-
-        // trim name and password before using
         String adminName = adminpass.getName().trim();
         String adminPassPre = adminpass.getPasswordPre().trim();
         String adminPassNew = adminpass.getPasswordNew().trim();
+
+        if(adminPassNew.length() <=5 || adminPassNew.length() >=14){
+            throw new IllegalArgumentException("Password must be 5 to 14 characters");
+        }
+
 
         // check if old and new password is same
         if(adminPassPre.equals(adminPassNew)) {

@@ -49,7 +49,7 @@ public class EmployeeServices {
             throw new IllegalArgumentException("Employee password cannot be blank");
         }
         trimmedPassword = trimmedPassword.trim();
-        if(trimmedPassword.length() <= 4 || trimmedPassword.length() >= 15){
+        if(trimmedPassword.length() <= 5 || trimmedPassword.length() >= 14){
             throw new IllegalArgumentException("Password must be 5 to  14 characters");
         }
 
@@ -133,15 +133,25 @@ public class EmployeeServices {
 
     public EmployeeDTO updateEmployeePassword(@NonNull EmployeePasswordUpdateDTO employeepass) {
         // Check if admin input have required fields
-        if((employeepass.getEid() == null)) {
-            // return appropriate server response
-            return null;
-        } else if((employeepass.getPasswordPre() == null) || (employeepass.getPasswordPre().trim().isEmpty())) {
-            // return appropriate server response
-            return null;
-        } else if((employeepass.getPasswordNew() == null) || (employeepass.getPasswordNew().trim().isEmpty())) {
-            // return appropriate server response
-            return null;
+        if(employeepass.getEid() == null) {
+            throw new IllegalArgumentException("Employee Id cannot be blank");
+        }
+
+        String oldPassword = employeepass.getPasswordPre();
+        if(oldPassword == null || oldPassword.trim().isEmpty()) {
+            throw new IllegalArgumentException("Old password cannot be blank");
+        }
+        oldPassword = oldPassword.trim();
+
+        String newPassword = employeepass.getPasswordNew();
+        if(newPassword == null || newPassword.trim().isEmpty()) {
+            throw new IllegalArgumentException("New password cannot be blank");
+        }
+        newPassword = newPassword.trim();
+
+
+        if(newPassword.length() <= 5 || newPassword.length() >= 14){
+            throw new IllegalArgumentException("Password must be 5 to 14 characters");
         }
 
         Employee foundEmployee = employeeRepository.findById(employeepass.getEid())
