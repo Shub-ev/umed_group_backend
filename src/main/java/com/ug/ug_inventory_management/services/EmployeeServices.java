@@ -32,28 +32,42 @@ public class EmployeeServices {
     }
 
     public EmployeeDTO createEmployee(@NonNull Employee employee){
+
         if(employee.getEid() == null){
-            throw new IllegalArgumentException("Employee Id can not be blank");
+            throw new IllegalArgumentException("Employee Id cannot be blank");
         }
-        if (employee.getUnit_name() == null || employee.getUnit_name().trim().isEmpty()) {
-            throw new IllegalArgumentException("Employee unit name can not be blank");
+
+        String trimmedUnit = employee.getUnit_name();
+        if(trimmedUnit == null || trimmedUnit.trim().isEmpty()){
+            throw new IllegalArgumentException("Employee unit name cannot be blank");
         }
-        if((employee.getPassword() == null) || (employee.getPassword().trim().isEmpty())) {
-            throw new IllegalArgumentException("Employee password can not be blank");
+        trimmedUnit = trimmedUnit.trim();
+
+
+        String trimmedPassword = employee.getPassword();
+        if(trimmedPassword == null || trimmedPassword.trim().isEmpty()){
+            throw new IllegalArgumentException("Employee password cannot be blank");
         }
-        // check if employee with same eid exist
+        trimmedPassword = trimmedPassword.trim();
+        if(trimmedPassword.length() <= 4 || trimmedPassword.length() >= 15){
+            throw new IllegalArgumentException("Password must be 5 to  14 characters");
+        }
+
+        // 4️⃣ Check duplicate employee
         if(employeeRepository.existsById(employee.getEid())) {
             throw new IllegalArgumentException("Employee already exists with id: " + employee.getEid());
         }
 
+        // 5️⃣ 🔐 Hash password BEFORE saving
+        String hashedPassword = passwordEncoder.encode(trimmedPassword);
 
-        employee.setAllocation(LocalDate.now());
-        // trim unit name and password before saving
-        employee.setUnit_name(employee.getUnit_name().trim());
-        String trimmedpass = employee.getPassword().trim();
-        Employee repoResponse = employeeRepository.save(employee);
-        String hashedPassword=passwordEncoder.encode(trimmedpass);
+        // 6️⃣ Set cleaned & processed values
+        employee.setUnit_name(trimmedUnit);
         employee.setPassword(hashedPassword);
+        employee.setAllocation(LocalDate.now());
+
+
+        Employee repoResponse = employeeRepository.save(employee);
 
         EmployeeDTO employeeDTO= new EmployeeDTO(
                 repoResponse.getEid(),
@@ -66,15 +80,19 @@ public class EmployeeServices {
     public  EmployeeDTO loginEmployee(@NonNull Employee employee){
         if(employee.getEid()==null){
             throw new IllegalArgumentException("Employee Id can not be blank");
-        } else if (employee.getPassword()==null ||employee.getPassword().trim().isEmpty()) {
-            throw new IllegalArgumentException("Employee password can not be blank");
         }
+        String rawPassword = employee.getPassword();
+        if(rawPassword == null || rawPassword.trim().isEmpty()){
+            throw new IllegalArgumentException("Employee password cannot be blank");
+        }
+        rawPassword = rawPassword.trim();
+
 
         Employee foundEmployee = employeeRepository.findById(employee.getEid())
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with eid: " + employee.getEid()));
 
         // check the password
-        if(!employee.getPassword().equals(foundEmployee.getPassword())) {
+        if(!passwordEncoder.matches(rawPassword, foundEmployee.getPassword())) {
             throw new WrongPasswordException("Invalid credentials");
         }
         EmployeeDTO employeeDTO= new EmployeeDTO(
