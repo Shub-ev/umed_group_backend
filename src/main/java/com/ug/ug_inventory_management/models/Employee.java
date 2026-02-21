@@ -26,7 +26,8 @@ public class Employee {
 
     protected Employee (){}
 
-    public Employee( String unit_name,String password,LocalDate allocation){
+    public Employee(Long eid, String unit_name,String password,LocalDate allocation){
+        this.eid = eid;
         this.unit_name = unit_name;
         this.password = password;
         this.allocation = allocation;
@@ -47,6 +48,8 @@ public class Employee {
     public LocalDate getAllocation() {
         return allocation;
     }
+
+    public void setEid(Long eid) { this.eid = eid; }
 
     public void setAllocation(LocalDate allocation) {
         this.allocation = allocation;
