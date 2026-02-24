@@ -9,13 +9,8 @@ import com.ug.ug_inventory_management.common.exceptions.WrongPasswordException;
 import com.ug.ug_inventory_management.models.Employee;
 import com.ug.ug_inventory_management.repositories.EmployeeRepository;
 import org.jspecify.annotations.NonNull;
-import com.ug.ug_inventory_management.repositories.EmployeeRepository;
-import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.transaction.annotation.Transactional;
-
-import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 
@@ -170,6 +165,10 @@ public class EmployeeServices {
         } else {
             return null;
         }
+    }
+
+    public Long employeeCount() {
+        return employeeRepository.count();
     }
 
 }
