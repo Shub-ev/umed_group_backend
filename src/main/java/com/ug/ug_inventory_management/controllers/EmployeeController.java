@@ -48,4 +48,9 @@ public class EmployeeController {
 
         return ResponseEntity.ok(employeeDTO);
     }
+
+    @GetMapping("/count")
+    public Long getEmployeeCount() {
+        return employeeServices.employeeCount();
+    }
 }
