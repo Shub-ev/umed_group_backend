@@ -62,4 +62,14 @@ public class Employee {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    @Override
+    public String toString() {
+        return "Employee{" +
+                "id=" + id +
+                ", eid=" + eid +
+                ", unit_name='" + unit_name + '\'' +
+                ", allocation=" + allocation +
+                '}';
+    }
 }

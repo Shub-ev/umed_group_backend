@@ -22,6 +22,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/hkfu/login").permitAll()
                         .requestMatchers("/hkfu/**").permitAll() // for testing
+                        .requestMatchers("/employee/**").permitAll() // for testing
                         .anyRequest().authenticated()
                 );
 
