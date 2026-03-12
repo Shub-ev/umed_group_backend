@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/hkfu")
@@ -64,5 +66,11 @@ public class AdminController {
     @GetMapping("/count")
     public Long getAdminCount() {
         return adminServices.getAdminCount();
+    }
+
+    @GetMapping("/get_admins")
+    public ResponseEntity<List<AdminResponseDTO>> getAdmins() {
+        List<AdminResponseDTO> admins = adminServices.getAdmins();
+        return ResponseEntity.ok(admins);
     }
 }
