@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 // @Service marks this class as SprintBean.
 @Service
 public class AdminServices {
@@ -177,6 +179,18 @@ public class AdminServices {
         }
         adminRepository.delete(foundAdmin);
         return new AdminResponseDTO(admin.getId(), admin.getName());
+    }
+
+    public AdminResponseDTO convertDTO(Admin admin) {
+        return new AdminResponseDTO(admin.getId(), admin.getName());
+    }
+
+    public List<AdminResponseDTO> getAdmins() {
+        List<Admin> admins = adminRepository.findAll();
+
+        return admins.stream()
+                .map(this::convertDTO)
+                .toList();
     }
 
     public Long getAdminCount() {
