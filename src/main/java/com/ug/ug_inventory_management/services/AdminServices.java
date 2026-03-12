@@ -178,4 +178,8 @@ public class AdminServices {
         adminRepository.delete(foundAdmin);
         return new AdminResponseDTO(admin.getId(), admin.getName());
     }
+
+    public Long getAdminCount() {
+        return adminRepository.count();
+    }
 }
