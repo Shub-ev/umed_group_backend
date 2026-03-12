@@ -7,6 +7,8 @@ import com.ug.ug_inventory_management.services.EmployeeServices;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/employee")
@@ -52,5 +54,11 @@ public class EmployeeController {
     @GetMapping("/count")
     public Long getEmployeeCount() {
         return employeeServices.employeeCount();
+    }
+
+    @GetMapping("/get_employees")
+    public ResponseEntity<List<EmployeeDTO>> getEmployees() {
+        List<EmployeeDTO> employees = employeeServices.getEmployees();
+        return ResponseEntity.ok(employees);
     }
 }
