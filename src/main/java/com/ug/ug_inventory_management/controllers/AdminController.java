@@ -60,4 +60,9 @@ public class AdminController {
 
         return ResponseEntity.ok(adminResponseDTO);
     }
+
+    @GetMapping("/count")
+    public Long getAdminCount() {
+        return adminServices.getAdminCount();
+    }
 }
