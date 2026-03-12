@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 public class EmployeeServices {
@@ -170,4 +171,17 @@ public class EmployeeServices {
         return employeeRepository.count();
     }
 
+    public EmployeeDTO convertDTO(Employee employee) {
+        return new EmployeeDTO(
+                employee.getEid(), employee.getUnit_name(), employee.getAllocation()
+        );
+    }
+
+    public List<EmployeeDTO> getEmployees() {
+        List<Employee> employees = employeeRepository.findAll();
+
+        return employees.stream()
+                .map(this::convertDTO)
+                .toList();
+    }
 }
