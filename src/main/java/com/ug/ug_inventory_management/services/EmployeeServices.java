@@ -27,7 +27,6 @@ public class EmployeeServices {
     }
 
     public EmployeeDTO createEmployee(@NonNull Employee employee){
-
         if(employee.getEid() == null){
             throw new IllegalArgumentException("Employee Id cannot be blank");
         }
@@ -83,7 +82,7 @@ public class EmployeeServices {
         rawPassword = rawPassword.trim();
 
 
-        Employee foundEmployee = employeeRepository.findById(employee.getEid())
+        Employee foundEmployee = employeeRepository.findByEid(employee.getEid())
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with eid: " + employee.getEid()));
 
         // check the password
