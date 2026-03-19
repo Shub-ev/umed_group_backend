@@ -1,4 +1,8 @@
 package com.ug.ug_inventory_management.models;
 
-public class FieldType {
+public enum FieldType {
+    STRING,
+    NUMBER,
+    BOOLEAN,
+    DATE
 }
