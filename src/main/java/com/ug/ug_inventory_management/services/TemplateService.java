@@ -6,6 +6,8 @@ import com.ug.ug_inventory_management.repositories.*;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.List; // ✅ ADD THIS
+
 @Service
 public class TemplateService {
 
@@ -27,6 +29,7 @@ public class TemplateService {
         Template template = new Template();
         template.setTemplateName(request.getTemplateName());
         templateRepo.save(template);
+
         System.out.println("Fields: " + request.getFields());
 
         for(FieldRequest f : request.getFields()) {
@@ -39,5 +42,9 @@ public class TemplateService {
 
             fieldRepo.save(field);
         }
+    }
+
+    public List<Template> getAllTemplates() {
+        return templateRepo.findAll();
     }
 }
