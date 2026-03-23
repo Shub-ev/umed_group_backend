@@ -1,4 +1,4 @@
-package com.ug.ug_inventory_management.models;
+package com.ug.ug_inventory_management.enums;
 
 public enum FieldType {
     STRING,

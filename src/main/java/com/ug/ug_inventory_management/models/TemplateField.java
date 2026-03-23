@@ -1,5 +1,6 @@
 package com.ug.ug_inventory_management.models;
 
+import com.ug.ug_inventory_management.enums.FieldType;
 import jakarta.persistence.*;
 
 @Entity

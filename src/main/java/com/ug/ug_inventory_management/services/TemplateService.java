@@ -1,6 +1,7 @@
 package com.ug.ug_inventory_management.services;
 
 import com.ug.ug_inventory_management.common.dtos.*;
+import com.ug.ug_inventory_management.enums.FieldType;
 import com.ug.ug_inventory_management.models.*;
 import com.ug.ug_inventory_management.repositories.*;
 import jakarta.transaction.Transactional;
