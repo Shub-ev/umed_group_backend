@@ -27,8 +27,10 @@ public class TemplateService {
         Template template = new Template();
         template.setTemplateName(request.getTemplateName());
         templateRepo.save(template);
+        System.out.println("Fields: " + request.getFields());
 
         for(FieldRequest f : request.getFields()) {
+            System.out.println(f);
 
             TemplateField field = new TemplateField();
             field.setTemplateId(template.getId());

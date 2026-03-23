@@ -64,10 +64,10 @@ public class SecurityConfig {
                         .requestMatchers("/employee/**").permitAll()
                         .requestMatchers("/hkfu/**").permitAll()
                         .anyRequest().authenticated()
-                )
+                );
 
                 // 🔥 ADD THIS LINE
-                .addFilterBefore(new JwtFilter(), UsernamePasswordAuthenticationFilter.class);
+//                .addFilterBefore(new JwtFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
