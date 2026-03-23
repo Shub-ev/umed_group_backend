@@ -1,8 +1,13 @@
 package com.ug.ug_inventory_management.controllers;
 
 import com.ug.ug_inventory_management.common.dtos.TemplateRequest;
+import com.ug.ug_inventory_management.models.Template;
 import com.ug.ug_inventory_management.services.TemplateService;
+
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/templates")
@@ -15,8 +20,13 @@ public class TemplateController {
     }
 
     @PostMapping
-    public String createTemplate(@RequestBody TemplateRequest request) {
+    public Map<String, String> createTemplate(@RequestBody TemplateRequest request) {
         service.createTemplate(request);
-        return "Template Created";
+        return Map.of("message", "Template Created");
+    }
+
+    @GetMapping
+    public List<Template> getAllTemplates() {
+        return service.getAllTemplates();
     }
 }
