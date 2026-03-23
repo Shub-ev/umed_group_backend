@@ -1,10 +1,19 @@
 package com.ug.ug_inventory_management.common.dtos;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.time.LocalDate;
 
+@Schema(description = "DTO for responding employee data as response")
 public class EmployeeDTO {
+
+    @Schema(description = "Employee ID")
     private Long eid;
+
+    @Schema(description = "Employee working unit name")
     private String unit_name;
+
+    @Schema(description = "Employee allocation data")
     private LocalDate allocation;
 
     public EmployeeDTO(Long eid, String unit_name, LocalDate allocation) {
