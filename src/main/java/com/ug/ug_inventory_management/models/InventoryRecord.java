@@ -17,31 +17,33 @@ public class InventoryRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long template_id;
+    @ManyToOne
+    @JoinColumn(name = "template_id")
+    private Template template;
 
-    private String unit_name;
+    private String unitName;
 
-    @OneToMany(mappedBy = "inventory_record", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "inventoryRecord", cascade = CascadeType.ALL)
     private List<InventoryValue> values;
 
     public InventoryRecord() {
     }
 
-    public InventoryRecord(Long template_id, String unit_name) {
-        this.template_id = template_id;
-        this.unit_name = unit_name;
+    public InventoryRecord(Template template, String unitName) {
+        this.template = template;
+        this.unitName = unitName;
     }
 
     // Getters
     public Long getId() { return id; }
 
-    public Long getTemplateId() { return template_id; }
+    public Template getTemplate() { return template; }
 
-    public String getUnitName() { return unit_name; }
+    public String getUnitName() { return unitName; }
 
 
     // Setters
-    public void setTemplateId(Long template_id) { this.template_id = template_id; }
+    public void setTemplate(Template template) { this.template = template; }
 
-    public void setUnitName(String unit_name) { this.unit_name = unit_name; }
+    public void setUnitName(String unitName) { this.unitName = unitName; }
 }
