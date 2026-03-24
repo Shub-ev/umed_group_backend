@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Map;
 
 @Schema(description = "DTO for creating inventory record")
-public class InventoryCreateRecordDTO {
+public class CreateInventoryRecordDTO {
 
     @Schema(description = "ID of template to which this record will belong")
     private Long templateId;
@@ -16,10 +16,10 @@ public class InventoryCreateRecordDTO {
     @Schema(description = "Map of values to be stored in this record")
     private Map<String, String> values;
 
-    public InventoryCreateRecordDTO() {
+    public CreateInventoryRecordDTO() {
     }
 
-    public InventoryCreateRecordDTO(Long templateId, String unitName, Map<String, String> values) {
+    public CreateInventoryRecordDTO(Long templateId, String unitName, Map<String, String> values) {
         this.templateId = templateId;
         this.unitName = unitName;
         this.values = values;
