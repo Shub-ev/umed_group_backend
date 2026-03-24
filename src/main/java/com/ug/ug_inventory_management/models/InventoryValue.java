@@ -42,8 +42,8 @@ public class InventoryValue {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "record")
-    private InventoryRecord inventory_record;
+    @JoinColumn(name = "record_id")
+    private InventoryRecord inventoryRecord;
 
     private Long fieldId;
 
@@ -53,8 +53,8 @@ public class InventoryValue {
     public InventoryValue() {
     }
 
-    public InventoryValue(InventoryRecord inventory_record, Long fieldId, String value) {
-        this.inventory_record = inventory_record;
+    public InventoryValue(InventoryRecord inventoryRecord, Long fieldId, String value) {
+        this.inventoryRecord = inventoryRecord;
         this.fieldId = fieldId;
         this.value = value;
     }
@@ -64,8 +64,8 @@ public class InventoryValue {
         return id;
     }
 
-    public InventoryRecord getRecordId() {
-        return inventory_record;
+    public InventoryRecord getInventoryRecord() {
+        return inventoryRecord;
     }
 
     public Long getFieldId() {
@@ -78,8 +78,8 @@ public class InventoryValue {
 
 
     // ✅ SETTERS
-    public void setRecordId(InventoryRecord inventory_record) {
-        this.inventory_record = inventory_record;
+    public void setInventoryRecord(InventoryRecord inventoryRecord) {
+        this.inventoryRecord = inventoryRecord;
     }
 
     public void setFieldId(Long fieldId) {
