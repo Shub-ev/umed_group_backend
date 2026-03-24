@@ -23,10 +23,13 @@ public class InventoryController {
 
     // ✅ GET INVENTORY (IMPORTANT)
     @GetMapping("/{templateId}/{unitId}")
-    public Object getInventory(
-            @PathVariable Long templateId,
-            @PathVariable String unitName)
-    {
-        return service.getInventory(templateId, unitName);
+    public List<Map<String, String>> getInventory(@PathVariable Long templateId,
+                                                  @PathVariable Long unitId) {
+        return service.getInventory(templateId, unitId);
+    }
+
+    @GetMapping("/summary/{templateId}")
+    public List<Map<String, String>> getSummary(@PathVariable Long templateId) {
+        return service.getInventorySummary(templateId);
     }
 }
