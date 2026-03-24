@@ -120,21 +120,21 @@ public class InventoryService {
                 ));
 
 
-        Map<Long, InventoryRecord> latestRecordPerUnit = new HashMap<>();
+        Map<String, InventoryRecord> latestRecordPerUnit = new HashMap<>();
 
         for (InventoryRecord record : records) {
-            Long unitId = record.getUnitId();
+            String unitName = record.getUnitName();
 
-            if (!latestRecordPerUnit.containsKey(unitId) ||
-                    record.getId() > latestRecordPerUnit.get(unitId).getId()) {
-                latestRecordPerUnit.put(unitId, record);
+            if (!latestRecordPerUnit.containsKey(unitName) ||
+                    record.getId() > latestRecordPerUnit.get(unitName).getId()) {
+                latestRecordPerUnit.put(unitName, record);
             }
         }
 
         List<Map<String, String>> result = new ArrayList<>();
 
-        for (Map.Entry<Long, InventoryRecord> entry : latestRecordPerUnit.entrySet()) {
-            Long unitId = entry.getKey();
+        for (Map.Entry<String, InventoryRecord> entry : latestRecordPerUnit.entrySet()) {
+            String unitId = entry.getKey();
             InventoryRecord record = entry.getValue();
 
             List<InventoryValue> values =
@@ -187,7 +187,7 @@ public class InventoryService {
             Map<String, String> row = new LinkedHashMap<>();
 
             // ✅ ADD UNIT INFO (VERY IMPORTANT)
-            row.put("unitId", String.valueOf(record.getUnitId()));
+            row.put("unitName", String.valueOf(record.getUnitName()));
 
             for (TemplateField field : fields) {
                 row.put(

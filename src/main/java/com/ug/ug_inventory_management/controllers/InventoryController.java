@@ -4,6 +4,9 @@ import com.ug.ug_inventory_management.services.InventoryService;
 import com.ug.ug_inventory_management.common.dtos.CreateInventoryRecordDTO;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/inventory")
 public class InventoryController {
@@ -24,8 +27,8 @@ public class InventoryController {
     // ✅ GET INVENTORY (IMPORTANT)
     @GetMapping("/{templateId}/{unitId}")
     public List<Map<String, String>> getInventory(@PathVariable Long templateId,
-                                                  @PathVariable Long unitId) {
-        return service.getInventory(templateId, unitId);
+                                                  @PathVariable String unitName) {
+        return service.getInventory(templateId, unitName);
     }
 
     @GetMapping("/summary/{templateId}")
