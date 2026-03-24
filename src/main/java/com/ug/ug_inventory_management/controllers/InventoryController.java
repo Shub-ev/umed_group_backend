@@ -25,12 +25,14 @@ public class InventoryController {
     }
 
     // ✅ GET INVENTORY (IMPORTANT)
-    @GetMapping("/{templateId}/{unitId}")
+    @GetMapping("/{templateId}/{unitName}")
     public List<Map<String, String>> getInventory(@PathVariable Long templateId,
                                                   @PathVariable String unitName) {
         return service.getInventory(templateId, unitName);
     }
 
+
+    // #### Why {summary} name???
     @GetMapping("/summary/{templateId}")
     public List<Map<String, String>> getSummary(@PathVariable Long templateId) {
         return service.getInventorySummary(templateId);
