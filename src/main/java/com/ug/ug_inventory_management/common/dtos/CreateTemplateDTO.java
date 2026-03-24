@@ -1,4 +1,5 @@
 package com.ug.ug_inventory_management.common.dtos;
+import com.ug.ug_inventory_management.utils.TemplateField;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
@@ -10,14 +11,14 @@ public class CreateTemplateDTO {
     private String templateName;
 
     @Schema(description = "List of fields to add into the template")
-    private List<FieldRequest> fields;
+    private List<TemplateField> templateFields;
 
     public CreateTemplateDTO() {
     }
 
-    public CreateTemplateDTO(String templateName, List<FieldRequest> fields) {
+    public CreateTemplateDTO(String templateName, List<TemplateField> templateFields) {
         this.templateName = templateName;
-        this.fields = fields;
+        this.templateFields = templateFields;
     }
 
 
@@ -26,8 +27,8 @@ public class CreateTemplateDTO {
         return templateName;
     }
 
-    public List<FieldRequest> getFields() {
-        return fields;
+    public List<TemplateField> getFields() {
+        return templateFields;
     }
 
 
@@ -36,7 +37,7 @@ public class CreateTemplateDTO {
         this.templateName = templateName;
     }
 
-    public void setFields(List<FieldRequest> fields) {
-        this.fields = fields;
+    public void setFields(List<TemplateField> templateFields) {
+        this.templateFields = templateFields;
     }
 }
