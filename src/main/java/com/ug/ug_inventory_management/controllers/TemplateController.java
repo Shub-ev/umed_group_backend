@@ -1,6 +1,6 @@
 package com.ug.ug_inventory_management.controllers;
 
-import com.ug.ug_inventory_management.common.dtos.TemplateRequest;
+import com.ug.ug_inventory_management.common.dtos.CreateTemplateDTO;
 import com.ug.ug_inventory_management.models.Template;
 import com.ug.ug_inventory_management.services.TemplateService;
 
@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/templates")
+@RequestMapping("/templates")
 public class TemplateController {
 
     private final TemplateService service;
@@ -20,7 +20,7 @@ public class TemplateController {
     }
 
     @PostMapping
-    public Map<String, String> createTemplate(@RequestBody TemplateRequest request) {
+    public Map<String, String> createTemplate(@RequestBody CreateTemplateDTO request) {
         service.createTemplate(request);
         return Map.of("message", "Template Created");
     }
