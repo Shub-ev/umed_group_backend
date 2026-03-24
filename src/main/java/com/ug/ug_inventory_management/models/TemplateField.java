@@ -16,10 +16,14 @@ public class TemplateField {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long templateId;
+    @ManyToOne
+    @JoinColumn(name = "template_id")
+    private Template template;
 
+    @Column(nullable = false)
     private String fieldName;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private FieldType fieldType;
 
@@ -27,21 +31,24 @@ public class TemplateField {
     public TemplateField() {
     }
 
-    public TemplateField(Long templateId, String fieldName, FieldType fieldType) {
-        this.templateId = templateId;
+    public TemplateField(Template template, String fieldName, FieldType fieldType) {
+        this.template = template;
         this.fieldName = fieldName;
         this.fieldType = fieldType;
     }
 
+    // Getters
     public Long getId() { return id; }
 
-    public Long getTemplateId() { return templateId; }
+    public Template getTemplate() { return template; }
 
     public String getFieldName() { return fieldName; }
 
     public FieldType getFieldType() { return fieldType; }
 
-    public void setTemplateId(Long templateId) { this.templateId = templateId; }
+
+    // Setters
+    public void setTemplate(Template template) { this.template = template; }
 
     public void setFieldName(String fieldName) { this.fieldName = fieldName; }
 
