@@ -82,7 +82,7 @@
 
 package com.ug.ug_inventory_management.services;
 
-import com.ug.ug_inventory_management.common.dtos.InventoryRequest;
+import com.ug.ug_inventory_management.common.dtos.CreateInventoryRecordDTO;
 import com.ug.ug_inventory_management.models.InventoryRecord;
 import com.ug.ug_inventory_management.models.InventoryValue;
 import com.ug.ug_inventory_management.models.TemplateField;
@@ -91,6 +91,7 @@ import com.ug.ug_inventory_management.repositories.InventoryValueRepository;
 import com.ug.ug_inventory_management.repositories.TemplateFieldRepository;
 
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -112,11 +113,11 @@ public class InventoryService {
 
     // ✅ SAVE INVENTORY (CREATE)
     @Transactional
-    public void saveRecord(InventoryRequest request) {
+    public void saveRecord(@NotNull CreateInventoryRecordDTO request) {
 
         InventoryRecord record = new InventoryRecord();
         record.setTemplateId(request.getTemplateId());
-        record.setUnitId(request.getUnitId());
+        record.setUnitName(request.getUnitName());
         recordRepo.save(record);
 
         List<TemplateField> fields =
@@ -134,7 +135,7 @@ public class InventoryService {
             }
 
             InventoryValue v = new InventoryValue();
-            v.setRecordId(record.getId());
+            v.setRecordId(record);
             v.setFieldId(field.getId());
             v.setValue(value);
 
@@ -143,10 +144,10 @@ public class InventoryService {
     }
 
     // ✅ FETCH INVENTORY (DYNAMIC TABLE)
-    public List<Map<String, String>> getInventory(Long templateId, Long unitId) {
+    public List<Map<String, String>> getInventory(@NotNull Long templateId,@NotNull String unitName) {
 
         List<InventoryRecord> records =
-                recordRepo.findByTemplateIdAndUnitId(templateId, unitId);
+                recordRepo.findByTemplateIdAndUnitName(templateId, unitName);
 
         List<TemplateField> fields =
                 fieldRepo.findByTemplateId(templateId);
