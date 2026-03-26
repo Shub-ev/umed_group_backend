@@ -3,9 +3,8 @@ package com.ug.ug_inventory_management.controllers;
 import com.ug.ug_inventory_management.common.dtos.TemplateRequest;
 import com.ug.ug_inventory_management.models.Template;
 import com.ug.ug_inventory_management.services.TemplateService;
-
 import org.springframework.web.bind.annotation.*;
-
+import com.ug.ug_inventory_management.models.TemplateField;
 import java.util.List;
 import java.util.Map;
 
@@ -28,5 +27,10 @@ public class TemplateController {
     @GetMapping
     public List<Template> getAllTemplates() {
         return service.getAllTemplates();
+    }
+
+    @GetMapping("/{templateId}/fields")
+    public List<TemplateField> getFieldsByTemplateId(@PathVariable Long templateId) {
+        return service.getFieldsByTemplateId(templateId);
     }
 }

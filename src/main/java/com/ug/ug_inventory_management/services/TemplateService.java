@@ -48,4 +48,8 @@ public class TemplateService {
     public List<Template> getAllTemplates() {
         return templateRepo.findAll();
     }
+
+    public List<TemplateField> getFieldsByTemplateId(Long templateId) {
+        return fieldRepo.findByTemplateId(templateId);
+    }
 }

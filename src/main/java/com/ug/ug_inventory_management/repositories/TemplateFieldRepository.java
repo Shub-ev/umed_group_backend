@@ -8,3 +8,4 @@ import java.util.List;
 public interface TemplateFieldRepository extends JpaRepository<TemplateField, Long> {
     List<TemplateField> findByTemplateId(Long templateId);
 }
+
