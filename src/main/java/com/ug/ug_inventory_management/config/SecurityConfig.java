@@ -60,6 +60,8 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/templates/**").permitAll()
+                        .requestMatchers("/api/inventory/**").permitAll()
                         .requestMatchers("/api/**").permitAll()
                         .requestMatchers("/employee/**").permitAll()
                         .requestMatchers("/hkfu/**").permitAll()
