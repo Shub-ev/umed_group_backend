@@ -1,15 +1,16 @@
-
-
 package com.ug.ug_inventory_management.services;
 
-import com.ug.ug_inventory_management.common.dtos.InventoryRequest;
+import com.ug.ug_inventory_management.common.dtos.CreateInventoryRecordDTO;
 import com.ug.ug_inventory_management.models.InventoryRecord;
 import com.ug.ug_inventory_management.models.InventoryValue;
+import com.ug.ug_inventory_management.models.Template;
 import com.ug.ug_inventory_management.models.TemplateField;
 import com.ug.ug_inventory_management.repositories.InventoryRecordRepository;
 import com.ug.ug_inventory_management.repositories.InventoryValueRepository;
 import com.ug.ug_inventory_management.repositories.TemplateFieldRepository;
+import com.ug.ug_inventory_management.repositories.TemplateRepository;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -18,56 +19,77 @@ import java.util.stream.Collectors;
 @Service
 public class InventoryService {
 
-    private final InventoryRecordRepository recordRepo;
-    private final InventoryValueRepository valueRepo;
-    private final TemplateFieldRepository fieldRepo;
+    private final InventoryRecordRepository inventoryRecordRepository;
+    private final InventoryValueRepository inventoryValueRepository;
+    private final TemplateFieldRepository templateFieldRepository;
+    private final TemplateRepository templateRepository;
 
-    public InventoryService(InventoryRecordRepository r,
-                            InventoryValueRepository v,
-                            TemplateFieldRepository f) {
-        this.recordRepo = r;
-        this.valueRepo = v;
-        this.fieldRepo = f;
+    public InventoryService(InventoryRecordRepository inventoryRecordRepository,
+                            InventoryValueRepository inventoryValueRepository,
+                            TemplateFieldRepository templateFieldRepository,
+                            TemplateRepository templateRepository) {
+        this.inventoryRecordRepository = inventoryRecordRepository;
+        this.inventoryValueRepository = inventoryValueRepository;
+        this.templateFieldRepository = templateFieldRepository;
+        this.templateRepository = templateRepository;
     }
 
+    /*  #### Correct this comment
+     * saveRecord(CreateInventoryRecordDTO):
+     * Creates record and save it to database.
+     *
+     * @param CreateInventoryRecordDTO:
+     * This DTO provides,
+     * 1. templateId
+     * 2. unitName
+     * 3. values
+     * To the service method & method saves this data into InventoryRecord and InventoryValue
+     */
     @Transactional
-    public void saveRecord(InventoryRequest request) {
-
-        InventoryRecord record = new InventoryRecord();
-        record.setTemplateId(request.getTemplateId());
-        record.setUnitId(request.getUnitId());
-        recordRepo.save(record);
+    public void saveRecord(@NotNull CreateInventoryRecordDTO request) {
+        // A. Store record
+        Template template = templateRepository.findById(request.getTemplateId())
+                .orElseThrow(() -> new RuntimeException("Template not found"));
+        InventoryRecord inventoryRecord = new InventoryRecord(
+                    template,
+                    request.getUnitName()
+                );
+        inventoryRecordRepository.save(inventoryRecord);
 
         List<TemplateField> fields =
-                fieldRepo.findByTemplateId(request.getTemplateId());
+                templateFieldRepository.findByTemplate_Id(request.getTemplateId());
 
         for (TemplateField field : fields) {
-
             String value = request.getValues().get(field.getFieldName());
 
+            // ✅ VALIDATION (important)
             if (value == null) {
+                // #### Handle exception properly
                 throw new RuntimeException(
                         "Missing value for field: " + field.getFieldName()
                 );
             }
 
-            InventoryValue v = new InventoryValue();
-            v.setRecordId(record.getId());
-            v.setFieldId(field.getId());
-            v.setValue(value);
-
-            valueRepo.save(v);
+            // B. Store field to InventoryValue table
+            InventoryValue inventoryValue = new InventoryValue(
+                    inventoryRecord,
+                    field.getId(),
+                    value
+                );
+            inventoryValueRepository.save(inventoryValue);
         }
     }
 
+    // ✅ FETCH INVENTORY (DYNAMIC TABLE)
+    public List<Map<String, String>> getInventory(@NotNull Long templateId, @NotNull String unitName) {
 
-    public List<Map<String, String>> getInventory(Long templateId, Long unitId) {
+//        List<InventoryRecord> records =
+//                inventoryRecordRepository.findByTemplateIdAndUnitName(templateId, unitName);
 
-        List<InventoryRecord> records =
-                recordRepo.findByTemplateIdAndUnitId(templateId, unitId);
+        List<InventoryRecord> records = inventoryRecordRepository.findByTemplate_Id(templateId);
 
         List<TemplateField> fields =
-                fieldRepo.findByTemplateId(templateId);
+                templateFieldRepository.findByTemplate_Id(templateId);
 
         Map<Long, String> fieldMap = fields.stream()
                 .collect(Collectors.toMap(
@@ -80,7 +102,7 @@ public class InventoryService {
         for (InventoryRecord record : records) {
 
             List<InventoryValue> values =
-                    valueRepo.findByRecordId(record.getId());
+                    inventoryValueRepository.findByInventoryRecord_Id(record.getId());
 
             Map<String, String> row = new LinkedHashMap<>();
 
@@ -105,10 +127,10 @@ public class InventoryService {
     public List<Map<String, String>> getUnitWiseSummary(Long templateId) {
 
         List<InventoryRecord> records =
-                recordRepo.findByTemplateId(templateId);
+                inventoryRecordRepository.findByTemplate_Id(templateId);
 
         List<TemplateField> fields =
-                fieldRepo.findByTemplateId(templateId);
+                templateFieldRepository.findByTemplate_Id(templateId);
 
         Map<Long, String> fieldMap = fields.stream()
                 .collect(Collectors.toMap(
@@ -117,25 +139,25 @@ public class InventoryService {
                 ));
 
 
-        Map<Long, InventoryRecord> latestRecordPerUnit = new HashMap<>();
+        Map<String, InventoryRecord> latestRecordPerUnit = new HashMap<>();
 
         for (InventoryRecord record : records) {
-            Long unitId = record.getUnitId();
+            String unitName = record.getUnitName();
 
-            if (!latestRecordPerUnit.containsKey(unitId) ||
-                    record.getId() > latestRecordPerUnit.get(unitId).getId()) {
-                latestRecordPerUnit.put(unitId, record);
+            if (!latestRecordPerUnit.containsKey(unitName) ||
+                    record.getId() > latestRecordPerUnit.get(unitName).getId()) {
+                latestRecordPerUnit.put(unitName, record);
             }
         }
 
         List<Map<String, String>> result = new ArrayList<>();
 
-        for (Map.Entry<Long, InventoryRecord> entry : latestRecordPerUnit.entrySet()) {
-            Long unitId = entry.getKey();
+        for (Map.Entry<String, InventoryRecord> entry : latestRecordPerUnit.entrySet()) {
+            String unitId = entry.getKey();
             InventoryRecord record = entry.getValue();
 
             List<InventoryValue> values =
-                    valueRepo.findByRecordId(record.getId());
+                    inventoryValueRepository.findByInventoryRecord_Id(record.getId());
 
             Map<String, String> row = new LinkedHashMap<>();
             row.put("unitId", String.valueOf(unitId));
@@ -163,18 +185,19 @@ public class InventoryService {
 
         // ❗ REMOVE unitId filter
         List<InventoryRecord> records =
-                recordRepo.findByTemplateId(templateId);
+                inventoryRecordRepository.findByTemplate_Id(templateId);
 
         List<TemplateField> fields =
-                fieldRepo.findByTemplateId(templateId);
+                templateFieldRepository.findByTemplate_Id(templateId);
 
         List<Map<String, String>> result = new ArrayList<>();
 
         for (InventoryRecord record : records) {
 
             List<InventoryValue> values =
-                    valueRepo.findByRecordId(record.getId());
+                    inventoryValueRepository.findByInventoryRecord_Id(record.getId());
 
+            // 🔥 OPTIMIZATION (important)
             Map<Long, String> valueMap = new HashMap<>();
             for (InventoryValue val : values) {
                 valueMap.put(val.getFieldId(), val.getValue());
@@ -183,7 +206,7 @@ public class InventoryService {
             Map<String, String> row = new LinkedHashMap<>();
 
             // ✅ ADD UNIT INFO (VERY IMPORTANT)
-            row.put("unitId", String.valueOf(record.getUnitId()));
+            row.put("unitName", String.valueOf(record.getUnitName()));
 
             for (TemplateField field : fields) {
                 row.put(

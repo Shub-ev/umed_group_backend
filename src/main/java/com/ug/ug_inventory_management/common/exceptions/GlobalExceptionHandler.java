@@ -7,6 +7,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
 
+/*
+ * GlobalExceptionHandler
+ * We use GlobalExceptionHandler to handle exceptions instead of adding try/catch
+ * at every possible place which could throw exception.
+ *
+ * @RestControllerAdvice:
+ * This annotation is specialization of @Component annotation.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
