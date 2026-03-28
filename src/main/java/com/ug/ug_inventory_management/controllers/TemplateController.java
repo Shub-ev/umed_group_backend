@@ -12,25 +12,25 @@ import java.util.Map;
 @RequestMapping("/templates")
 public class TemplateController {
 
-    private final TemplateService service;
+    private final TemplateService templateService;
 
     public TemplateController(TemplateService service) {
-        this.service = service;
+        this.templateService = service;
     }
 
     @PostMapping
     public Map<String, String> createTemplate(@RequestBody CreateTemplateDTO request) {
-        service.createTemplate(request);
+        templateService.createTemplate(request);
         return Map.of("message", "Template Created");
     }
 
     @GetMapping
     public List<Template> getAllTemplates() {
-        return service.getAllTemplates();
+        return templateService.getAllTemplates();
     }
 
     @GetMapping("/{templateId}/fields")
     public List<TemplateField> getFieldsByTemplateId(@PathVariable Long templateId) {
-        return service.getFieldsByTemplateId(templateId);
+        return templateService.getFieldsByTemplateId(templateId);
     }
 }
