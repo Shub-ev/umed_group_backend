@@ -41,4 +41,15 @@ public class Template {
     public void setTemplateName(String templateName) {
         this.templateName = templateName;
     }
+
+
+    // toString
+    @Override
+    public String toString() {
+        return "Template{" +
+                "id=" + id +
+                ", templateName='" + templateName + '\'' +
+                ", fields=" + fields +
+                '}';
+    }
 }
