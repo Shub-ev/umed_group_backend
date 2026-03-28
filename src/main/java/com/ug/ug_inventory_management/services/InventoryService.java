@@ -223,15 +223,6 @@ public class InventoryService {
         return result;
     }
 
-
-
-
-
-
-
-
-
-
     public ResponseEntity<?> updateInventory(InventoryUpdateRequest req, String role) {
 
         if (!"EMPLOYEE".equalsIgnoreCase(role)) {
