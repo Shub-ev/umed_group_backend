@@ -1,10 +1,10 @@
 package com.ug.ug_inventory_management.services;
 
-import com.ug.ug_inventory_management.common.dtos.*;
-import com.ug.ug_inventory_management.enums.FieldType;
-import com.ug.ug_inventory_management.models.*;
-import com.ug.ug_inventory_management.repositories.*;
-import com.ug.ug_inventory_management.utils.TemplateField;
+import com.ug.ug_inventory_management.common.dtos.CreateTemplateDTO;
+import com.ug.ug_inventory_management.models.Template;
+import com.ug.ug_inventory_management.models.TemplateField;
+import com.ug.ug_inventory_management.repositories.TemplateFieldRepository;
+import com.ug.ug_inventory_management.repositories.TemplateRepository;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
@@ -14,43 +14,42 @@ import java.util.List; // ✅ ADD THIS
 @Service
 public class TemplateService {
 
-    private final TemplateRepository templateRepo;
-    private final TemplateFieldRepository fieldRepo;
+    private final TemplateRepository templateRepository;
+    private final TemplateFieldRepository templateFieldRepository;
 
-    public TemplateService(TemplateRepository t, TemplateFieldRepository f) {
-        this.templateRepo = t;
-        this.fieldRepo = f;
+    public TemplateService(TemplateRepository templateRepository, TemplateFieldRepository templateFieldRepository) {
+        this.templateRepository = templateRepository;
+        this.templateFieldRepository = templateFieldRepository;
     }
 
     @Transactional
     public void createTemplate(@NotNull CreateTemplateDTO request) {
-
-        if(templateRepo.existsByTemplateName(request.getTemplateName())) {
+        if(templateRepository.existsByTemplateName(request.getTemplateName())) {
             throw new RuntimeException("Template already exists");
         }
 
         Template template = new Template(request.getTemplateName());
-        templateRepo.save(template);
+        templateRepository.save(template);
 
         System.out.println("Fields: " + request.getFields());
 
-        for(TemplateField f : request.getFields()) {
-            System.out.println(f);
+        for(TemplateField field : request.getFields()) {
+            // ## We have templateFeild object from client request then why to create new!
+//            com.ug.ug_inventory_management.models.TemplateField templateField = new com.ug.ug_inventory_management.models.TemplateField();
+//            templateField.setTemplate(template);
+//            templateField.setFieldName(field.getFieldName());
+//            templateField.setFieldType(field.getFieldType());
+//            field.setTemplate(template);
 
-            com.ug.ug_inventory_management.models.TemplateField templateField = new com.ug.ug_inventory_management.models.TemplateField();
-            templateField.setTemplate(template);
-            templateField.setFieldName(f.getName());
-            templateField.setFieldType(FieldType.valueOf(f.getType()));
-
-            fieldRepo.save(templateField);
+            templateFieldRepository.save(field);
         }
     }
 
     public List<Template> getAllTemplates() {
-        return templateRepo.findAll();
+        return templateRepository.findAll();
     }
 
-    public List<TemplateField> getFieldsByTemplateId(Long templateId) {
-        return fieldRepo.findByTemplateId(templateId);
+    public List<TemplateField> getFieldsByTemplateId(@NotNull Long templateId) {
+        return templateFieldRepository.findByTemplate_Id(templateId);
     }
 }
