@@ -9,6 +9,8 @@ import com.ug.ug_inventory_management.models.TemplateField;
 import com.ug.ug_inventory_management.repositories.InventoryRecordRepository;
 import com.ug.ug_inventory_management.repositories.InventoryValueRepository;
 import com.ug.ug_inventory_management.repositories.TemplateFieldRepository;
+import com.ug.ug_inventory_management.common.dtos.InventoryUpdateRequest;
+import org.springframework.http.ResponseEntity;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +23,7 @@ public class InventoryService {
     private final InventoryRecordRepository recordRepo;
     private final InventoryValueRepository valueRepo;
     private final TemplateFieldRepository fieldRepo;
+
 
     public InventoryService(InventoryRecordRepository r,
                             InventoryValueRepository v,
@@ -197,4 +200,88 @@ public class InventoryService {
 
         return result;
     }
-}
+
+
+
+
+
+
+
+
+
+
+    public ResponseEntity<?> updateInventory(InventoryUpdateRequest req, String role) {
+
+        if (!"EMPLOYEE".equalsIgnoreCase(role)) {
+            return ResponseEntity.status(403).body("Only employees can update");
+        }
+
+        // 🔥 Fetch fields dynamically
+        List<InventoryValue> inwardList = valueRepo.findFieldByName(
+                req.getTemplateId(), req.getUnitId(), "inward");
+
+        List<InventoryValue> outwardList = valueRepo.findFieldByName(
+                req.getTemplateId(), req.getUnitId(), "outward");
+
+        List<InventoryValue> stockList = valueRepo.findFieldByName(
+                req.getTemplateId(), req.getUnitId(), "stock");
+
+        if (inwardList.isEmpty() || outwardList.isEmpty() || stockList.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body("Template must contain inward, outward and stock");
+        }
+
+        InventoryValue inwardField = inwardList.get(0);
+        InventoryValue outwardField = outwardList.get(0);
+        InventoryValue stockField = stockList.get(0);
+
+        // ✅ Validate template structure
+        if (inwardField == null || outwardField == null || stockField == null) {
+            return ResponseEntity.badRequest()
+                    .body("Template must contain inward, outward and stock");
+        }
+
+        System.out.println("INWARD FIELD: " + inwardField);
+        System.out.println("OUTWARD FIELD: " + outwardField);
+        System.out.println("STOCK FIELD: " + stockField);
+
+        int inward = Integer.parseInt(
+                inwardField.getValue() == null ? "0" : inwardField.getValue().trim()
+        );
+
+        int outward = Integer.parseInt(
+                outwardField.getValue() == null ? "0" : outwardField.getValue().trim()
+        );
+
+        int qty = req.getChangeQty();
+
+        // 🔥 Update inward/outward
+        if ("INWARD".equalsIgnoreCase(req.getAction())) {
+            inward += qty;
+            inwardField.setValue(String.valueOf(inward));
+        }
+        else if ("OUTWARD".equalsIgnoreCase(req.getAction())) {
+
+            if ((inward - outward) < qty) {
+                return ResponseEntity.badRequest().body("Not enough stock");
+            }
+
+            outward += qty;
+            outwardField.setValue(String.valueOf(outward));
+        }
+
+        // 🔥 ALWAYS calculate stock
+        int stock = inward - outward;
+        stockField.setValue(String.valueOf(stock));
+
+        // 🔥 Save all
+        valueRepo.save(inwardField);
+        valueRepo.save(outwardField);
+        valueRepo.save(stockField);
+
+        return ResponseEntity.ok("Stock updated successfully");
+    }
+    }
+
+
+
