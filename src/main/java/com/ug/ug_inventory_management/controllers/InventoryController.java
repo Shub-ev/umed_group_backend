@@ -2,7 +2,6 @@ package com.ug.ug_inventory_management.controllers;
 
 import com.ug.ug_inventory_management.services.InventoryService;
 import com.ug.ug_inventory_management.common.dtos.CreateInventoryRecordDTO;
-import com.ug.ug_inventory_management.common.dtos.InventoryRequest;
 import com.ug.ug_inventory_management.common.dtos.InventoryUpdateRequest;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
@@ -14,16 +13,16 @@ import java.util.Map;
 @RequestMapping("/inventory")
 public class InventoryController {
 
-    private final InventoryService service;
+    private final InventoryService inventoryService;
 
-    public InventoryController(InventoryService service) {
-        this.service = service;
+    public InventoryController(InventoryService inventoryService) {
+        this.inventoryService = inventoryService;
     }
 
     // ✅ CREATE INVENTORY
     @PostMapping
     public String addInventory(@RequestBody CreateInventoryRecordDTO request) {
-        service.saveRecord(request);
+        inventoryService.saveRecord(request);
         return "Inventory Saved";
     }
 
@@ -31,24 +30,19 @@ public class InventoryController {
     @GetMapping("/{templateId}/{unitName}")
     public List<Map<String, String>> getInventory(@PathVariable Long templateId,
                                                   @PathVariable String unitName) {
-        return service.getInventory(templateId, unitName);
+        return inventoryService.getInventory(templateId, unitName);
     }
-
 
     // #### Why {summary} name???
     @GetMapping("/summary/{templateId}")
     public List<Map<String, String>> getSummary(@PathVariable Long templateId) {
-        return service.getInventorySummary(templateId);
+        return inventoryService.getInventorySummary(templateId);
     }
 
-
-
-        @PostMapping("/update")
-        public ResponseEntity<?> updateInventory(
-                @RequestBody InventoryUpdateRequest request,
-                @RequestHeader("role") String role
-        ) {
-            return service.updateInventory(request, role);
-        }
-
+    @PostMapping("/update")
+    public ResponseEntity<?> updateInventory(
+            @RequestBody InventoryUpdateRequest request,
+            @RequestHeader("role") String role) {
+        return inventoryService.updateInventory(request, role);
+    }
 }
