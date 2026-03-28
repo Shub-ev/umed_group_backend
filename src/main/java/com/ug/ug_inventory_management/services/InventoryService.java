@@ -239,13 +239,13 @@ public class InventoryService {
         }
 
         // 🔥 Fetch fields dynamically
-        List<InventoryValue> inwardList = valueRepo.findFieldByName(
+        List<InventoryValue> inwardList = inventoryValueRepository.findFieldByName(
                 req.getTemplateId(), req.getUnitId(), "inward");
 
-        List<InventoryValue> outwardList = valueRepo.findFieldByName(
+        List<InventoryValue> outwardList = inventoryValueRepository.findFieldByName(
                 req.getTemplateId(), req.getUnitId(), "outward");
 
-        List<InventoryValue> stockList = valueRepo.findFieldByName(
+        List<InventoryValue> stockList = inventoryValueRepository.findFieldByName(
                 req.getTemplateId(), req.getUnitId(), "stock");
 
         if (inwardList.isEmpty() || outwardList.isEmpty() || stockList.isEmpty()) {
@@ -297,9 +297,9 @@ public class InventoryService {
         stockField.setValue(String.valueOf(stock));
 
         // 🔥 Save all
-        valueRepo.save(inwardField);
-        valueRepo.save(outwardField);
-        valueRepo.save(stockField);
+        inventoryValueRepository.save(inwardField);
+        inventoryValueRepository.save(outwardField);
+        inventoryValueRepository.save(stockField);
 
         return ResponseEntity.ok("Stock updated successfully");
     }
