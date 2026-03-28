@@ -1,5 +1,5 @@
 package com.ug.ug_inventory_management.common.dtos;
-import com.ug.ug_inventory_management.utils.TemplateField;
+import com.ug.ug_inventory_management.models.TemplateField;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
