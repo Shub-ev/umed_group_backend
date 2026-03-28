@@ -238,68 +238,68 @@ public class InventoryService {
             return ResponseEntity.status(403).body("Only employees can update");
         }
 
-        // 🔥 Fetch fields dynamically
-        List<InventoryValue> inwardList = inventoryValueRepository.findFieldByName(
-                req.getTemplateId(), req.getUnitId(), "inward");
+//        // 🔥 Fetch fields dynamically
+//        List<InventoryValue> inwardList = inventoryValueRepository.findFieldByName(
+//                req.getTemplateId(), req.getUnitId(), "inward");
+//
+//        List<InventoryValue> outwardList = inventoryValueRepository.findFieldByName(
+//                req.getTemplateId(), req.getUnitId(), "outward");
+//
+//        List<InventoryValue> stockList = inventoryValueRepository.findFieldByName(
+//                req.getTemplateId(), req.getUnitId(), "stock");
 
-        List<InventoryValue> outwardList = inventoryValueRepository.findFieldByName(
-                req.getTemplateId(), req.getUnitId(), "outward");
-
-        List<InventoryValue> stockList = inventoryValueRepository.findFieldByName(
-                req.getTemplateId(), req.getUnitId(), "stock");
-
-        if (inwardList.isEmpty() || outwardList.isEmpty() || stockList.isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body("Template must contain inward, outward and stock");
-        }
-
-        InventoryValue inwardField = inwardList.get(0);
-        InventoryValue outwardField = outwardList.get(0);
-        InventoryValue stockField = stockList.get(0);
-
-        // ✅ Validate template structure
-        if (inwardField == null || outwardField == null || stockField == null) {
-            return ResponseEntity.badRequest()
-                    .body("Template must contain inward, outward and stock");
-        }
-
-        System.out.println("INWARD FIELD: " + inwardField);
-        System.out.println("OUTWARD FIELD: " + outwardField);
-        System.out.println("STOCK FIELD: " + stockField);
-
-        int inward = Integer.parseInt(
-                inwardField.getValue() == null ? "0" : inwardField.getValue().trim()
-        );
-
-        int outward = Integer.parseInt(
-                outwardField.getValue() == null ? "0" : outwardField.getValue().trim()
-        );
-
-        int qty = req.getChangeQty();
-
-        // 🔥 Update inward/outward
-        if ("INWARD".equalsIgnoreCase(req.getAction())) {
-            inward += qty;
-            inwardField.setValue(String.valueOf(inward));
-        }
-        else if ("OUTWARD".equalsIgnoreCase(req.getAction())) {
-
-            if ((inward - outward) < qty) {
-                return ResponseEntity.badRequest().body("Not enough stock");
-            }
-
-            outward += qty;
-            outwardField.setValue(String.valueOf(outward));
-        }
-
-        // 🔥 ALWAYS calculate stock
-        int stock = inward - outward;
-        stockField.setValue(String.valueOf(stock));
-
-        // 🔥 Save all
-        inventoryValueRepository.save(inwardField);
-        inventoryValueRepository.save(outwardField);
-        inventoryValueRepository.save(stockField);
+//        if (inwardList.isEmpty() || outwardList.isEmpty() || stockList.isEmpty()) {
+//            return ResponseEntity.badRequest()
+//                    .body("Template must contain inward, outward and stock");
+//        }
+//
+//        InventoryValue inwardField = inwardList.get(0);
+//        InventoryValue outwardField = outwardList.get(0);
+//        InventoryValue stockField = stockList.get(0);
+//
+//        // ✅ Validate template structure
+//        if (inwardField == null || outwardField == null || stockField == null) {
+//            return ResponseEntity.badRequest()
+//                    .body("Template must contain inward, outward and stock");
+//        }
+//
+//        System.out.println("INWARD FIELD: " + inwardField);
+//        System.out.println("OUTWARD FIELD: " + outwardField);
+//        System.out.println("STOCK FIELD: " + stockField);
+//
+//        int inward = Integer.parseInt(
+//                inwardField.getValue() == null ? "0" : inwardField.getValue().trim()
+//        );
+//
+//        int outward = Integer.parseInt(
+//                outwardField.getValue() == null ? "0" : outwardField.getValue().trim()
+//        );
+//
+//        int qty = req.getChangeQty();
+//
+//        // 🔥 Update inward/outward
+//        if ("INWARD".equalsIgnoreCase(req.getAction())) {
+//            inward += qty;
+//            inwardField.setValue(String.valueOf(inward));
+//        }
+//        else if ("OUTWARD".equalsIgnoreCase(req.getAction())) {
+//
+//            if ((inward - outward) < qty) {
+//                return ResponseEntity.badRequest().body("Not enough stock");
+//            }
+//
+//            outward += qty;
+//            outwardField.setValue(String.valueOf(outward));
+//        }
+//
+//        // 🔥 ALWAYS calculate stock
+//        int stock = inward - outward;
+//        stockField.setValue(String.valueOf(stock));
+//
+//        // 🔥 Save all
+//        inventoryValueRepository.save(inwardField);
+//        inventoryValueRepository.save(outwardField);
+//        inventoryValueRepository.save(stockField);
 
         return ResponseEntity.ok("Stock updated successfully");
     }
