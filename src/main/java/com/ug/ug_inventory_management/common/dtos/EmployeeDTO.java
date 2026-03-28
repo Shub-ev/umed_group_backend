@@ -7,27 +7,27 @@ import java.time.LocalDate;
 @Schema(description = "DTO for responding employee data as response")
 public class EmployeeDTO {
 
-    @Schema(name="eid",description = "Employee ID")
-    private Long eid;
+    @Schema(description = "Employee ID")
+    private Long eId;
 
-    @Schema(name="unit_name",description = "Employee working unit name")
-    private String unit_name;
+    @Schema(description = "Employee working unit name")
+    private String unitName;
 
     @Schema(name="allocation",description = "Employee allocation data")
     private LocalDate allocation;
 
-    public EmployeeDTO(Long eid, String unit_name, LocalDate allocation) {
-        this.eid = eid;
-        this.unit_name = unit_name;
+    public EmployeeDTO(Long eId, String unitName, LocalDate allocation) {
+        this.eId = eId;
+        this.unitName = unitName;
         this.allocation = allocation;
     }
 
-    public Long getEid() {
-        return eid;
+    public Long getEId() {
+        return eId;
     }
 
-    public String getUnit_name() {
-        return unit_name;
+    public String getUnitName() {
+        return unitName;
     }
 
     public LocalDate getAllocation() {
@@ -36,7 +36,7 @@ public class EmployeeDTO {
 
     @Override
     public String toString() {
-        return "EID: " + this.eid + "\tUnit Name: " + this.unit_name + "\tAllocation: "
+        return "EId: " + this.eId + "\tUnit Name: " + this.unitName + "\tAllocation: "
                 + this.allocation;
     }
 }

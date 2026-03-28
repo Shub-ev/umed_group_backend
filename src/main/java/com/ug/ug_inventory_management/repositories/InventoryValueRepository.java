@@ -21,6 +21,7 @@ WHERE r.templateId = :templateId
     List<InventoryValue> findFieldByName(Long templateId, Long unitId, String fieldName);
 
 
+    List<InventoryValue> findByInventoryRecord_Id(Long recordId);
 }
 
 

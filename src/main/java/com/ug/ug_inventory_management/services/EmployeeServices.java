@@ -28,11 +28,11 @@ public class EmployeeServices {
     }
 
     public EmployeeDTO createEmployee(@NonNull Employee employee){
-        if(employee.getEid() == null){
+        if(employee.getEId() == null){
             throw new IllegalArgumentException("Employee Id cannot be blank");
         }
 
-        String trimmedUnit = employee.getUnit_name();
+        String trimmedUnit = employee.getUnitName();
         if(trimmedUnit == null || trimmedUnit.trim().isEmpty()){
             throw new IllegalArgumentException("Employee unit name cannot be blank");
         }
@@ -49,15 +49,15 @@ public class EmployeeServices {
         }
 
         // 4️⃣ Check duplicate employee
-        if(employeeRepository.existsById(employee.getEid())) {
-            throw new IllegalArgumentException("Employee already exists with id: " + employee.getEid());
+        if(employeeRepository.existsById(employee.getEId())) {
+            throw new IllegalArgumentException("Employee already exists with id: " + employee.getEId());
         }
 
         // 5️⃣ 🔐 Hash password BEFORE saving
         String hashedPassword = passwordEncoder.encode(trimmedPassword);
 
         // 6️⃣ Set cleaned & processed values
-        employee.setUnit_name(trimmedUnit);
+        employee.setUnitName(trimmedUnit);
         employee.setPassword(hashedPassword);
         employee.setAllocation(LocalDate.now());
 
@@ -65,15 +65,15 @@ public class EmployeeServices {
         Employee repoResponse = employeeRepository.save(employee);
 
         EmployeeDTO employeeDTO= new EmployeeDTO(
-                repoResponse.getEid(),
-                repoResponse.getUnit_name(),
+                repoResponse.getEId(),
+                repoResponse.getUnitName(),
                 repoResponse.getAllocation()
         );
         return employeeDTO;
     }
 
     public  EmployeeDTO loginEmployee(@NonNull Employee employee){
-        if(employee.getEid()==null){
+        if(employee.getEId()==null){
             throw new IllegalArgumentException("Employee Id can not be blank");
         }
         String rawPassword = employee.getPassword();
@@ -83,16 +83,16 @@ public class EmployeeServices {
         rawPassword = rawPassword.trim();
 
 
-        Employee foundEmployee = employeeRepository.findByEid(employee.getEid())
-                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with eid: " + employee.getEid()));
+        Employee foundEmployee = employeeRepository.findByEId(employee.getEId())
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with eid: " + employee.getEId()));
 
         // check the password
         if(!passwordEncoder.matches(rawPassword, foundEmployee.getPassword())) {
             throw new WrongPasswordException("Invalid credentials");
         }
         EmployeeDTO employeeDTO= new EmployeeDTO(
-                foundEmployee.getEid(),
-                foundEmployee.getUnit_name(),
+                foundEmployee.getEId(),
+                foundEmployee.getUnitName(),
                 foundEmployee.getAllocation()
         );
         return employeeDTO;
@@ -100,22 +100,22 @@ public class EmployeeServices {
 
     public EmployeeDTO updateEmployeeUnitName(@NonNull Employee employee) {
         // Check if admin input have required fields
-        if((employee.getEid() == null)) {
+        if((employee.getEId() == null)) {
             // return appropriate server response
             return null;
         } else if((employee.getPassword() == null) || (employee.getPassword().trim().isEmpty())) {
             // return appropriate server response
             return null;
         }
-        Employee foundEmployee = employeeRepository.findById(employee.getEid())
-                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with eid: " + employee.getEid()));
+        Employee foundEmployee = employeeRepository.findById(employee.getEId())
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with eid: " + employee.getEId()));
 
         // verify password before updating the admin entity
         if(foundEmployee.getPassword().equals(employee.getPassword())) {
-            foundEmployee.setUnit_name(employee.getUnit_name());
+            foundEmployee.setUnitName(employee.getUnitName());
             Employee saveRes = employeeRepository.save(foundEmployee);
             if (saveRes != null) {
-                EmployeeDTO employeeDTO = new EmployeeDTO(saveRes.getEid(), saveRes.getUnit_name(),saveRes.getAllocation());
+                EmployeeDTO employeeDTO = new EmployeeDTO(saveRes.getEId(), saveRes.getUnitName(),saveRes.getAllocation());
                 return employeeDTO;
             } else {
                 return null;
@@ -157,7 +157,7 @@ public class EmployeeServices {
             foundEmployee.setPassword(employeepass.getPasswordNew());
             Employee saveRes = employeeRepository.save(foundEmployee);
             if (saveRes != null) {
-                EmployeeDTO employeeDTO = new EmployeeDTO(saveRes.getEid(), saveRes.getPassword(),saveRes.getAllocation());
+                EmployeeDTO employeeDTO = new EmployeeDTO(saveRes.getEId(), saveRes.getPassword(),saveRes.getAllocation());
                 return employeeDTO;
             } else {
                 return null;
@@ -173,7 +173,7 @@ public class EmployeeServices {
 
     public EmployeeDTO convertDTO(Employee employee) {
         return new EmployeeDTO(
-                employee.getEid(), employee.getUnit_name(), employee.getAllocation()
+                employee.getEId(), employee.getUnitName(), employee.getAllocation()
         );
     }
 

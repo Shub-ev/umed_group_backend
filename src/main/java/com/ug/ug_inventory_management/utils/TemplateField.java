@@ -1,6 +1,6 @@
-package com.ug.ug_inventory_management.common.dtos;
+package com.ug.ug_inventory_management.utils;
 
-public class FieldRequest {
+public class TemplateField {
 
     private String name;
     private String type;

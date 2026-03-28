@@ -2,6 +2,8 @@ package com.ug.ug_inventory_management.models;
 
 import jakarta.persistence.*;
 
+import java.util.List;
+
 /*
  * Template Entity
  * Template acts as the blueprint for table.
@@ -21,6 +23,9 @@ public class Template {
 
     @Column(unique = true, nullable = false)
     private String templateName;
+
+    @OneToMany(mappedBy = "template", cascade = CascadeType.ALL)
+    private List<TemplateField> fields;
 
     public Template() {
     }

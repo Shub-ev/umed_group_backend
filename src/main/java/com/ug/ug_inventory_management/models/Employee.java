@@ -13,10 +13,10 @@ public class Employee {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private Long eid;
+    private Long eId;
 
     @Column(nullable = false)
-    private String unit_name;
+    private String unitName;
 
     @Column(nullable=false)
     private String password;
@@ -26,19 +26,19 @@ public class Employee {
 
     protected Employee (){}
 
-    public Employee(Long eid, String unit_name,String password,LocalDate allocation){
-        this.eid = eid;
-        this.unit_name = unit_name;
+    public Employee(Long eId, String unitName,String password,LocalDate allocation){
+        this.eId = eId;
+        this.unitName = unitName;
         this.password = password;
         this.allocation = allocation;
     }
 
-    public Long getEid() {
-        return eid;
+    public Long getEId() {
+        return eId;
     }
 
-    public String getUnit_name() {
-        return unit_name;
+    public String getUnitName() {
+        return unitName;
     }
 
     public String getPassword() {
@@ -49,14 +49,14 @@ public class Employee {
         return allocation;
     }
 
-    public void setEid(Long eid) { this.eid = eid; }
+    public void setEId(Long eId) { this.eId = eId; }
 
     public void setAllocation(LocalDate allocation) {
         this.allocation = allocation;
     }
 
-    public void setUnit_name(String unit_name) {
-        this.unit_name = unit_name;
+    public void setUnitName(String unitName) {
+        this.unitName = unitName;
     }
 
     public void setPassword(String password) {
@@ -67,8 +67,8 @@ public class Employee {
     public String toString() {
         return "Employee{" +
                 "id=" + id +
-                ", eid=" + eid +
-                ", unit_name='" + unit_name + '\'' +
+                ", eId=" + eId +
+                ", unitName='" + unitName + '\'' +
                 ", allocation=" + allocation +
                 '}';
     }

@@ -4,7 +4,9 @@ import com.ug.ug_inventory_management.common.dtos.*;
 import com.ug.ug_inventory_management.enums.FieldType;
 import com.ug.ug_inventory_management.models.*;
 import com.ug.ug_inventory_management.repositories.*;
+import com.ug.ug_inventory_management.utils.TemplateField;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.util.List; // ✅ ADD THIS
@@ -21,27 +23,26 @@ public class TemplateService {
     }
 
     @Transactional
-    public void createTemplate(TemplateRequest request) {
+    public void createTemplate(@NotNull CreateTemplateDTO request) {
 
         if(templateRepo.existsByTemplateName(request.getTemplateName())) {
             throw new RuntimeException("Template already exists");
         }
 
-        Template template = new Template();
-        template.setTemplateName(request.getTemplateName());
+        Template template = new Template(request.getTemplateName());
         templateRepo.save(template);
 
         System.out.println("Fields: " + request.getFields());
 
-        for(FieldRequest f : request.getFields()) {
+        for(TemplateField f : request.getFields()) {
             System.out.println(f);
 
-            TemplateField field = new TemplateField();
-            field.setTemplateId(template.getId());
-            field.setFieldName(f.getName());
-            field.setFieldType(FieldType.valueOf(f.getType()));
+            com.ug.ug_inventory_management.models.TemplateField templateField = new com.ug.ug_inventory_management.models.TemplateField();
+            templateField.setTemplate(template);
+            templateField.setFieldName(f.getName());
+            templateField.setFieldType(FieldType.valueOf(f.getType()));
 
-            fieldRepo.save(field);
+            fieldRepo.save(templateField);
         }
     }
 

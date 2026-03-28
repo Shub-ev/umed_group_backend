@@ -28,6 +28,11 @@ package com.ug.ug_inventory_management.models;
 
 import jakarta.persistence.*;
 
+/*
+ * Inventory Value
+ * Acts as field for Inventory record.
+ * Inventory record can have multiple corresponding Inventory fields.
+ */
 @Entity
 @Table(name = "inventory_values")
 public class InventoryValue {
@@ -36,19 +41,31 @@ public class InventoryValue {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long recordId;
+    @ManyToOne
+    @JoinColumn(name = "record_id")
+    private InventoryRecord inventoryRecord;
+
     private Long fieldId;
 
     @Column(columnDefinition = "TEXT")
     private String value;
+
+    public InventoryValue() {
+    }
+
+    public InventoryValue(InventoryRecord inventoryRecord, Long fieldId, String value) {
+        this.inventoryRecord = inventoryRecord;
+        this.fieldId = fieldId;
+        this.value = value;
+    }
 
     // ✅ GETTERS
     public Long getId() {
         return id;
     }
 
-    public Long getRecordId() {
-        return recordId;
+    public InventoryRecord getInventoryRecord() {
+        return inventoryRecord;
     }
 
     public Long getFieldId() {
@@ -59,9 +76,10 @@ public class InventoryValue {
         return value;
     }
 
+
     // ✅ SETTERS
-    public void setRecordId(Long recordId) {
-        this.recordId = recordId;
+    public void setInventoryRecord(InventoryRecord inventoryRecord) {
+        this.inventoryRecord = inventoryRecord;
     }
 
     public void setFieldId(Long fieldId) {

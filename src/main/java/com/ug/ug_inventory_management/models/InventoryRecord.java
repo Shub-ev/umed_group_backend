@@ -1,32 +1,14 @@
-//package com.ug.ug_inventory_management.models;
-//
-//import jakarta.persistence.*;
-//
-//@Entity
-//@Table(name = "inventory_records")
-//public class InventoryRecord {
-//
-//    @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
-//    private Long id;
-//
-//    private Long templateId;
-//
-//    private Long unitId;
-//
-//    public Long getId() { return id; }
-//
-//    public void setTemplateId(Long templateId) { this.templateId = templateId; }
-//
-//    public void setUnitId(Long unitId) { this.unitId = unitId; }
-//
-//
-//}
-
 package com.ug.ug_inventory_management.models;
 
 import jakarta.persistence.*;
 
+import java.util.List;
+
+/*
+ * Inventory Record
+ * This stores each record as row of table.
+ * Each inventory record with corresponding to template, is as row to the table.
+ */
 @Entity
 @Table(name = "inventory_records")
 public class InventoryRecord {
@@ -35,29 +17,33 @@ public class InventoryRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long templateId;
+    @ManyToOne
+    @JoinColumn(name = "template_id")
+    private Template template;
 
-    private Long unitId;
+    private String unitName;
 
+    @OneToMany(mappedBy = "inventoryRecord", cascade = CascadeType.ALL)
+    private List<InventoryValue> values;
 
-    public Long getId() {
-        return id;
+    public InventoryRecord() {
     }
 
-    public Long getTemplateId() {
-        return templateId;
+    public InventoryRecord(Template template, String unitName) {
+        this.template = template;
+        this.unitName = unitName;
     }
 
-    public Long getUnitId() {
-        return unitId;
-    }
+    // Getters
+    public Long getId() { return id; }
+
+    public Template getTemplate() { return template; }
+
+    public String getUnitName() { return unitName; }
 
 
-    public void setTemplateId(Long templateId) {
-        this.templateId = templateId;
-    }
+    // Setters
+    public void setTemplate(Template template) { this.template = template; }
 
-    public void setUnitId(Long unitId) {
-        this.unitId = unitId;
-    }
+    public void setUnitName(String unitName) { this.unitName = unitName; }
 }
