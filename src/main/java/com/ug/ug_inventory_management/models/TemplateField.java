@@ -53,4 +53,16 @@ public class TemplateField {
     public void setFieldName(String fieldName) { this.fieldName = fieldName; }
 
     public void setFieldType(FieldType fieldType) { this.fieldType = fieldType; }
+
+
+    // toString
+    @Override
+    public String toString() {
+        return "TemplateField{" +
+                "id=" + id +
+                ", template=" + template +
+                ", fieldName='" + fieldName + '\'' +
+                ", fieldType=" + fieldType +
+                '}';
+    }
 }
