@@ -2,23 +2,25 @@ package com.ug.ug_inventory_management.common.dtos.Employee;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.time.LocalDate;
-
-@Schema(description = "DTO for responding employee data as response")
-public class EmployeeDTO {
+@Schema(description = "DTO for creating employee")
+public class CreateEmployeeDTO {
 
     @Schema(description = "Employee ID", example = "1234")
     private Long eId;
 
-    @Schema(description = "Employee working unit name")
+    @Schema(description = "Employee working unit name", example = "New York Unit")
     private String unitName;
 
-    public EmployeeDTO() {
+    @Schema(hidden = true)
+    private String password;
+
+    public CreateEmployeeDTO() {
     }
 
-    public EmployeeDTO(Long eId, String unitName) {
+    public CreateEmployeeDTO(Long eId, String unitName, String password) {
         this.eId = eId;
         this.unitName = unitName;
+        this.password = password;
     }
 
 
@@ -31,13 +33,16 @@ public class EmployeeDTO {
         return unitName;
     }
 
+    public String getPassword() { return password; }
+
 
     // toString
     @Override
     public String toString() {
-        return "EmployeeDTO{" +
+        return "CreateEmployeeDTO{" +
                 "eId=" + eId +
                 ", unitName='" + unitName + '\'' +
+                ", password='" + password + '\'' +
                 '}';
     }
 }
