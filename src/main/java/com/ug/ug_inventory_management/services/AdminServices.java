@@ -78,8 +78,7 @@ public class AdminServices {
                         new AdminNotFoundException("Admin not found with name: " + trimmedName)
                 );
 
-
-        //checking the password matches with the hashed one or not
+        //checking if the password matches with the hashed one or not
         if (!passwordEncoder.matches(trimmedPassword, foundAdmin.getPassword())) {
             throw new WrongPasswordException("Invalid credentials");
         }
@@ -108,7 +107,7 @@ public class AdminServices {
         Admin foundAdmin = adminRepository.findByName(adminOldName)
                 .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + adminOldName));
 
-        if(!foundAdmin.getPassword().equals(adminPassword)) {
+        if(!passwordEncoder.matches(adminPassword, foundAdmin.getPassword())) {
             throw new WrongPasswordException("Invalid credentials");
         }
         if(adminRepository.existsByName(adminNewName)) {
