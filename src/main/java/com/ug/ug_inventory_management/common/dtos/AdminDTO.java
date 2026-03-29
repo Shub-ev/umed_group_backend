@@ -5,6 +5,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "DTO for creating and login admin.")
 public class AdminDTO {
 
+    @Schema(description = "Admin ID", example = "1234")
+    private Long Id;
+
     @Schema(description = "Admin name", example = "John Deo")
     private String name;
 
@@ -19,6 +22,8 @@ public class AdminDTO {
         this.password=password;
     }
 
+
+    public Long getId() { return Id; }
     public String getName() {
         return name;
     }
