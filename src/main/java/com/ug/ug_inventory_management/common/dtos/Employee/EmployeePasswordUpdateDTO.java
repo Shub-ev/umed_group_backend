@@ -1,4 +1,4 @@
-package com.ug.ug_inventory_management.common.dtos;
+package com.ug.ug_inventory_management.common.dtos.Employee;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -6,29 +6,35 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class EmployeePasswordUpdateDTO {
 
     @Schema(description = "Employee ID")
-    private Long eid;
+    private Long eId;
 
     @Schema(description = "Employee working unit name")
-    private String unit_name;
+    private String unitName;
 
     @Schema(hidden = true)
     private String passwordPre;
+
     @Schema(hidden = true)
     private String passwordNew;
 
-    public EmployeePasswordUpdateDTO(Long eid, String unit_name, String passwordPre, String passwordNew) {
-        this.eid = eid;
-        this.unit_name = unit_name;
+    public EmployeePasswordUpdateDTO() {
+    }
+
+    public EmployeePasswordUpdateDTO(Long eId, String unitName, String passwordPre, String passwordNew) {
+        this.eId = eId;
+        this.unitName = unitName;
         this.passwordPre = passwordPre;
         this.passwordNew = passwordNew;
     }
 
-    public Long getEid() {
-        return eid;
+
+    // getters
+    public Long geteId() {
+        return eId;
     }
 
-    public String getUnit_name() {
-        return unit_name;
+    public String getUnitName() {
+        return unitName;
     }
 
     public String getPasswordPre() {
@@ -37,5 +43,17 @@ public class EmployeePasswordUpdateDTO {
 
     public String getPasswordNew() {
         return passwordNew;
+    }
+
+
+    // toString
+    @Override
+    public String toString() {
+        return "EmployeePasswordUpdateDTO{" +
+                "eid=" + eId +
+                ", unit_name='" + unitName + '\'' +
+                ", passwordPre='" + passwordPre + '\'' +
+                ", passwordNew='" + passwordNew + '\'' +
+                '}';
     }
 }
