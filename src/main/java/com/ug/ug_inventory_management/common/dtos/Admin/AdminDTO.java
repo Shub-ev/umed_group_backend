@@ -1,4 +1,4 @@
-package com.ug.ug_inventory_management.common.dtos;
+package com.ug.ug_inventory_management.common.dtos.Admin;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -23,6 +23,7 @@ public class AdminDTO {
     }
 
 
+    // getters
     public Long getId() { return Id; }
     public String getName() {
         return name;
@@ -31,6 +32,18 @@ public class AdminDTO {
         return password;
     }
 
+
+    // setters
     public void setName(String name) { this.name = name; }
     public void setPassword(String password) { this.password = password; }
+
+    // toString
+    @Override
+    public String toString() {
+        return "AdminDTO{" +
+                "Id=" + Id +
+                ", name='" + name + '\'' +
+                ", password='" + password + '\'' +
+                '}';
+    }
 }

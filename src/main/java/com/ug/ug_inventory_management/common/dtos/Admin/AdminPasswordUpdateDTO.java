@@ -1,4 +1,4 @@
-package com.ug.ug_inventory_management.common.dtos;
+package com.ug.ug_inventory_management.common.dtos.Admin;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
