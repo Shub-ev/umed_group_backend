@@ -1,16 +1,14 @@
 package com.ug.ug_inventory_management.common.dtos;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import io.swagger.v3.oas.annotations.media.Schema;
 
+@Schema(description = "DTO for creating and login admin.")
 public class AdminDTO {
 
-    private Long id;
-
+    @Schema(description = "Admin name", example = "John Deo")
     private String name;
 
+    @Schema(hidden = true)
     private String password;
 
     public AdminDTO() {
@@ -21,7 +19,6 @@ public class AdminDTO {
         this.password=password;
     }
 
-    public Long getId() { return id; }
     public String getName() {
         return name;
     }
