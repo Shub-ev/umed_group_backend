@@ -1,5 +1,7 @@
 package com.ug.ug_inventory_management.common.exceptions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,8 +20,11 @@ import java.time.LocalDateTime;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(EmployeeNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleEmployeeNotFoundException(EmployeeNotFoundException exception) {
+        log.warn("Employee not found: ", exception.getMessage());
         return new ResponseEntity<>(new ErrorResponse(
                 LocalDateTime.now(),
                 exception.getMessage(),
@@ -29,6 +34,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AdminNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleAdminNotFoundException(AdminNotFoundException exception) {
+        log.warn("Admin not found: ", exception.getMessage());
         return new ResponseEntity<>(new ErrorResponse(
                 LocalDateTime.now(),
                 exception.getMessage(),
@@ -38,6 +44,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException exception) {
+        log.warn("Validation failed: {}", exception.getMessage());
         return new ResponseEntity<>(new ErrorResponse(
                 LocalDateTime.now(),
                 exception.getMessage(),
@@ -47,6 +54,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(WrongPasswordException.class)
     public ResponseEntity<ErrorResponse> handleWrongPasswordException(WrongPasswordException exception) {
+        log.warn("Authentication failed: {}", exception.getMessage());
         return new ResponseEntity<>(new ErrorResponse(
                 LocalDateTime.now(),
                 exception.getMessage(),
