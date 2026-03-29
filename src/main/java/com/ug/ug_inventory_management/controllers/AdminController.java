@@ -47,36 +47,44 @@ public class AdminController {
 
     @PatchMapping("/update/name")
     public ResponseEntity<AdminResponseDTO> updateAdminName(@RequestBody AdminNameUpdateDTO admin) {
+        log.info("Updating admin name for admin: {}", admin.getOldName());
         AdminResponseDTO adminResponseDTO = adminServices.updateAdminName(admin);
-        System.out.println(adminResponseDTO);
+        log.info("Admin name updated successfully from {} to {}", admin.getOldName(), admin.getNewName());
 
         return ResponseEntity.ok(adminResponseDTO);
     }
 
     @PatchMapping("/update/password")
     public ResponseEntity<AdminResponseDTO> updateAdminPassword(@RequestBody AdminPasswordUpdateDTO adminpass) {
+        log.info("Updating admin password for admin: {}", adminpass.getName());
         AdminResponseDTO adminResponseDTO = adminServices.updateAdminPassword(adminpass);
-        System.out.println(adminResponseDTO);
+        log.info("Password updated successfully for admin: {}", adminpass.getId());
 
         return ResponseEntity.ok(adminResponseDTO);
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<AdminResponseDTO> deleteAdmin(@RequestBody Admin admin) {
-        AdminResponseDTO adminResponseDTO = adminServices.deleteAdmin(admin);
-        System.out.println(adminResponseDTO);
+    public ResponseEntity<AdminResponseDTO> deleteAdmin(@RequestBody AdminDTO adminDTO) {
+        log.info("Deleting admin with name: {}", adminDTO.getName());
+        AdminResponseDTO adminResponseDTO = adminServices.deleteAdmin(adminDTO);
+        log.info("Admin deleted successfully with name: {}", adminDTO.getName());
 
         return ResponseEntity.ok(adminResponseDTO);
     }
 
     @GetMapping("/count")
     public Long getAdminCount() {
-        return adminServices.getAdminCount();
+        log.info("Fetching admin count");
+        Long adminCount = adminServices.getAdminCount();
+        log.info("Admin count fetched: {}", adminCount);
+        return adminCount;
     }
 
     @GetMapping("/get_admins")
     public ResponseEntity<List<AdminResponseDTO>> getAdmins() {
+        log.info("Fetching admins");
         List<AdminResponseDTO> admins = adminServices.getAdmins();
+        log.info("Admins fetched");
         return ResponseEntity.ok(admins);
     }
 }
