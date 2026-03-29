@@ -149,7 +149,7 @@ public class AdminServices {
                 .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + adminName));
 
         // verify password
-        if(!foundAdmin.getPassword().equals(adminPassPre)) {
+        if(!passwordEncoder.matches(adminPassPre, foundAdmin.getPassword())) {
             throw new WrongPasswordException("Invalid credentials");
         }
         foundAdmin.setPassword(adminPassNew);
@@ -158,16 +158,17 @@ public class AdminServices {
     }
 
     @Transactional
-    public AdminResponseDTO deleteAdmin(@NonNull Admin admin) {
-        if(admin.getName() == null || admin.getName().trim().isEmpty()) {
+    public AdminResponseDTO deleteAdmin(@NonNull AdminDTO adminDTO) {
+        if(adminDTO.getName() == null || adminDTO.getName().trim().isEmpty()) {
             return null;
-        } else if(admin.getPassword() == null || admin.getPassword().trim().isEmpty()) {
+        }
+        if(adminDTO.getPassword() == null || adminDTO.getPassword().trim().isEmpty()) {
             return null;
         }
 
         // trim admin name and password before using
-        String adminName = admin.getName().trim();
-        String adminPassword = admin.getPassword().trim();
+        String adminName = adminDTO.getName().trim();
+        String adminPassword = adminDTO.getPassword().trim();
 
         Admin foundAdmin = adminRepository.findByName(adminName)
                 .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + adminName));
@@ -176,7 +177,7 @@ public class AdminServices {
             throw new WrongPasswordException("Invalid credentials");
         }
         adminRepository.delete(foundAdmin);
-        return new AdminResponseDTO(admin.getId(), admin.getName());
+        return new AdminResponseDTO(adminDTO.getId(), adminDTO.getName());
     }
 
     public AdminResponseDTO convertDTO(Admin admin) {
