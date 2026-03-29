@@ -33,6 +33,9 @@ public class Employee {
         this.allocation = allocation;
     }
 
+    // Getters
+    public Long getId() { return id; }
+
     public Long getEId() {
         return eId;
     }
@@ -49,6 +52,8 @@ public class Employee {
         return allocation;
     }
 
+
+    // Setters
     public void setEId(Long eId) { this.eId = eId; }
 
     public void setAllocation(LocalDate allocation) {
