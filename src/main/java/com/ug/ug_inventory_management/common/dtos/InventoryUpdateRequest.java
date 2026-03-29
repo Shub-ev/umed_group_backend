@@ -4,6 +4,7 @@ public class InventoryUpdateRequest {
 
     private Long templateId;
     private Long unitId;
+    private String unitName;
     private Long fieldId;
     private int changeQty;
     private String action; // INWARD / OUTWARD
@@ -28,6 +29,14 @@ public class InventoryUpdateRequest {
 
     public String getAction() {
         return action;
+    }
+
+    public String getUnitName() {
+        return unitName;
+    }
+
+    public void setUnitName(String unitName) {
+        this.unitName = unitName;
     }
 
     public void setTemplateId(Long templateId) {
