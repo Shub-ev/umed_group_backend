@@ -14,13 +14,13 @@ public interface InventoryValueRepository extends JpaRepository<InventoryValue, 
 
     @Query("""
 SELECT v FROM InventoryValue v
-JOIN InventoryRecord r ON v.recordId = r.id
+JOIN v.inventoryRecord r
 JOIN TemplateField f ON v.fieldId = f.id
-WHERE r.templateId = :templateId
-  AND r.unitId = :unitId
+WHERE r.template.id = :templateId
+  AND r.unitName = :unitName
   AND LOWER(f.fieldName) LIKE LOWER(CONCAT('%', :fieldName, '%'))
 """)
-    List<InventoryValue> findFieldByName(Long templateId, Long unitId, String fieldName);
+    List<InventoryValue> findFieldByName(Long templateId, String unitName, String fieldName);
 
 
     List<InventoryValue> findByInventoryRecord_Id(Long recordId);
