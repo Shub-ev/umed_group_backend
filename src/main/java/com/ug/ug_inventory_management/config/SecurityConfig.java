@@ -12,47 +12,6 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//
-//        http
-//                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-//                .csrf(csrf -> csrf.disable())
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-//                        .requestMatchers("/hkfu/login").permitAll()
-//                        .requestMatchers("/hkfu/**").permitAll() // for testing
-//                        .requestMatchers("/employee/**").permitAll() // for testing
-//                        .requestMatchers("/api/**").permitAll()//temporary
-//                        .anyRequest().authenticated()
-//                );
-//
-//        return http.build();
-//    }
-//   @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//
-//        http
-//                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-//                .csrf(csrf -> csrf.disable())
-//                .authorizeHttpRequests(auth -> auth
-//
-//                        // ✅ FIRST allow API
-//                        .requestMatchers("/api/**").permitAll()
-//                        .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
-//
-//                        // existing
-//                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-//                        .requestMatchers("/hkfu/login").permitAll()
-//                        .requestMatchers("/hkfu/**").permitAll()
-//                        .requestMatchers("/employee/**").permitAll()
-//
-//                        .anyRequest().authenticated()
-//                );
-//
-//        return http.build();
-//    }
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
@@ -60,32 +19,39 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/templates/**").permitAll()
-                        .requestMatchers("/inventory/**").permitAll()
-                        .requestMatchers("/employee/**").permitAll()
-                        .requestMatchers("/hkfu/**").permitAll()
-                        .requestMatchers("/swagger-ui/**").permitAll()
-                        .requestMatchers("/v3/**").permitAll()
+
+                        // ✅ FIXED (both root + subpaths)
+                        .requestMatchers("/templates", "/templates/**").permitAll()
+                        .requestMatchers("/inventory", "/inventory/**").permitAll()
+                        .requestMatchers("/employee", "/employee/**").permitAll()
+                        .requestMatchers("/hkfu", "/hkfu/**").permitAll()
+
+                        // ✅ Swagger
+                        .requestMatchers("/swagger-ui/**", "/v3/**").permitAll()
+
+                        // ✅ Preflight
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         .anyRequest().authenticated()
                 );
 
-                // 🔥 ADD THIS LINE
-//                .addFilterBefore(new JwtFilter(), UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
+
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+
+        configuration.setAllowedOriginPatterns(List.of("*")); // 🔥 BEST FOR DEV
         configuration.setAllowedMethods(List.of("*"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
+
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
