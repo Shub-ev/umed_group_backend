@@ -1,10 +1,13 @@
 package com.ug.ug_inventory_management.controllers;
 
+import com.ug.ug_inventory_management.common.dtos.AdminDTO;
 import com.ug.ug_inventory_management.common.dtos.AdminResponseDTO;
 import com.ug.ug_inventory_management.common.dtos.AdminNameUpdateDTO;
 import com.ug.ug_inventory_management.common.dtos.AdminPasswordUpdateDTO;
 import com.ug.ug_inventory_management.models.Admin;
 import com.ug.ug_inventory_management.services.AdminServices;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +20,7 @@ import java.util.List;
 public class AdminController {
 
     private final AdminServices adminServices;
+    private static final Logger log = LoggerFactory.getLogger(AdminController.class);
 
     public AdminController(AdminServices adminServices) {
         this.adminServices = adminServices;
@@ -24,17 +28,19 @@ public class AdminController {
 
     // Create admin controller
     @PostMapping("/")
-    public ResponseEntity<AdminResponseDTO> createAdmin(@RequestBody Admin admin) {
+    public ResponseEntity<AdminResponseDTO> createAdmin(@RequestBody AdminDTO admin) {
+        log.info("Creating admin with name: {}", admin.getName());
         AdminResponseDTO admin_res = adminServices.createAdmin(admin);
-        System.out.println(admin_res);
+        log.info("Created Admin: {}", admin_res);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(admin_res);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AdminResponseDTO> loginAdmin(@RequestBody Admin admin) {
+    public ResponseEntity<AdminResponseDTO> loginAdmin(@RequestBody AdminDTO admin) {
+        log.info("Login with admin name: {}", admin.getName());
         AdminResponseDTO admin_res = adminServices.loginAdmin(admin);
-        System.out.println(admin_res);
+        log.info("Login process completed, response: {}", admin_res);
 
         return ResponseEntity.ok(admin_res);
     }

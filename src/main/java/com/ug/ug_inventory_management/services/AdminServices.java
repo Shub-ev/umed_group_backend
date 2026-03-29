@@ -1,5 +1,6 @@
 package com.ug.ug_inventory_management.services;
 
+import com.ug.ug_inventory_management.common.dtos.AdminDTO;
 import com.ug.ug_inventory_management.common.dtos.AdminResponseDTO;
 import com.ug.ug_inventory_management.common.dtos.AdminNameUpdateDTO;
 import com.ug.ug_inventory_management.common.dtos.AdminPasswordUpdateDTO;
@@ -28,18 +29,17 @@ public class AdminServices {
     }
 
 
-    public AdminResponseDTO createAdmin(@NonNull Admin admin) {
-
-        if (admin.getName() == null || admin.getName().trim().isEmpty()) {
+    public AdminResponseDTO createAdmin(@NonNull AdminDTO adminDTO) {
+        if (adminDTO.getName() == null || adminDTO.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Admin name must not be blank");
         }
 
-        if (admin.getPassword() == null || admin.getPassword().trim().isEmpty()) {
+        if (adminDTO.getPassword() == null || adminDTO.getPassword().trim().isEmpty()) {
             throw new IllegalArgumentException("Admin password must not be blank");
         }
 
-        String trimmedName = admin.getName().trim();
-        String trimmedPassword = admin.getPassword().trim();
+        String trimmedName = adminDTO.getName().trim();
+        String trimmedPassword = adminDTO.getPassword().trim();
         if(trimmedPassword.length() <= 4 || trimmedPassword.length() >= 15){
             throw new IllegalArgumentException("Password must be 5 to  14 characters");
         }
@@ -51,8 +51,7 @@ public class AdminServices {
         //Hash password before saving to database
         String encodedPassword = passwordEncoder.encode(trimmedPassword);
 
-        admin.setName(trimmedName);
-        admin.setPassword(encodedPassword);
+        Admin admin = new Admin(trimmedName, encodedPassword);
 
         Admin repoResponse = adminRepository.save(admin);
 
@@ -61,7 +60,7 @@ public class AdminServices {
 
 
 
-    public AdminResponseDTO loginAdmin(@NonNull Admin admin) {
+    public AdminResponseDTO loginAdmin(@NonNull AdminDTO admin) {
 
         if (admin.getName() == null || admin.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Admin name must not be blank");
