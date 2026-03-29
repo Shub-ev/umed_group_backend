@@ -1,9 +1,9 @@
 package com.ug.ug_inventory_management.services;
 
-import com.ug.ug_inventory_management.common.dtos.AdminDTO;
-import com.ug.ug_inventory_management.common.dtos.AdminResponseDTO;
-import com.ug.ug_inventory_management.common.dtos.AdminNameUpdateDTO;
-import com.ug.ug_inventory_management.common.dtos.AdminPasswordUpdateDTO;
+import com.ug.ug_inventory_management.common.dtos.Admin.AdminDTO;
+import com.ug.ug_inventory_management.common.dtos.Admin.AdminResponseDTO;
+import com.ug.ug_inventory_management.common.dtos.Admin.AdminNameUpdateDTO;
+import com.ug.ug_inventory_management.common.dtos.Admin.AdminPasswordUpdateDTO;
 import com.ug.ug_inventory_management.common.exceptions.AdminNotFoundException;
 import com.ug.ug_inventory_management.common.exceptions.IllegalArgumentException;
 import com.ug.ug_inventory_management.common.exceptions.WrongPasswordException;
