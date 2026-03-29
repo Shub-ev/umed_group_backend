@@ -26,7 +26,7 @@ public class Employee {
 
     protected Employee (){}
 
-    public Employee(Long eId, String unitName,String password,LocalDate allocation){
+    public Employee(Long eId, String unitName, String password, LocalDate allocation){
         this.eId = eId;
         this.unitName = unitName;
         this.password = password;
