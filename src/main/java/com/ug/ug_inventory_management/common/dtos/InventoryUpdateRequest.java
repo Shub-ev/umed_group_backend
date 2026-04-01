@@ -1,23 +1,19 @@
+
 package com.ug.ug_inventory_management.common.dtos;
 
 public class InventoryUpdateRequest {
 
     private Long templateId;
-    private Long unitId;
     private String unitName;
     private Long fieldId;
+    private Long recordId;
     private int changeQty;
     private String action; // INWARD / OUTWARD
-
-    // Getters & Setters
 
     public Long getTemplateId() {
         return templateId;
     }
 
-    public Long getUnitId() {
-        return unitId;
-    }
 
     public Long getFieldId() {
         return fieldId;
@@ -35,17 +31,14 @@ public class InventoryUpdateRequest {
         return unitName;
     }
 
-    public void setUnitName(String unitName) {
-        this.unitName = unitName;
+    public Long getRecordId() {
+        return recordId;
     }
 
     public void setTemplateId(Long templateId) {
         this.templateId = templateId;
     }
 
-    public void setUnitId(Long unitId) {
-        this.unitId = unitId;
-    }
 
     public void setFieldId(Long fieldId) {
         this.fieldId = fieldId;
@@ -57,5 +50,13 @@ public class InventoryUpdateRequest {
 
     public void setAction(String action) {
         this.action = action;
+    }
+
+    public void setUnitName(String unitName) {
+        this.unitName = unitName;
+    }
+
+    public void setRecordId(Long recordId) {
+        this.recordId = recordId;
     }
 }
