@@ -1,6 +1,6 @@
 
 package com.ug.ug_inventory_management.common.dtos;
-
+import com.ug.ug_inventory_management.enums.ActionType;
 public class InventoryUpdateRequest {
 
     private Long templateId;
@@ -8,7 +8,7 @@ public class InventoryUpdateRequest {
     private Long fieldId;
     private Long recordId;
     private int changeQty;
-    private String action; // INWARD / OUTWARD
+    private ActionType action; // INWARD / OUTWARD
 
     public Long getTemplateId() {
         return templateId;
@@ -23,7 +23,7 @@ public class InventoryUpdateRequest {
         return changeQty;
     }
 
-    public String getAction() {
+    public ActionType getAction() {
         return action;
     }
 
@@ -48,7 +48,7 @@ public class InventoryUpdateRequest {
         this.changeQty = changeQty;
     }
 
-    public void setAction(String action) {
+    public void setAction(ActionType action) {
         this.action = action;
     }
 
