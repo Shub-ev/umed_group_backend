@@ -22,28 +22,35 @@ public class TemplateService {
         this.templateFieldRepository = templateFieldRepository;
     }
 
-    @Transactional
-    public void createTemplate(@NotNull CreateTemplateDTO request) {
-        if(templateRepository.existsByTemplateName(request.getTemplateName())) {
-            throw new RuntimeException("Template already exists");
-        }
 
-        Template template = new Template(request.getTemplateName());
-        templateRepository.save(template);
+@Transactional
+public void createTemplate(@NotNull CreateTemplateDTO request) {
 
-        System.out.println("Fields: " + request.getFields());
-
-        for(TemplateField field : request.getFields()) {
-            // ## We have templateFeild object from client request then why to create new!
-//            com.ug.ug_inventory_management.models.TemplateField templateField = new com.ug.ug_inventory_management.models.TemplateField();
-//            templateField.setTemplate(template);
-//            templateField.setFieldName(field.getFieldName());
-//            templateField.setFieldType(field.getFieldType());
-//            field.setTemplate(template);
-
-            templateFieldRepository.save(field);
-        }
+    if (templateRepository.existsByTemplateName(request.getTemplateName())) {
+        throw new RuntimeException("Template already exists");
     }
+
+    Template template = new Template(request.getTemplateName());
+    templateRepository.save(template);
+
+    System.out.println("Fields: " + request.getFields());
+
+    for (TemplateField fieldDTO : request.getFields()) {
+
+        TemplateField field = new TemplateField();
+
+        // 🔥 FIX 1: map correct field
+        field.setFieldName(fieldDTO.getFieldName());  // or getFieldName() depending on DTO
+
+        // 🔥 FIX 2: map type
+        field.setFieldType(fieldDTO.getFieldType());
+
+        // 🔥 FIX 3: set relationship
+        field.setTemplate(template);
+
+        templateFieldRepository.save(field);
+    }
+}
 
     public List<Template> getAllTemplates() {
         return templateRepository.findAll();
