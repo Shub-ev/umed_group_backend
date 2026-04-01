@@ -4,16 +4,16 @@ import java.util.Map;
 
 public class UnitSummaryDTO {
 
-    private Long unitId;
+    private String unitName;
     private Map<String, Integer> values;
 
-    public UnitSummaryDTO(Long unitId, Map<String, Integer> values) {
-        this.unitId = unitId;
+    public UnitSummaryDTO(String unitName, Map<String, Integer> values) {
+        this.unitName = unitName;
         this.values = values;
     }
 
-    public Long getUnitId() {
-        return unitId;
+    public String getUnitName() {
+        return unitName;
     }
 
     public Map<String, Integer> getValues() {
