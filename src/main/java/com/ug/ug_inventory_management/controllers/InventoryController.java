@@ -39,10 +39,10 @@ public class InventoryController {
         return inventoryService.getInventorySummary(templateId);
     }
 
+
+
     @PostMapping("/update")
-    public ResponseEntity<?> updateInventory(
-            @RequestBody InventoryUpdateRequest request,
-            @RequestHeader("role") String role) {
-        return inventoryService.updateInventory(request, role);
+    public ResponseEntity<?> updateInventory(@RequestBody InventoryUpdateRequest request) {
+        return inventoryService.updateInventory(request);
     }
 }
