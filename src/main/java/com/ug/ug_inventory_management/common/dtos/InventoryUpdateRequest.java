@@ -4,7 +4,6 @@ import com.ug.ug_inventory_management.enums.ActionType;
 public class InventoryUpdateRequest {
 
     private Long templateId;
-    private String unitName;
     private Long fieldId;
     private Long recordId;
     private int changeQty;
@@ -13,7 +12,6 @@ public class InventoryUpdateRequest {
     public Long getTemplateId() {
         return templateId;
     }
-
 
     public Long getFieldId() {
         return fieldId;
@@ -25,10 +23,6 @@ public class InventoryUpdateRequest {
 
     public ActionType getAction() {
         return action;
-    }
-
-    public String getUnitName() {
-        return unitName;
     }
 
     public Long getRecordId() {
@@ -52,9 +46,6 @@ public class InventoryUpdateRequest {
         this.action = action;
     }
 
-    public void setUnitName(String unitName) {
-        this.unitName = unitName;
-    }
 
     public void setRecordId(Long recordId) {
         this.recordId = recordId;
