@@ -6,7 +6,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.*;
-
+import org.springframework.security.config.http.SessionCreationPolicy;
 import java.util.List;
 
 @Configuration
@@ -18,23 +18,26 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
+
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                )
+
                 .authorizeHttpRequests(auth -> auth
 
-                        // ✅ FIXED (both root + subpaths)
-                        .requestMatchers("/templates", "/templates/**").permitAll()
-                        .requestMatchers("/inventory", "/inventory/**").permitAll()
-                        .requestMatchers("/employee", "/employee/**").permitAll()
-                        .requestMatchers("/hkfu", "/hkfu/**").permitAll()
+                        .requestMatchers("/error").permitAll() // EXPLICIT METHOD-BASED PERMISSION (IMPORTANT)
+                        .requestMatchers(HttpMethod.POST, "/templates").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/templates/**").permitAll()
 
-                        // ✅ Swagger
+                        .requestMatchers("/inventory/**").permitAll()
+                        .requestMatchers("/employee/**").permitAll()
+                        .requestMatchers("/hkfu/**").permitAll()
+
                         .requestMatchers("/swagger-ui/**", "/v3/**").permitAll()
-
-                        // ✅ Preflight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         .anyRequest().authenticated()
                 );
-
         return http.build();
     }
 
@@ -43,8 +46,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration configuration = new CorsConfiguration();
-
-        configuration.setAllowedOriginPatterns(List.of("*")); // 🔥 BEST FOR DEV
+        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowCredentials(true);
         configuration.setAllowedMethods(List.of("*"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
