@@ -25,35 +25,6 @@ public class TemplateService {
     }
 
 
-//@Transactional
-//public void createTemplate(@NotNull CreateTemplateDTO request) {
-//
-//    if (templateRepository.existsByTemplateName(request.getTemplateName())) {
-//        throw new RuntimeException("Template already exists");
-//    }
-//
-//    Template template = new Template(request.getTemplateName());
-//    templateRepository.save(template);
-//
-//    System.out.println("Fields: " + request.getFields());
-//
-//    for (TemplateField fieldDTO : request.getFields()) {
-//
-//        TemplateField field = new TemplateField();
-//
-//        // 🔥 FIX 1: map correct field
-//        field.setFieldName(fieldDTO.getFieldName());  // or getFieldName() depending on DTO
-//
-//        // 🔥 FIX 2: map type
-//        field.setFieldType(fieldDTO.getFieldType());
-//
-//        // 🔥 FIX 3: set relationship
-//        field.setTemplate(template);
-//
-//        templateFieldRepository.save(field);
-//    }
-//}
-
     @Transactional
     public void createTemplate(@NotNull CreateTemplateDTO request) {
 
@@ -65,7 +36,6 @@ public class TemplateService {
         templateRepository.save(template);
 
         // ✅ Define fixed fields
-        List<String> FIXED_FIELDS = List.of("INWARD", "OUTWARD", "STOCK", "BY");
 
         System.out.println("Fields: " + request.getFields());
 
@@ -89,24 +59,24 @@ public class TemplateService {
         }
 
         // ✅ 3. Save USER fields
+        int order = 1;
+          // ✅ 1. Save USER fields FIRST
         for (TemplateField fieldDTO : requestFields) {
-
             TemplateField field = new TemplateField();
-
             field.setFieldName(fieldDTO.getFieldName().trim().toUpperCase());
             field.setFieldType(fieldDTO.getFieldType());
             field.setTemplate(template);
-
+            field.setDisplayOrder(order++); // 🔥 KEY
             templateFieldRepository.save(field);
         }
 
-        // ✅ 4. AUTO ADD FIXED FIELDS
+        // ✅ 2. Save FIXED fields LAST
         for (String fixed : FIXED_FIELDS) {
 
             TemplateField field = new TemplateField();
+
             field.setFieldName(fixed);
 
-            // assign type
             if (fixed.equals("BY")) {
                 field.setFieldType(com.ug.ug_inventory_management.enums.FieldType.STRING);
             } else {
@@ -115,16 +85,18 @@ public class TemplateService {
 
             field.setTemplate(template);
 
+            field.setDisplayOrder(order++); // continues
+
             templateFieldRepository.save(field);
         }
-    }
 
+    }
 
     public List<Template> getAllTemplates() {
         return templateRepository.findAll();
     }
 
     public List<TemplateField> getFieldsByTemplateId(@NotNull Long templateId) {
-        return templateFieldRepository.findByTemplate_Id(templateId);
+        return templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(templateId);
     }
 }
