@@ -71,7 +71,7 @@ public class InventoryService {
         inventoryRecordRepository.save(inventoryRecord);
 
         List<TemplateField> fields =
-                templateFieldRepository.findByTemplate_Id(request.getTemplateId());
+                templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(request.getTemplateId());
 
         for (TemplateField field : fields) {
             String value = request.getValues().get(field.getFieldName());
@@ -104,7 +104,7 @@ public class InventoryService {
         List<InventoryRecord> records = inventoryRecordRepository.findByTemplate_Id(templateId);
 
         List<TemplateField> fields =
-                templateFieldRepository.findByTemplate_Id(templateId);
+                templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(templateId);
 
         Map<Long, String> fieldMap = fields.stream()
                 .collect(Collectors.toMap(
@@ -157,7 +157,7 @@ public class InventoryService {
                 inventoryRecordRepository.findByTemplate_Id(templateId);
 
         List<TemplateField> fields =
-                templateFieldRepository.findByTemplate_Id(templateId);
+                templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(templateId);
 
         Map<Long, String> fieldMap = fields.stream()
                 .collect(Collectors.toMap(
@@ -216,7 +216,7 @@ public class InventoryService {
                 inventoryRecordRepository.findByTemplate_Id(templateId);
 
         List<TemplateField> fields =
-                templateFieldRepository.findByTemplate_Id(templateId);
+                templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(templateId);
 
         List<Map<String, String>> result = new ArrayList<>();
 
@@ -266,7 +266,7 @@ public class InventoryService {
 
         // ✅ Fetch all fields in ONE query (performance fix)
         Map<Long, String> fieldMap = templateFieldRepository
-                .findByTemplate_Id(req.getTemplateId())
+                .findByTemplate_IdOrderByDisplayOrderAsc(req.getTemplateId())
                 .stream()
                 .collect(Collectors.toMap(
                         TemplateField::getId,
