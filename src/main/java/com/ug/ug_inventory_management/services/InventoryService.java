@@ -23,8 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.context.ApplicationEventPublisher;
 
 
-
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -96,6 +94,8 @@ public class InventoryService {
         }
     }
 
+
+
 //     ✅ FETCH INVENTORY (DYNAMIC TABLE)
     public List<Map<String, String>> getInventory(@NotNull Long templateId, @NotNull String unitName) {
 
@@ -149,6 +149,7 @@ public class InventoryService {
             return 0;
         }
     }
+
 
     public List<Map<String, String>> getUnitWiseSummary(Long templateId) {
 
@@ -207,6 +208,7 @@ public class InventoryService {
         return result;
     }
 
+
     public List<Map<String, String>> getInventorySummary(Long templateId) {
 
         // ❗ REMOVE unitId filter
@@ -248,105 +250,24 @@ public class InventoryService {
     }
 
 
-
-//
-//    @Transactional
-//    public ResponseEntity<?> updateInventory(InventoryUpdateRequest req, String role) {
-//
-//        if (!"EMPLOYEE".equalsIgnoreCase(role)) {
-//            return ResponseEntity.status(403).body("Only employees can update");
-//        }
-//
-//        // Fetch all fields for this record
-//        List<InventoryValue> values = inventoryValueRepository.findByInventoryRecord_Id(req.getRecordId());
-//
-//        if (values.isEmpty()) {
-//            return ResponseEntity.badRequest().body("No inventory found for this record");
-//        }
-//
-//        InventoryValue inwardField = null;
-//        InventoryValue outwardField = null;
-//        InventoryValue stockField = null;
-//
-//        for (InventoryValue v : values) {
-//            String fieldName = templateFieldRepository
-//                    .findById(v.getFieldId())
-//                    .orElseThrow(() -> new RuntimeException("TemplateField not found"))
-//                    .getFieldName()
-//                    .toLowerCase();
-//
-//            if (fieldName.contains("inward")) inwardField = v;
-//            else if (fieldName.contains("outward")) outwardField = v;
-//            else if (fieldName.contains("stock")) stockField = v;
-//        }
-//
-//        if (inwardField == null || outwardField == null || stockField == null) {
-//            return ResponseEntity.badRequest().body("Template must contain inward, outward and stock fields");
-//        }
-//
-//        // Parse current values
-//        int inward = Integer.parseInt(inwardField.getValue() == null ? "0" : inwardField.getValue().trim());
-//        int outward = Integer.parseInt(outwardField.getValue() == null ? "0" : outwardField.getValue().trim());
-//        int previousStock = inward - outward;
-//        int qty = req.getChangeQty();
-//
-//        // Apply update
-//        if ("INWARD".equalsIgnoreCase(req.getAction())) {
-//            inward += qty;
-//            inwardField.setValue(String.valueOf(inward));
-//        } else if ("OUTWARD".equalsIgnoreCase(req.getAction())) {
-//            if ((inward - outward) < qty) {
-//                return ResponseEntity.badRequest().body("Not enough stock");
-//            }
-//            outward += qty;
-//            outwardField.setValue(String.valueOf(outward));
-//        } else {
-//            return ResponseEntity.badRequest().body("Invalid action");
-//        }
-//
-//        int newStock = inward - outward;
-//        stockField.setValue(String.valueOf(newStock));
-//
-//        // Save changes
-//        inventoryValueRepository.saveAll(List.of(inwardField, outwardField, stockField));
-//
-//        // ✅ Get UnitName from the record itself
-//        String unitName = inwardField.getInventoryRecord().getUnitName();
-//
-//        // ✅ Get employee performing action
-//        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-//        String performedBy = (auth != null && auth.isAuthenticated()) ? auth.getName() : "SYSTEM";
-//
-//        // Create log
-//        InventoryLog log = new InventoryLog(
-//                req.getTemplateId(),
-//                unitName,
-//                req.getAction(),
-//                qty,
-//                previousStock,
-//                newStock,
-//                performedBy
-//        );
-//
-//        // Publish audit event
-//        publisher.publishEvent(new InventoryAuditEvent(log));
-//
-//        return ResponseEntity.ok("Stock updated successfully");
-//    }
-
     @Transactional
-    public ResponseEntity<?> updateInventory(InventoryUpdateRequest req) {
+    public ResponseEntity<?> updateInventory(InventoryUpdateRequest req, String role,Long eId ,String unitName) {
 
-        InventoryRecord record = inventoryRecordRepository.findById(req.getRecordId())
-                .orElseThrow(() -> new RuntimeException("Record not found"));
+        if (role == null || !role.toUpperCase().contains("EMPLOYEE")) {
+            return ResponseEntity.status(403).body("Only employees can update");
+        }
 
-        List<InventoryValue> values = inventoryValueRepository
-                .findByInventoryRecord_Id(record.getId());
+        List<InventoryValue> values =
+                inventoryValueRepository.findByInventoryRecord_Id(req.getRecordId());
 
-        List<TemplateField> fields = templateFieldRepository
-                .findByTemplate_Id(req.getTemplateId());
+        if (values.isEmpty()) {
+            return ResponseEntity.badRequest().body("No inventory found for this record");
+        }
 
-        Map<Long, String> fieldMap = fields.stream()
+        // ✅ Fetch all fields in ONE query (performance fix)
+        Map<Long, String> fieldMap = templateFieldRepository
+                .findByTemplate_Id(req.getTemplateId())
+                .stream()
                 .collect(Collectors.toMap(
                         TemplateField::getId,
                         f -> f.getFieldName().toLowerCase()
@@ -358,7 +279,6 @@ public class InventoryService {
 
         for (InventoryValue v : values) {
             String fieldName = fieldMap.get(v.getFieldId());
-
             if (fieldName == null) continue;
 
             if (fieldName.contains("inward")) inwardField = v;
@@ -366,36 +286,63 @@ public class InventoryService {
             else if (fieldName.contains("stock")) stockField = v;
         }
 
+        if (inwardField == null || outwardField == null || stockField == null) {
+            return ResponseEntity.badRequest()
+                    .body("Template must contain inward, outward and stock fields");
+        }
+
+        // ✅ Safe parsing
         int inward = safeParse(inwardField.getValue());
         int outward = safeParse(outwardField.getValue());
 
         int previousStock = inward - outward;
         int qty = req.getChangeQty();
+        ActionType action = req.getAction();
 
-        if (req.getAction() == ActionType.INWARD) {
-            inward += qty;
-            inwardField.setValue(String.valueOf(inward));
+        switch (action) {
 
-        } else if (req.getAction() == ActionType.OUTWARD) {
+            case INWARD:
+                inward += qty;
+                inwardField.setValue(String.valueOf(inward));
+                break;
 
-            if ((inward - outward) < qty) {
-                return ResponseEntity.badRequest().body("Not enough stock");
-            }
+            case OUTWARD:
+                if ((inward - outward) < qty) {
+                    return ResponseEntity.badRequest().body("Not enough stock");
+                }
+                outward += qty;
+                outwardField.setValue(String.valueOf(outward));
+                break;
 
-            outward += qty;
-            outwardField.setValue(String.valueOf(outward));
+            default:
+                return ResponseEntity.badRequest().body("Invalid action");
         }
 
         int newStock = inward - outward;
+        stockField.setValue(String.valueOf(newStock));
 
-        if (stockField != null) {
-            stockField.setValue(String.valueOf(newStock));
-        }
+        inventoryValueRepository.saveAll(
+                List.of(inwardField, outwardField, stockField)
+        );
+        Long performedBy = eId;
+        InventoryLog log = new InventoryLog(
+                req.getTemplateId(),
+                unitName,
+                action.name(),
+                qty,
+                previousStock,
+                newStock,
+                performedBy
+        );
 
-        inventoryValueRepository.saveAll(values);
+        System.out.println("DEBUG → Before event publish");
+        publisher.publishEvent(new InventoryAuditEvent(log));
+        System.out.println("DEBUG → Before event publish");
 
-        return ResponseEntity.ok("Updated successfully");
+        return ResponseEntity.ok("Stock updated successfully");
     }
+
+
 }
 
 
