@@ -9,7 +9,12 @@ import jakarta.persistence.*;
  * Each field acts as column of table.
  */
 @Entity
-@Table(name = "template_fields")
+@Table(
+        name = "template_fields",
+        uniqueConstraints = @UniqueConstraint(
+                columnNames = {"template_id", "fieldName"}
+        )
+)
 public class TemplateField {
 
     @Id
