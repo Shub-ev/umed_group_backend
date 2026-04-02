@@ -21,6 +21,9 @@ public class TemplateField {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private int displayOrder;
+
     @ManyToOne
     @JoinColumn(name = "template_id")
     private Template template;
@@ -51,6 +54,9 @@ public class TemplateField {
 
     public FieldType getFieldType() { return fieldType; }
 
+    public int getDisplayOrder() {
+        return displayOrder;
+    }
 
     // Setters
     public void setTemplate(Template template) { this.template = template; }
@@ -59,6 +65,9 @@ public class TemplateField {
 
     public void setFieldType(FieldType fieldType) { this.fieldType = fieldType; }
 
+    public void setDisplayOrder(int displayOrder) {
+        this.displayOrder = displayOrder;
+    }
 
     // toString
     @Override
