@@ -1,3 +1,9 @@
+/*
+ * Filter checks the requests as per security config and verify the
+ * JWT token
+ * % Study %
+ */
+
 package com.ug.ug_inventory_management.filters;
 
 import com.ug.ug_inventory_management.security.JwtService;
