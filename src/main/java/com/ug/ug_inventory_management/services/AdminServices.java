@@ -177,7 +177,7 @@ public class AdminServices {
         Admin foundAdmin = adminRepository.findByName(adminName)
                 .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + adminName));
 
-        if(!foundAdmin.getPassword().equals(adminPassword)) {
+        if(!passwordEncoder.matches(adminPassword, foundAdmin.getPassword())) {
             throw new WrongPasswordException("Invalid credentials");
         }
         adminRepository.delete(foundAdmin);
