@@ -1,10 +1,12 @@
-package com.ug.ug_inventory_management.config;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+package com.ug.ug_inventory_management.security;
+import com.ug.ug_inventory_management.filters.JwtAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.*;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import java.util.List;
@@ -12,31 +14,45 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Autowired
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
+
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
-
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/error",
+                                "/templates",
+                                "/templates/**",
+                                "/inventory/**",
+                                "/swagger-ui/**",
+                                "/v3/**"
+                        ).permitAll()
+                        // Employee
+                        .requestMatchers(HttpMethod.POST, "/employee", "/employee/").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/employee/delete").hasRole("ADMIN")
+                        .requestMatchers("/employee/login").permitAll()
+                        .requestMatchers("/employee/**").hasAnyRole("ADMIN", "EMPLOYEE")
 
-                        .requestMatchers("/error").permitAll() // EXPLICIT METHOD-BASED PERMISSION (IMPORTANT)
-                        .requestMatchers(HttpMethod.POST, "/templates").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/templates/**").permitAll()
-
-                        .requestMatchers("/inventory/**").permitAll()
-                        .requestMatchers("/employee/**").permitAll()
-                        .requestMatchers("/hkfu/**").permitAll()
-
-                        .requestMatchers("/swagger-ui/**", "/v3/**").permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
+                        // Admin
+                        .requestMatchers(HttpMethod.POST, "/hkfu/login").permitAll()
+                        .requestMatchers("/hkfu/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
+                )
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
                 );
         return http.build();
     }
