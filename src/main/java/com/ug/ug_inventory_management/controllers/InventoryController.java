@@ -1,14 +1,12 @@
 package com.ug.ug_inventory_management.controllers;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.GrantedAuthority;
 import com.ug.ug_inventory_management.services.InventoryService;
 import com.ug.ug_inventory_management.common.dtos.CreateInventoryRecordDTO;
 import com.ug.ug_inventory_management.common.dtos.InventoryUpdateRequest;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 //import com.ug.ug_inventory_management.common.security.CustomUserDetails;
-import com.ug.ug_inventory_management.common.dtos.Employee.ResponseEmployeeDTO;
+import com.ug.ug_inventory_management.common.dtos.Employee.EmployeeResponseDTO;
 
 import java.util.List;
 import java.util.Map;
@@ -55,7 +53,7 @@ public class InventoryController {
         String unitName;
         String role = "EMPLOYEE";
 
-        if (auth != null && auth.getPrincipal() instanceof ResponseEmployeeDTO user) {
+        if (auth != null && auth.getPrincipal() instanceof EmployeeResponseDTO user) {
             eId = user.geteId();
             unitName = user.getUnitName();
         } else {
