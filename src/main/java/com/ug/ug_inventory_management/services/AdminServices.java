@@ -1,15 +1,14 @@
 package com.ug.ug_inventory_management.services;
 
-import com.ug.ug_inventory_management.common.dtos.Admin.AdminDTO;
-import com.ug.ug_inventory_management.common.dtos.Admin.AdminResponseDTO;
-import com.ug.ug_inventory_management.common.dtos.Admin.AdminNameUpdateDTO;
-import com.ug.ug_inventory_management.common.dtos.Admin.AdminPasswordUpdateDTO;
+import com.ug.ug_inventory_management.common.dtos.Admin.*;
 import com.ug.ug_inventory_management.common.exceptions.AdminNotFoundException;
 import com.ug.ug_inventory_management.common.exceptions.IllegalArgumentException;
 import com.ug.ug_inventory_management.common.exceptions.WrongPasswordException;
 import com.ug.ug_inventory_management.models.Admin;
 import com.ug.ug_inventory_management.repositories.AdminRepository;
+import com.ug.ug_inventory_management.security.JwtService;
 import org.jspecify.annotations.NonNull;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,11 +22,13 @@ public class AdminServices {
     // Dependency injection by Constructor Injection
     private final AdminRepository adminRepository;
     private final PasswordEncoder passwordEncoder;
-    public AdminServices(AdminRepository adminRepository,PasswordEncoder passwordEncoder) {
-        this.adminRepository = adminRepository;
-        this.passwordEncoder=passwordEncoder;
-    }
+    private final JwtService jwtService;
 
+    public AdminServices(AdminRepository adminRepository,PasswordEncoder passwordEncoder, JwtService jwtService) {
+        this.adminRepository = adminRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+    }
 
     public AdminResponseDTO createAdmin(@NonNull AdminDTO adminDTO) {
         if (adminDTO.getName() == null || adminDTO.getName().trim().isEmpty()) {
@@ -58,9 +59,7 @@ public class AdminServices {
         return new AdminResponseDTO(repoResponse.getId(), repoResponse.getName());
     }
 
-
-
-    public AdminResponseDTO loginAdmin(@NonNull AdminDTO admin) {
+    public AdminLoginResponseDTO loginAdmin(@NonNull AdminDTO admin) {
 
         if (admin.getName() == null || admin.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Admin name must not be blank");
@@ -83,9 +82,14 @@ public class AdminServices {
             throw new WrongPasswordException("Invalid credentials");
         }
 
-        return new AdminResponseDTO(foundAdmin.getId(), foundAdmin.getName());
-    }
+        // generate JWT token
+        String token = jwtService.generateToken(
+                admin.getName(),
+                "ROLE_ADMIN"
+        );
 
+        return new AdminLoginResponseDTO(foundAdmin.getId(), foundAdmin.getName(), token);
+    }
 
     @Transactional
     public AdminResponseDTO updateAdminName(@NonNull AdminNameUpdateDTO admin) {
