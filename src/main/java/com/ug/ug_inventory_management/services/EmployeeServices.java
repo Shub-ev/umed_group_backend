@@ -7,7 +7,11 @@ import com.ug.ug_inventory_management.common.exceptions.IllegalArgumentException
 import com.ug.ug_inventory_management.common.exceptions.WrongPasswordException;
 import com.ug.ug_inventory_management.models.Employee;
 import com.ug.ug_inventory_management.repositories.EmployeeRepository;
+import com.ug.ug_inventory_management.security.CustomEmployeeDetails;
 import org.jspecify.annotations.NonNull;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -15,7 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Service
-public class EmployeeServices {
+public class EmployeeServices implements UserDetailsService {
 
     // Dependency Injection using "constructor injection"
     private final EmployeeRepository employeeRepository;
@@ -226,5 +230,25 @@ public class EmployeeServices {
         return employees.stream()
                 .map(this::convertDTO)
                 .toList();
+    }
+
+    /*####   Load Employee service for JWT   ###*/
+    @Override
+    public UserDetails loadUserByUsername(String username) {
+
+        Long eId;
+        try {
+            eId = Long.parseLong(username);
+        } catch (NumberFormatException ex) {
+            throw new EmployeeNotFoundException("Invalid employee id: " + username);
+        }
+
+
+        Employee employee = employeeRepository.findByeId(eId)
+                .orElseThrow(() ->
+                        new EmployeeNotFoundException("Employee not found with eid: " + eId)
+                );
+
+        return new CustomEmployeeDetails(employee);
     }
 }

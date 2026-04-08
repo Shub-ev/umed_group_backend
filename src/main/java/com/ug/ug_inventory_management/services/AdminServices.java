@@ -9,7 +9,10 @@ import com.ug.ug_inventory_management.common.exceptions.IllegalArgumentException
 import com.ug.ug_inventory_management.common.exceptions.WrongPasswordException;
 import com.ug.ug_inventory_management.models.Admin;
 import com.ug.ug_inventory_management.repositories.AdminRepository;
+import com.ug.ug_inventory_management.security.CustomAdminDetails;
 import org.jspecify.annotations.NonNull;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +21,7 @@ import java.util.List;
 
 // @Service marks this class as SprintBean.
 @Service
-public class AdminServices {
+public class AdminServices implements UserDetailsService {
 
     // Dependency injection by Constructor Injection
     private final AdminRepository adminRepository;
@@ -194,5 +197,16 @@ public class AdminServices {
 
     public Long getAdminCount() {
         return adminRepository.count();
+    }
+
+
+    /*####   Load Admin service for JWT   ###*/
+    @Override
+    public UserDetails loadUserByUsername(String username) {
+
+        Admin admin = adminRepository.findByName(username)
+                .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + username));
+
+        return new CustomAdminDetails(admin);
     }
 }
