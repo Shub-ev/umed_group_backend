@@ -1,4 +1,4 @@
-package com.ug.ug_inventory_management.config;
+package com.ug.ug_inventory_management.configs;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
