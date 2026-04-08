@@ -26,7 +26,11 @@ public class InventoryLog {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    public InventoryLog() {}
+
+
+    public InventoryLog() {
+        // Required by JPA
+    }
 
     public InventoryLog(Long templateId, String unitName, String action,
                         Integer changeQty, Integer previousQty,
@@ -38,6 +42,42 @@ public class InventoryLog {
         this.previousQty = previousQty;
         this.newQty = newQty;
         this.performedBy = performedBy;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Long getTemplateId() {
+        return templateId;
+    }
+
+    public String getUnitName() {
+        return unitName;
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public Integer getChangeQty() {
+        return changeQty;
+    }
+
+    public Integer getPreviousQty() {
+        return previousQty;
+    }
+
+    public Integer getNewQty() {
+        return newQty;
+    }
+
+    public Long getPerformedBy() {
+        return performedBy;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
 }
