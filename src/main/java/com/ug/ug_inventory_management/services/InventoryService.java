@@ -16,6 +16,7 @@ import com.ug.ug_inventory_management.common.dtos.InventoryUpdateRequest;
 import org.springframework.http.ResponseEntity;
 import com.ug.ug_inventory_management.repositories.TemplateRepository;
 import com.ug.ug_inventory_management.enums.ActionType;
+import com.ug.ug_inventory_management.repositories.InventoryLogRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import jakarta.validation.constraints.NotNull;
@@ -34,18 +35,20 @@ public class InventoryService {
     private final TemplateFieldRepository templateFieldRepository;
     private final TemplateRepository templateRepository;
     private final ApplicationEventPublisher publisher;
+    private  final InventoryLogRepository inventoryLogRepository;
 
 
 
     public InventoryService(InventoryRecordRepository inventoryRecordRepository,
                             InventoryValueRepository inventoryValueRepository,
                             TemplateFieldRepository templateFieldRepository,
-                            TemplateRepository templateRepository,ApplicationEventPublisher publisher) {
+                            TemplateRepository templateRepository,ApplicationEventPublisher publisher,InventoryLogRepository inventoryLogRepository) {
         this.inventoryRecordRepository = inventoryRecordRepository;
         this.inventoryValueRepository = inventoryValueRepository;
         this.templateFieldRepository = templateFieldRepository;
         this.templateRepository = templateRepository;
         this.publisher = publisher;
+        this.inventoryLogRepository=inventoryLogRepository;
     }
 
     /*  #### Correct this comment
@@ -340,6 +343,28 @@ public class InventoryService {
         System.out.println("DEBUG → Before event publish");
 
         return ResponseEntity.ok("Stock updated successfully");
+    }
+
+
+
+
+
+    // Employee logs – fetch logs for their unit
+    // Use injected instance, not the interface name
+    public List<InventoryLog> getLogsForEmployee(String unitName) {
+        return inventoryLogRepository.findByUnitNameOrderByCreatedAtDesc(unitName);
+    }
+
+    public List<InventoryLog> getLogsForAdmin(String unitName, Long templateId) {
+        if(templateId == null){
+            return inventoryLogRepository.findByUnitNameOrderByCreatedAtDesc(unitName);
+        } else {
+            return inventoryLogRepository.findByUnitNameAndTemplateIdOrderByCreatedAtDesc(unitName, templateId);
+        }
+    }
+
+    public List<String> getAllUnits() {
+        return inventoryLogRepository.findAllUnits();
     }
 
 
