@@ -102,4 +102,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
                 """.formatted(java.time.LocalDateTime.now(), message));
     }
+
+    // we add this method to bypass dofilterinternal method as JwtFilter takes place
+    // before SecurityConfig requestMatchers
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+
+        return path.equals("/employee/login") ||
+                path.equals("/hkfu/login");
+    }
 }
