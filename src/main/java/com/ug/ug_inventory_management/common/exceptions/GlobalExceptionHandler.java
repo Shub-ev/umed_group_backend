@@ -1,5 +1,7 @@
 package com.ug.ug_inventory_management.common.exceptions;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -55,6 +57,26 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(WrongPasswordException.class)
     public ResponseEntity<ErrorResponse> handleWrongPasswordException(WrongPasswordException exception) {
         log.warn("Authentication failed: {}", exception.getMessage());
+        return new ResponseEntity<>(new ErrorResponse(
+                LocalDateTime.now(),
+                exception.getMessage(),
+                HttpStatus.UNAUTHORIZED.value()
+        ), HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<ErrorResponse> handleJwtException(ExpiredJwtException exception) {
+        log.warn("Jwt authorization failed: {}", exception.getMessage());
+        return new ResponseEntity<>(new ErrorResponse(
+                LocalDateTime.now(),
+                exception.getMessage(),
+                HttpStatus.UNAUTHORIZED.value()
+        ), HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<ErrorResponse> handleJwtException(JwtException exception) {
+        log.warn("Jwt authorization failed: {}", exception.getMessage());
         return new ResponseEntity<>(new ErrorResponse(
                 LocalDateTime.now(),
                 exception.getMessage(),
