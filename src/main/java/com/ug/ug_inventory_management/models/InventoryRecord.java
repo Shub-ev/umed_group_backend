@@ -49,14 +49,11 @@ public class InventoryRecord {
 
 
     // toString
-
     @Override
     public String toString() {
         return "InventoryRecord{" +
                 "id=" + id +
-                ", template=" + template +
                 ", unitName='" + unitName + '\'' +
-                ", values=" + values +
                 '}';
     }
 }
