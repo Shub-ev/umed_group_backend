@@ -1,6 +1,8 @@
 package com.ug.ug_inventory_management.services;
 import com.ug.ug_inventory_management.common.events.InventoryAuditEvent;
 import com.ug.ug_inventory_management.models.InventoryLog;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,16 +14,12 @@ import com.ug.ug_inventory_management.models.TemplateField;
 import com.ug.ug_inventory_management.repositories.InventoryRecordRepository;
 import com.ug.ug_inventory_management.repositories.InventoryValueRepository;
 import com.ug.ug_inventory_management.repositories.TemplateFieldRepository;
-import com.ug.ug_inventory_management.common.dtos.InventoryUpdateRequest;
-import org.springframework.http.ResponseEntity;
+import com.ug.ug_inventory_management.common.dtos.InventoryUpdateRecordDTO;
 import com.ug.ug_inventory_management.repositories.TemplateRepository;
 import com.ug.ug_inventory_management.enums.ActionType;
 import com.ug.ug_inventory_management.repositories.InventoryLogRepository;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
-import org.springframework.context.ApplicationEventPublisher;
 
 
 import java.util.*;
@@ -37,7 +35,7 @@ public class InventoryService {
     private final ApplicationEventPublisher publisher;
     private  final InventoryLogRepository inventoryLogRepository;
 
-
+    private static final Logger log = LoggerFactory.getLogger(InventoryService.class);
 
     public InventoryService(InventoryRecordRepository inventoryRecordRepository,
                             InventoryValueRepository inventoryValueRepository,
@@ -63,7 +61,7 @@ public class InventoryService {
      * To the service method & method saves this data into InventoryRecord and InventoryValue
      */
     @Transactional
-    public void saveRecord(@NotNull CreateInventoryRecordDTO request) {
+    public void addInventory(@NotNull CreateInventoryRecordDTO request) {
         // A. Store record
         Template template = templateRepository.findById(request.getTemplateId())
                 .orElseThrow(() -> new RuntimeException("Template not found"));
@@ -101,9 +99,7 @@ public class InventoryService {
 
 //     ✅ FETCH INVENTORY (DYNAMIC TABLE)
     public List<Map<String, String>> getInventory(@NotNull Long templateId, @NotNull String unitName) {
-
-
-
+        log.info("Fetching Inventory of template ID: ", templateId);
         List<InventoryRecord> records = inventoryRecordRepository.findByTemplate_Id(templateId);
 
         List<TemplateField> fields =
@@ -118,24 +114,26 @@ public class InventoryService {
         List<Map<String, String>> result = new ArrayList<>();
 
         for (InventoryRecord record : records) {
-
-            List<InventoryValue> values =
-                    inventoryValueRepository.findByInventoryRecord_Id(record.getId());
-
             Map<String, String> row = new LinkedHashMap<>();
 
-            for (TemplateField field : fields) {
-                row.put(field.getFieldName(), "");
-            }
+            if(record.getUnitName().equals(unitName)){
+                List<InventoryValue> values =
+                        inventoryValueRepository.findByInventoryRecord_Id(record.getId());
 
-            for (InventoryValue val : values) {
-                String fieldName = fieldMap.get(val.getFieldId());
-                if (fieldName != null) {
-                    row.put(fieldName, val.getValue());
+                for (TemplateField field : fields) {
+                    row.put(field.getFieldName(), "");
                 }
-            }
 
-            result.add(row);
+                for (InventoryValue val : values) {
+                    String fieldName = fieldMap.get(val.getFieldId());
+                    if (fieldName != null) {
+                        row.put(fieldName, val.getValue());
+                    }
+                }
+
+                row.put("recordId", record.getId().toString());
+                result.add(row);
+            }
         }
 
         return result;
@@ -254,18 +252,15 @@ public class InventoryService {
 
 
     @Transactional
-    public ResponseEntity<?> updateInventory(InventoryUpdateRequest req, String role,Long eId ,String unitName) {
-
-        if (role == null || !role.toUpperCase().contains("EMPLOYEE")) {
-            return ResponseEntity.status(403).body("Only employees can update");
-        }
-
+    public ResponseEntity<?> updateInventory(InventoryUpdateRecordDTO req) {
+        log.info("Update Inventory: " + req.getTemplateId());
         List<InventoryValue> values =
                 inventoryValueRepository.findByInventoryRecord_Id(req.getRecordId());
-
         if (values.isEmpty()) {
             return ResponseEntity.badRequest().body("No inventory found for this record");
         }
+
+        log.info("Values: " + values.toString());
 
         // ✅ Fetch all fields in ONE query (performance fix)
         Map<Long, String> fieldMap = templateFieldRepository
@@ -327,17 +322,16 @@ public class InventoryService {
         inventoryValueRepository.saveAll(
                 List.of(inwardField, outwardField, stockField)
         );
-        Long performedBy = eId;
+
         InventoryLog log = new InventoryLog(
                 req.getTemplateId(),
-                unitName,
+                req.getUnitName(),
                 action.name(),
                 qty,
                 previousStock,
                 newStock,
-                performedBy
+                req.geteId()
         );
-
         System.out.println("DEBUG → Before event publish");
         publisher.publishEvent(new InventoryAuditEvent(log));
         System.out.println("DEBUG → Before event publish");
