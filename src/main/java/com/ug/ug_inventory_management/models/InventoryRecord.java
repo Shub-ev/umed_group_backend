@@ -46,4 +46,17 @@ public class InventoryRecord {
     public void setTemplate(Template template) { this.template = template; }
 
     public void setUnitName(String unitName) { this.unitName = unitName; }
+
+
+    // toString
+
+    @Override
+    public String toString() {
+        return "InventoryRecord{" +
+                "id=" + id +
+                ", template=" + template +
+                ", unitName='" + unitName + '\'' +
+                ", values=" + values +
+                '}';
+    }
 }
