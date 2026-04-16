@@ -1,7 +1,5 @@
 package com.ug.ug_inventory_management.controllers;
 
-import com.ug.ug_inventory_management.common.dtos.Admin.AdminDTO;
-import com.ug.ug_inventory_management.common.dtos.Admin.AdminResponseDTO;
 import com.ug.ug_inventory_management.common.dtos.Employee.*;
 import com.ug.ug_inventory_management.services.EmployeeServices;
 import org.slf4j.Logger;
@@ -25,48 +23,48 @@ public class EmployeeController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<ResponseEmployeeDTO> createEmployee(@RequestBody CreateEmployeeDTO createEmployeeDTO) {
+    public ResponseEntity<EmployeeResponseDTO> createEmployee(@RequestBody CreateEmployeeDTO createEmployeeDTO) {
         log.info("Creating employee with Id: {}", createEmployeeDTO.getEId());
-        ResponseEmployeeDTO responseEmployeeDTO = employeeServices.createEmployee(createEmployeeDTO);
-        log.info("Created Employee: {}", responseEmployeeDTO);
+        EmployeeResponseDTO employeeResponseDTO = employeeServices.createEmployee(createEmployeeDTO);
+        log.info("Created Employee: {}", employeeResponseDTO);
 
-        return ResponseEntity.ok(responseEmployeeDTO);
+        return ResponseEntity.ok(employeeResponseDTO);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ResponseEmployeeDTO> loginEmployee(@RequestBody LoginEmployeeDTO loginEmployeeDTO) {
+    public ResponseEntity<EmployeeLoginResponseDTO> loginEmployee(@RequestBody LoginEmployeeDTO loginEmployeeDTO) {
         log.info("Login with employee ID: {}", loginEmployeeDTO.getEId());
-        ResponseEmployeeDTO responseEmployeeDTO = employeeServices.loginEmployee(loginEmployeeDTO);
-        log.info("Login process completed, response: {}", responseEmployeeDTO);
+        EmployeeLoginResponseDTO employeeResponseDTO = employeeServices.loginEmployee(loginEmployeeDTO);
+        log.info("Login process completed, response: {}", employeeResponseDTO);
 
-        return ResponseEntity.ok(responseEmployeeDTO);
+        return ResponseEntity.ok(employeeResponseDTO);
     }
 
     @PatchMapping("/update/unit_name")
-    public ResponseEntity<ResponseEmployeeDTO> updateEmployeeUnitName(@RequestBody EmployeeUnitNameUpdateDTO employeeUnitNameUpdateDTO) {
+    public ResponseEntity<EmployeeResponseDTO> updateEmployeeUnitName(@RequestBody EmployeeUnitNameUpdateDTO employeeUnitNameUpdateDTO) {
         log.info("Updating unit name for employee: {}", employeeUnitNameUpdateDTO.geteId());
-        ResponseEmployeeDTO responseEmployeeDTO = employeeServices.updateEmployeeUnitName(employeeUnitNameUpdateDTO);
+        EmployeeResponseDTO employeeResponseDTO = employeeServices.updateEmployeeUnitName(employeeUnitNameUpdateDTO);
         log.info("Unit name updated successfully for employee: {}", employeeUnitNameUpdateDTO.geteId());
 
-        return ResponseEntity.ok(responseEmployeeDTO);
+        return ResponseEntity.ok(employeeResponseDTO);
     }
 
     @PatchMapping("/update/password")
-    public ResponseEntity<ResponseEmployeeDTO> updateEmployeePassword(@RequestBody EmployeePasswordUpdateDTO employeePasswordUpdateDTO) {
+    public ResponseEntity<EmployeeResponseDTO> updateEmployeePassword(@RequestBody EmployeePasswordUpdateDTO employeePasswordUpdateDTO) {
         log.info("Updating password for employee ID: {}", employeePasswordUpdateDTO.geteId());
-        ResponseEmployeeDTO employeeDTO = employeeServices.updateEmployeePassword(employeePasswordUpdateDTO);
+        EmployeeResponseDTO employeeDTO = employeeServices.updateEmployeePassword(employeePasswordUpdateDTO);
         log.info("Password updated successfully for employee: {}", employeePasswordUpdateDTO.geteId());
 
         return ResponseEntity.ok(employeeDTO);
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<ResponseEmployeeDTO> deleteEmployee(@RequestBody LoginEmployeeDTO loginEmployeeDTO) {
+    public ResponseEntity<EmployeeResponseDTO> deleteEmployee(@RequestBody LoginEmployeeDTO loginEmployeeDTO) {
         log.info("Deleting employee with ID: {}", loginEmployeeDTO.getEId());
-        ResponseEmployeeDTO responseEmployeeDTO = employeeServices.deleteEmployee(loginEmployeeDTO);
+        EmployeeResponseDTO employeeResponseDTO = employeeServices.deleteEmployee(loginEmployeeDTO);
         log.info("Employee deleted successfully with ID: {}", loginEmployeeDTO.getEId());
 
-        return ResponseEntity.ok(responseEmployeeDTO);
+        return ResponseEntity.ok(employeeResponseDTO);
     }
 
     @GetMapping("/count")
@@ -78,9 +76,9 @@ public class EmployeeController {
     }
 
     @GetMapping("/get_employees")
-    public ResponseEntity<List<ResponseEmployeeDTO>> getEmployees() {
+    public ResponseEntity<List<EmployeeResponseDTO>> getEmployees() {
         log.info("Fetching employees");
-        List<ResponseEmployeeDTO> employees = employeeServices.getEmployees();
+        List<EmployeeResponseDTO> employees = employeeServices.getEmployees();
         log.info("Employees fetched");
         return ResponseEntity.ok(employees);
     }

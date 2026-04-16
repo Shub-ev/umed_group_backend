@@ -1,14 +1,11 @@
 package com.ug.ug_inventory_management.controllers;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.GrantedAuthority;
 import com.ug.ug_inventory_management.services.InventoryService;
 import com.ug.ug_inventory_management.common.dtos.CreateInventoryRecordDTO;
-import com.ug.ug_inventory_management.common.dtos.InventoryUpdateRequest;
+import com.ug.ug_inventory_management.common.dtos.InventoryUpdateRecordDTO;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 //import com.ug.ug_inventory_management.common.security.CustomUserDetails;
-import com.ug.ug_inventory_management.common.dtos.Employee.ResponseEmployeeDTO;
 
 import java.util.List;
 import java.util.Map;
@@ -26,7 +23,7 @@ public class InventoryController {
     // ✅ CREATE INVENTORY
     @PostMapping
     public String addInventory(@RequestBody CreateInventoryRecordDTO request) {
-        inventoryService.saveRecord(request);
+        inventoryService.addInventory(request);
         return "Inventory Saved";
     }
 
@@ -67,24 +64,33 @@ public class InventoryController {
 //    }
 
 
+
     //--------------Authenticated User only make changes in the qty ----------//
+//    @PostMapping("/update")
+//    public ResponseEntity<?> updateInventory(
+//            @RequestBody InventoryUpdateRequest req
+//    ) {
+//        Long eId = null;
+//        String unitName = null;
+//        String role = "EMPLOYEE";
+//
+//        if (auth != null && auth.getPrincipal() instanceof EmployeeResponseDTO user) {
+//            eId = user.geteId();
+//            unitName = user.getUnitName();
+//        } else {
+//            return ResponseEntity.status(401).body("User not authenticated");
+//        }
+//
+//        return inventoryService.updateInventory(req, role, eId, unitName);
+//    }
+
+
+
+
+//  --------------Authenticated User only make changes in the qty ----------  //
     @PostMapping("/update")
-    public ResponseEntity<?> updateInventory(
-            @RequestBody InventoryUpdateRequest req,
-            Authentication auth
-    ) {
-        Long eId = null;
-        String unitName = null;
-        String role = "EMPLOYEE";
-
-        if (auth != null && auth.getPrincipal() instanceof ResponseEmployeeDTO user) {
-            eId = user.geteId();
-            unitName = user.getUnitName();
-        } else {
-            return ResponseEntity.status(401).body("User not authenticated");
-        }
-
-        return inventoryService.updateInventory(req, role, eId, unitName);
+    public ResponseEntity<?> updateInventory(@RequestBody InventoryUpdateRecordDTO req) {
+        return inventoryService.updateInventory(req);
     }
 
 

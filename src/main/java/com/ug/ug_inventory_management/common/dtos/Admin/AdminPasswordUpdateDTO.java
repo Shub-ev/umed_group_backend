@@ -16,6 +16,9 @@ public class AdminPasswordUpdateDTO {
     @Schema(hidden = true)
     private String passwordNew;
 
+    //default constructor
+    public AdminPasswordUpdateDTO() {}
+
     public AdminPasswordUpdateDTO(Long id, String password, String password1, String name) {
         this.id = id;
         this.passwordPre = password;

@@ -1,9 +1,6 @@
 package com.ug.ug_inventory_management.controllers;
 
-import com.ug.ug_inventory_management.common.dtos.Admin.AdminDTO;
-import com.ug.ug_inventory_management.common.dtos.Admin.AdminResponseDTO;
-import com.ug.ug_inventory_management.common.dtos.Admin.AdminNameUpdateDTO;
-import com.ug.ug_inventory_management.common.dtos.Admin.AdminPasswordUpdateDTO;
+import com.ug.ug_inventory_management.common.dtos.Admin.*;
 import com.ug.ug_inventory_management.services.AdminServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,9 +33,9 @@ public class AdminController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AdminResponseDTO> loginAdmin(@RequestBody AdminDTO admin) {
+    public ResponseEntity<AdminLoginResponseDTO> loginAdmin(@RequestBody AdminDTO admin) {
         log.info("Login with admin name: {}", admin.getName());
-        AdminResponseDTO admin_res = adminServices.loginAdmin(admin);
+        AdminLoginResponseDTO admin_res = adminServices.loginAdmin(admin);
         log.info("Login process completed, response: {}", admin_res);
 
         return ResponseEntity.ok(admin_res);

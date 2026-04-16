@@ -29,7 +29,7 @@ public class EmployeePasswordUpdateDTO {
 
 
     // getters
-    public Long geteId() {
+    public Long getEId() {
         return eId;
     }
 

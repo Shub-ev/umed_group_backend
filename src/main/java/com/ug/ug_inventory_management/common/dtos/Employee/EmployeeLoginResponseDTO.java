@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 
 @Schema(description = "DTO to send the response from employee service handler")
-public class ResponseEmployeeDTO {
+public class EmployeeLoginResponseDTO {
     @Schema(description = "Employee table ID", example = "1234")
     private Long id;
 
@@ -18,14 +18,18 @@ public class ResponseEmployeeDTO {
     @Schema(description = "Employee allocation date")
     private LocalDate allocation;
 
-    public ResponseEmployeeDTO() {
+    @Schema(description = "JWT token")
+    private String token;
+
+    public EmployeeLoginResponseDTO() {
     }
 
-    public ResponseEmployeeDTO(Long id, Long eId, String unitName, LocalDate allocation) {
+    public EmployeeLoginResponseDTO(Long id, Long eId, String unitName, LocalDate allocation, String token) {
         this.id = id;
         this.eId = eId;
         this.unitName = unitName;
         this.allocation = allocation;
+        this.token = token;
     }
 
 
@@ -38,14 +42,17 @@ public class ResponseEmployeeDTO {
 
     public LocalDate getAllocation() { return allocation; }
 
+    public String getToken() { return token; }
+
     // toString
     @Override
     public String toString() {
-        return "ResponseEmployeeDTO{" +
+        return "EmployeeLoginResponseDTO{" +
                 "id=" + id +
                 ", eId=" + eId +
                 ", unitName='" + unitName + '\'' +
                 ", allocation=" + allocation +
+                ", token='" + token + '\'' +
                 '}';
     }
 }
