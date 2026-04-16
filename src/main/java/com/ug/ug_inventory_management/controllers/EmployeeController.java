@@ -51,18 +51,29 @@ public class EmployeeController {
 
     @PatchMapping("/update/password")
     public ResponseEntity<EmployeeResponseDTO> updateEmployeePassword(@RequestBody EmployeePasswordUpdateDTO employeePasswordUpdateDTO) {
-        log.info("Updating password for employee ID: {}", employeePasswordUpdateDTO.geteId());
+        log.info("Updating password for employee ID: {}", employeePasswordUpdateDTO.getEId());
         EmployeeResponseDTO employeeDTO = employeeServices.updateEmployeePassword(employeePasswordUpdateDTO);
-        log.info("Password updated successfully for employee: {}", employeePasswordUpdateDTO.geteId());
+        log.info("Password updated successfully for employee: {}", employeePasswordUpdateDTO.getEId());
 
         return ResponseEntity.ok(employeeDTO);
     }
 
+    // Delete employee by employee himself
     @DeleteMapping("/delete")
     public ResponseEntity<EmployeeResponseDTO> deleteEmployee(@RequestBody LoginEmployeeDTO loginEmployeeDTO) {
         log.info("Deleting employee with ID: {}", loginEmployeeDTO.getEId());
         EmployeeResponseDTO employeeResponseDTO = employeeServices.deleteEmployee(loginEmployeeDTO);
         log.info("Employee deleted successfully with ID: {}", loginEmployeeDTO.getEId());
+
+        return ResponseEntity.ok(employeeResponseDTO);
+    }
+
+    // Delete employee by Admin (no need of password)
+    @DeleteMapping("/delete-admin")
+    public ResponseEntity<EmployeeResponseDTO> deleteEmployeeByAdmin(@RequestBody LoginEmployeeDTO loginEmployeeDTO) {
+        log.info("Deleting employee with ID (by admin): {}", loginEmployeeDTO.getEId());
+        EmployeeResponseDTO employeeResponseDTO = employeeServices.deleteEmployeeByAdmin(loginEmployeeDTO);
+        log.info("Employee deleted successfully with ID (by admin): {}", loginEmployeeDTO.getEId());
 
         return ResponseEntity.ok(employeeResponseDTO);
     }
