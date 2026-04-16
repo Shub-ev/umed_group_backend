@@ -102,7 +102,7 @@ public class InventoryController {
 
     @GetMapping("/logs/admin")
     public ResponseEntity<?> getAdminLogs(
-            @RequestParam String unitName,
+            @RequestParam(required = false) String unitName,
             @RequestParam(required = false) Long templateId
     ) {
         return ResponseEntity.ok(inventoryService.getLogsForAdmin(unitName, templateId));

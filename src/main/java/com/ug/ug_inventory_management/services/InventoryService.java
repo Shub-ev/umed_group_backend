@@ -153,7 +153,6 @@ public class InventoryService {
 
 
     public List<Map<String, String>> getUnitWiseSummary(Long templateId) {
-
         List<InventoryRecord> records =
                 inventoryRecordRepository.findByTemplate_Id(templateId);
 
@@ -345,11 +344,15 @@ public class InventoryService {
 
     // Employee logs – fetch logs for their unit
     // Use injected instance, not the interface name
-    public List<InventoryLog> getLogsForEmployee(String unitName) {
-        return inventoryLogRepository.findByUnitNameOrderByCreatedAtDesc(unitName);
+    public List<InventoryLog> getEmployeeLogs(Long eId) {
+        return inventoryLogRepository.findByPerformedByOrderByCreatedAtDesc(eId);
     }
 
     public List<InventoryLog> getLogsForAdmin(String unitName, Long templateId) {
+        log.info("Admin Logs request:\nUnit Name : {}\nTemplate Id : {}", unitName, templateId);
+        if((unitName == null || unitName.trim().equals("")) && (templateId == null || templateId == 0)) {
+            return inventoryLogRepository.findAll();
+        }
         if(templateId == null){
             return inventoryLogRepository.findByUnitNameOrderByCreatedAtDesc(unitName);
         } else {
