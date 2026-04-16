@@ -156,7 +156,9 @@ public class AdminServices {
         if(!passwordEncoder.matches(adminPassPre, foundAdmin.getPassword())) {
             throw new WrongPasswordException("Invalid credentials");
         }
-        foundAdmin.setPassword(adminPassNew);
+
+//        foundAdmin.setPassword(adminPassNew);
+        foundAdmin.setPassword(passwordEncoder.encode(adminPassNew));
         Admin saveRes = adminRepository.save(foundAdmin);
         return new AdminResponseDTO(saveRes.getId(), saveRes.getName());
     }
