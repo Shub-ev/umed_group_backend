@@ -1,7 +1,6 @@
 package com.ug.ug_inventory_management.services;
 
 import com.ug.ug_inventory_management.common.dtos.Employee.*;
-
 import com.ug.ug_inventory_management.common.exceptions.EmployeeNotFoundException;
 import com.ug.ug_inventory_management.common.exceptions.IllegalArgumentException;
 import com.ug.ug_inventory_management.common.exceptions.WrongPasswordException;
@@ -11,6 +10,8 @@ import com.ug.ug_inventory_management.security.JwtService;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,7 +23,7 @@ public class EmployeeServices {
     private final EmployeeRepository employeeRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-
+    private static final Logger log = LoggerFactory.getLogger(EmployeeServices.class);
     public EmployeeServices(EmployeeRepository employeeRepository,PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.employeeRepository = employeeRepository;
         this.passwordEncoder = passwordEncoder;
@@ -101,6 +102,8 @@ public class EmployeeServices {
                 foundEmployee.getAllocation(),
                 token
         );
+        log.info("FULL LOGIN RESPONSE: {}", employeeResponseDTO);
+        log.info("eId in response = {}", employeeResponseDTO.geteId());
         return employeeResponseDTO;
     }
 
@@ -145,7 +148,7 @@ public class EmployeeServices {
 
     public EmployeeResponseDTO updateEmployeePassword(@NonNull EmployeePasswordUpdateDTO employeePasswordUpdateDTO) {
 
-        if (employeePasswordUpdateDTO.geteId() == null) {
+        if (employeePasswordUpdateDTO.getEId() == null) {
             throw new IllegalArgumentException("Employee Id cannot be blank");
         }
 
@@ -167,9 +170,9 @@ public class EmployeeServices {
             throw new IllegalArgumentException("Password must be 5 to 14 characters");
         }
 
-        Employee foundEmployee = employeeRepository.findByeId(employeePasswordUpdateDTO.geteId())
+        Employee foundEmployee = employeeRepository.findByeId(employeePasswordUpdateDTO.getEId())
                 .orElseThrow(() ->
-                        new EmployeeNotFoundException("Employee not found with eid: " + employeePasswordUpdateDTO.geteId())
+                        new EmployeeNotFoundException("Employee not found with eid: " + employeePasswordUpdateDTO.getEId())
                 );
 
         // ✅ FIX: compare hashed password
