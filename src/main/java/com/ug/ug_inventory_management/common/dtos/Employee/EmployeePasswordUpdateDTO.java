@@ -29,11 +29,9 @@ public class EmployeePasswordUpdateDTO {
 
 
     // getters
-    //name conflict resolved
     public Long getEId() {
         return eId;
     }
-
 
     public String getUnitName() {
         return unitName;
