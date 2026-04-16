@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -39,102 +40,39 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.jwtService = jwtService;
     }
 
-  //  @Override
-//    protected void doFilterInternal(
-//            HttpServletRequest request,
-//            HttpServletResponse response,
-//            FilterChain filterChain) throws ServletException, IOException {
-//
-//        try{
-//            String authHeader = request.getHeader("Authorization");
-//
-//            if(authHeader == null || !authHeader.startsWith("Bearer ")) {
-//                sendError(response, request, "Missing or invalid Authorization header");
-//                return;
-//            }
-//
-//            String token = authHeader.substring(7);
-//            String username = jwtService.extractUsername(token);
-//
-//            if(username == null) {
-//                sendError(response, request, "Invalid token: username missing");
-//                return;
-//            }
-//
-//            if(SecurityContextHolder.getContext().getAuthentication() == null) {
-//                UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
-//                if(jwtService.isTokenValid(token, userDetails)) {
-//                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-//                            userDetails,
-//                            null,
-//                            userDetails.getAuthorities()
-//                    );
-//
-//                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-//                    SecurityContextHolder.getContext().setAuthentication(authToken);
-//                } else {
-//                    sendError(response, request, "Invalid token");
-//                    return;
-//                }
-//            }
-//
-//            filterChain.doFilter(request, response);
-//        } catch(ExpiredJwtException exception) {
-//            sendError(response, request, "Token expired");
-//            return;
-//        } catch (JwtException exception) {
-//            sendError(response, request, "Invalid token");
-//            return;
-//        }
-//    }
-
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
+            FilterChain filterChain) throws ServletException, IOException {
 
-        try {
+        try{
             String authHeader = request.getHeader("Authorization");
 
-            // ✅ IMPORTANT: DO NOT BLOCK REQUEST IF NO TOKEN
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                filterChain.doFilter(request, response);
+            if(authHeader == null || !authHeader.startsWith("Bearer ")) {
+                sendError(response, request, "Missing or invalid Authorization header");
                 return;
             }
 
             String token = authHeader.substring(7);
+            String username = jwtService.extractUsername(token);
 
-            String username;
-            try {
-                username = jwtService.extractUsername(token);
-            } catch (Exception e) {
-                sendError(response, request, "Invalid token");
+            if(username == null) {
+                sendError(response, request, "Invalid token: username missing");
                 return;
             }
 
-            if (username != null &&
-                    SecurityContextHolder.getContext().getAuthentication() == null) {
-
-                UserDetails userDetails =
-                        customUserDetailsService.loadUserByUsername(username);
-
-                if (jwtService.isTokenValid(token, userDetails)) {
-
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
-
-                    authToken.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request)
+            if(SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+                if(jwtService.isTokenValid(token, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
                     );
 
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-
                 } else {
                     sendError(response, request, "Invalid token");
                     return;
@@ -142,11 +80,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             filterChain.doFilter(request, response);
+        } catch(UsernameNotFoundException exception) {
+            log.warn("JWT failed for URI: {} | Reason: {}", request.getRequestURI(), exception.getMessage());
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            response.setContentType("application/json");
 
-        } catch (ExpiredJwtException e) {
+            response.getWriter().write("""
+                {
+                    "timestamp": "%s",
+                    "message": "%s",
+                    "status": 401
+                }
+                """.formatted(java.time.LocalDateTime.now(), exception.getMessage()));
+        } catch (ExpiredJwtException exception) {
             sendError(response, request, "Token expired");
-        } catch (JwtException e) {
+            return;
+        } catch (JwtException exception) {
             sendError(response, request, "Invalid token");
+            return;
         }
     }
 
