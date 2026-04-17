@@ -42,8 +42,10 @@ public class SecurityConfig {
                         // Employee
                         .requestMatchers(HttpMethod.POST, "/employee", "/employee/").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/employee/delete").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/employee/delete-admin").hasRole("ADMIN")
                         .requestMatchers("/employee/login").permitAll()
                         .requestMatchers("/employee/**").hasAnyRole("ADMIN", "EMPLOYEE")
+                        .requestMatchers("/reports/**").hasAnyRole("ADMIN", "EMPLOYEE")
 
                         // Admin
                         .requestMatchers(HttpMethod.POST, "/hkfu/login").permitAll()

@@ -95,19 +95,14 @@ public class InventoryController {
 
 
 
-    @GetMapping("/logs/employee")
-    public ResponseEntity<?> getEmployeeLogs(Authentication auth) {
-        String unitName;
-
-        // since no auth implemented yet
-        unitName = "UNIT_1";
-
-        return ResponseEntity.ok(inventoryService.getLogsForEmployee(unitName));
+    @GetMapping("/logs/employee/{eId}")
+    public ResponseEntity<?> getEmployeeLogs(@PathVariable Long eId) {
+        return ResponseEntity.ok(inventoryService.getEmployeeLogs(eId));
     }
 
     @GetMapping("/logs/admin")
     public ResponseEntity<?> getAdminLogs(
-            @RequestParam String unitName,
+            @RequestParam(required = false) String unitName,
             @RequestParam(required = false) Long templateId
     ) {
         return ResponseEntity.ok(inventoryService.getLogsForAdmin(unitName, templateId));

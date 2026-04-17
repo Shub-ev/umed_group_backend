@@ -222,6 +222,23 @@ public class EmployeeServices {
         );
     }
 
+    public EmployeeResponseDTO deleteEmployeeByAdmin(@NonNull LoginEmployeeDTO loginEmployeeDTO) {
+        if(loginEmployeeDTO.getEId() == null){
+            throw new IllegalArgumentException("Employee Id can not be blank");
+        }
+
+        Employee foundEmployee = employeeRepository.findByeId(loginEmployeeDTO.getEId())
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with eid: " + loginEmployeeDTO.getEId()));
+
+        employeeRepository.delete(foundEmployee);
+        return new EmployeeResponseDTO(
+                foundEmployee.getId(),
+                foundEmployee.getEId(),
+                foundEmployee.getUnitName(),
+                foundEmployee.getAllocation()
+        );
+    }
+
     public Long employeeCount() {
         return employeeRepository.count();
     }
