@@ -103,7 +103,7 @@ public class EmployeeServices {
                 token
         );
         log.info("FULL LOGIN RESPONSE: {}", employeeResponseDTO);
-        log.info("eId in response = {}", employeeResponseDTO.geteId());
+        log.info("eId in response = {}", employeeResponseDTO.getEId());
         return employeeResponseDTO;
     }
 

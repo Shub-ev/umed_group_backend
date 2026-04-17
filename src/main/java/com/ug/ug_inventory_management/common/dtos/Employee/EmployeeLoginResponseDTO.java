@@ -36,13 +36,18 @@ public class EmployeeLoginResponseDTO {
     // Getters
     public Long getId() { return id; }
 
-    public Long geteId() { return eId; }
+    public Long getEId() { return eId; }
 
     public String getUnitName() { return unitName; }
 
     public LocalDate getAllocation() { return allocation; }
 
     public String getToken() { return token; }
+
+
+    public void setEId(Long eId) {
+        this.eId = eId;
+    }
 
     // toString
     @Override
