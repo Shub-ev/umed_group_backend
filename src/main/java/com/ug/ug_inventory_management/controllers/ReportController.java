@@ -1,0 +1,112 @@
+package com.ug.ug_inventory_management.controllers;
+
+import com.ug.ug_inventory_management.common.dtos.ReportRequestDTO;
+import com.ug.ug_inventory_management.common.dtos.ReportResponseDTO;
+import com.ug.ug_inventory_management.services.ReportService;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+@RestController
+@RequestMapping("/reports")
+public class ReportController {
+
+    private final ReportService reportService;
+
+    public ReportController(ReportService reportService) {
+        this.reportService = reportService;
+    }
+
+    // -----------------------------
+    // REPORT API (FIXED)
+    // -----------------------------
+    @GetMapping
+    public ResponseEntity<List<ReportResponseDTO>> getReport(
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to,
+            @RequestParam(required = false) String unit,
+            @RequestParam(required = false) Long templateId
+    ) {
+
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+
+        LocalDateTime fromDate = null;
+        LocalDateTime toDate = null;
+
+        try {
+            if (from != null && !from.isBlank()) {
+                fromDate = LocalDateTime.parse(from, formatter);
+            }
+
+            if (to != null && !to.isBlank()) {
+                toDate = LocalDateTime.parse(to, formatter);
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid date format. Expected ISO format.");
+        }
+
+        ReportRequestDTO req = new ReportRequestDTO();
+        req.setFromDate(fromDate);
+        req.setToDate(toDate);
+        req.setUnit(unit);
+        req.setTemplateId(templateId);
+
+        return ResponseEntity.ok(reportService.getReport(req));
+    }
+
+    // -----------------------------
+    // EXCEL EXPORT
+    // -----------------------------
+    @GetMapping("/export/excel")
+    public void exportExcel(
+            @RequestParam String from,
+            @RequestParam String to,
+            @RequestParam(required = false) String unit,
+            @RequestParam(required = false) Long templateId,
+            HttpServletResponse response
+    ) throws IOException {
+
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+
+        ReportRequestDTO req = new ReportRequestDTO();
+        req.setFromDate(LocalDateTime.parse(from, formatter));
+        req.setToDate(LocalDateTime.parse(to, formatter));
+        req.setUnit(unit);
+        req.setTemplateId(templateId);
+
+        List<ReportResponseDTO> data = reportService.getReport(req);
+
+        reportService.exportToExcel(data, response);
+    }
+
+    // -----------------------------
+    // PDF EXPORT
+    // -----------------------------
+    @GetMapping("/export/pdf")
+    public void exportPdf(
+            @RequestParam String from,
+            @RequestParam String to,
+            @RequestParam(required = false) String unit,
+            @RequestParam(required = false) Long templateId,
+            HttpServletResponse response
+    ) throws Exception {
+
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+
+        ReportRequestDTO req = new ReportRequestDTO();
+        req.setFromDate(LocalDateTime.parse(from, formatter));
+        req.setToDate(LocalDateTime.parse(to, formatter));
+        req.setUnit(unit);
+        req.setTemplateId(templateId);
+
+        List<ReportResponseDTO> data = reportService.getReport(req);
+
+        reportService.exportToPdf(data, response);
+    }
+}
