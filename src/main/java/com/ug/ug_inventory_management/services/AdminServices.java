@@ -7,6 +7,8 @@ import com.ug.ug_inventory_management.common.exceptions.WrongPasswordException;
 import com.ug.ug_inventory_management.models.Admin;
 import com.ug.ug_inventory_management.repositories.AdminRepository;
 import com.ug.ug_inventory_management.security.JwtService;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
@@ -59,6 +61,9 @@ public class AdminServices {
         return new AdminResponseDTO(repoResponse.getId(), repoResponse.getName());
     }
 
+
+
+    @Transactional
     public AdminLoginResponseDTO loginAdmin(@NonNull AdminDTO admin) {
 
         if (admin.getName() == null || admin.getName().trim().isEmpty()) {
@@ -77,33 +82,32 @@ public class AdminServices {
                         new AdminNotFoundException("Admin not found with name: " + trimmedName)
                 );
 
-        //checking if the password matches with the hashed one or not
         if (!passwordEncoder.matches(trimmedPassword, foundAdmin.getPassword())) {
             throw new WrongPasswordException("Invalid credentials");
         }
 
-        // generate JWT token
         String token = jwtService.generateToken(
-                admin.getName(),
+                trimmedName,
                 "ROLE_ADMIN"
         );
 
         return new AdminLoginResponseDTO(foundAdmin.getId(), foundAdmin.getName(), token);
     }
 
+
     @Transactional
-    public AdminResponseDTO updateAdminName(@NonNull AdminNameUpdateDTO admin) {
-        if((admin.getOldName() == null) || (admin.getOldName().trim().isEmpty())) {
+    public AdminLoginResponseDTO updateAdminName(@NonNull AdminNameUpdateDTO admin) {
+
+        if ((admin.getOldName() == null) || (admin.getOldName().trim().isEmpty())) {
             throw new IllegalArgumentException("admin old name must not be blank");
         }
-        if((admin.getNewName() == null) || (admin.getNewName().trim().isEmpty())) {
+        if ((admin.getNewName() == null) || (admin.getNewName().trim().isEmpty())) {
             throw new IllegalArgumentException("admin new name must not be blank");
         }
-        if((admin.getPassword() == null) || (admin.getPassword().trim().isEmpty())) {
+        if ((admin.getPassword() == null) || (admin.getPassword().trim().isEmpty())) {
             throw new IllegalArgumentException("admin password must not be blank");
         }
 
-        // trim admin name and password before use
         String adminOldName = admin.getOldName().trim();
         String adminNewName = admin.getNewName().trim();
         String adminPassword = admin.getPassword().trim();
@@ -111,81 +115,90 @@ public class AdminServices {
         Admin foundAdmin = adminRepository.findByName(adminOldName)
                 .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + adminOldName));
 
-        if(!passwordEncoder.matches(adminPassword, foundAdmin.getPassword())) {
+        if (!passwordEncoder.matches(adminPassword, foundAdmin.getPassword())) {
             throw new WrongPasswordException("Invalid credentials");
         }
-        if(adminRepository.existsByName(adminNewName)) {
-            throw new java.lang.IllegalArgumentException("admin with name "+ "\'" + adminNewName + "\'" + " already exists");
+
+        if (adminRepository.existsByName(adminNewName)) {
+            throw new IllegalArgumentException("admin with name '" + adminNewName + "' already exists");
         }
 
         foundAdmin.setName(adminNewName);
         Admin savedAdmin = adminRepository.save(foundAdmin);
-        return new AdminResponseDTO(savedAdmin.getId(), savedAdmin.getName());
+
+        // IMPORTANT: issue a new token with the new name
+        String newToken = jwtService.generateToken(savedAdmin.getName(), "ROLE_ADMIN");
+
+        return new AdminLoginResponseDTO(savedAdmin.getId(), savedAdmin.getName(), newToken);
     }
+
 
     @Transactional
     public AdminResponseDTO updateAdminPassword(@NonNull AdminPasswordUpdateDTO adminpass) {
-        if((adminpass.getName() == null) || (adminpass.getName().trim().isEmpty())) {
-            throw new IllegalArgumentException("admin name must not be blank");
-        }
-        if((adminpass.getPasswordPre() == null) || (adminpass.getPasswordPre().trim().isEmpty())) {
+
+        if ((adminpass.getPasswordPre() == null) || (adminpass.getPasswordPre().trim().isEmpty())) {
             throw new IllegalArgumentException("Old password must not be blank");
         }
-        if((adminpass.getPasswordNew() == null) || (adminpass.getPasswordNew().trim().isEmpty())) {
+        if ((adminpass.getPasswordNew() == null) || (adminpass.getPasswordNew().trim().isEmpty())) {
             throw new IllegalArgumentException("New password must not be blank");
         }
-        String adminName = adminpass.getName().trim();
+
         String adminPassPre = adminpass.getPasswordPre().trim();
         String adminPassNew = adminpass.getPasswordNew().trim();
 
-        if(adminPassNew.length() <=5 || adminPassNew.length() >=14){
+        if (adminPassNew.length() <= 5 || adminPassNew.length() >= 14) {
             throw new IllegalArgumentException("Password must be 5 to 14 characters");
         }
 
-
-        // check if old and new password is same
-        if(adminPassPre.equals(adminPassNew)) {
+        if (adminPassPre.equals(adminPassNew)) {
             throw new IllegalArgumentException("New password must be different from old password");
         }
 
-        // get the admin entity
-        Admin foundAdmin = adminRepository.findByName(adminName)
-                .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + adminName));
+        // Use authenticated username from JWT
+        String username = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
 
-        // verify password
-        if(!passwordEncoder.matches(adminPassPre, foundAdmin.getPassword())) {
+        Admin foundAdmin = adminRepository.findByName(username)
+                .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + username));
+
+        if (!passwordEncoder.matches(adminPassPre, foundAdmin.getPassword())) {
             throw new WrongPasswordException("Invalid credentials");
         }
 
-//        foundAdmin.setPassword(adminPassNew);
         foundAdmin.setPassword(passwordEncoder.encode(adminPassNew));
         Admin saveRes = adminRepository.save(foundAdmin);
+
         return new AdminResponseDTO(saveRes.getId(), saveRes.getName());
     }
 
+
+
     @Transactional
     public AdminResponseDTO deleteAdmin(@NonNull AdminDTO adminDTO) {
-        if(adminDTO.getName() == null || adminDTO.getName().trim().isEmpty()) {
-            return null;
-        }
+
         if(adminDTO.getPassword() == null || adminDTO.getPassword().trim().isEmpty()) {
-            return null;
+            throw new IllegalArgumentException("Password must not be blank");
         }
 
-        // trim admin name and password before using
-        String adminName = adminDTO.getName().trim();
         String adminPassword = adminDTO.getPassword().trim();
 
-        Admin foundAdmin = adminRepository.findByName(adminName)
-                .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + adminName));
+        //  GET USER FROM JWT (SECURE)
+        String username = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        Admin foundAdmin = adminRepository.findByName(username)
+                .orElseThrow(() -> new AdminNotFoundException("Admin not found with name: " + username));
 
         if(!passwordEncoder.matches(adminPassword, foundAdmin.getPassword())) {
             throw new WrongPasswordException("Invalid credentials");
         }
-        adminRepository.delete(foundAdmin);
-        return new AdminResponseDTO(adminDTO.getId(), adminDTO.getName());
-    }
 
+        adminRepository.delete(foundAdmin);
+
+        return new AdminResponseDTO(foundAdmin.getId(), foundAdmin.getName());
+    }
     public AdminResponseDTO convertDTO(Admin admin) {
         return new AdminResponseDTO(admin.getId(), admin.getName());
     }

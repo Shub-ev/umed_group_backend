@@ -23,12 +23,56 @@ public class AdminController {
     }
 
     // Create admin controller
+//    @PostMapping("/")
+//    public ResponseEntity<AdminResponseDTO> createAdmin(@RequestBody AdminDTO admin) {
+//        log.info("Creating admin with name: {}", admin.getName());
+//        AdminResponseDTO admin_res = adminServices.createAdmin(admin);
+//        log.info("Created Admin: {}", admin_res);
+//
+//        return ResponseEntity.status(HttpStatus.CREATED).body(admin_res);
+//    }
+//
+//    @PostMapping("/login")
+//    public ResponseEntity<AdminLoginResponseDTO> loginAdmin(@RequestBody AdminDTO admin) {
+//        log.info("Login with admin name: {}", admin.getName());
+//        AdminLoginResponseDTO admin_res = adminServices.loginAdmin(admin);
+//        log.info("Login process completed, response: {}", admin_res);
+//
+//        return ResponseEntity.ok(admin_res);
+//    }
+//
+//    @PatchMapping("/update/name")
+//    public ResponseEntity<AdminResponseDTO> updateAdminName(@RequestBody AdminNameUpdateDTO admin) {
+//        log.info("Updating admin name for admin: {}", admin.getOldName());
+//        AdminResponseDTO adminResponseDTO = adminServices.updateAdminName(admin);
+//        log.info("Admin name updated successfully from {} to {}", admin.getOldName(), admin.getNewName());
+//
+//        return ResponseEntity.ok(adminResponseDTO);
+//    }
+//
+//    @PatchMapping("/update/password")
+//    public ResponseEntity<AdminResponseDTO> updateAdminPassword(@RequestBody AdminPasswordUpdateDTO adminpass) {
+//        log.info("Updating admin password for admin: {}", adminpass.getName());
+//        AdminResponseDTO adminResponseDTO = adminServices.updateAdminPassword(adminpass);
+//        log.info("Password updated successfully for admin: {}", adminpass.getId());
+//
+//        return ResponseEntity.ok(adminResponseDTO);
+//    }
+//
+//    @DeleteMapping("/delete")
+//    public ResponseEntity<AdminResponseDTO> deleteAdmin(@RequestBody AdminDTO adminDTO) {
+//        log.info("Deleting admin with name: {}", adminDTO.getName());
+//        AdminResponseDTO adminResponseDTO = adminServices.deleteAdmin(adminDTO);
+//        log.info("Admin deleted successfully with name: {}", adminDTO.getName());
+//
+//        return ResponseEntity.ok(adminResponseDTO);
+//    }
+
     @PostMapping("/")
     public ResponseEntity<AdminResponseDTO> createAdmin(@RequestBody AdminDTO admin) {
         log.info("Creating admin with name: {}", admin.getName());
         AdminResponseDTO admin_res = adminServices.createAdmin(admin);
         log.info("Created Admin: {}", admin_res);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(admin_res);
     }
 
@@ -37,16 +81,14 @@ public class AdminController {
         log.info("Login with admin name: {}", admin.getName());
         AdminLoginResponseDTO admin_res = adminServices.loginAdmin(admin);
         log.info("Login process completed, response: {}", admin_res);
-
         return ResponseEntity.ok(admin_res);
     }
 
     @PatchMapping("/update/name")
-    public ResponseEntity<AdminResponseDTO> updateAdminName(@RequestBody AdminNameUpdateDTO admin) {
+    public ResponseEntity<AdminLoginResponseDTO> updateAdminName(@RequestBody AdminNameUpdateDTO admin) {
         log.info("Updating admin name for admin: {}", admin.getOldName());
-        AdminResponseDTO adminResponseDTO = adminServices.updateAdminName(admin);
+        AdminLoginResponseDTO adminResponseDTO = adminServices.updateAdminName(admin);
         log.info("Admin name updated successfully from {} to {}", admin.getOldName(), admin.getNewName());
-
         return ResponseEntity.ok(adminResponseDTO);
     }
 
@@ -54,20 +96,17 @@ public class AdminController {
     public ResponseEntity<AdminResponseDTO> updateAdminPassword(@RequestBody AdminPasswordUpdateDTO adminpass) {
         log.info("Updating admin password for admin: {}", adminpass.getName());
         AdminResponseDTO adminResponseDTO = adminServices.updateAdminPassword(adminpass);
-        log.info("Password updated successfully for admin: {}", adminpass.getId());
-
+        log.info("Password updated successfully for admin: {}", adminpass.getName());
         return ResponseEntity.ok(adminResponseDTO);
     }
 
     @DeleteMapping("/delete")
     public ResponseEntity<AdminResponseDTO> deleteAdmin(@RequestBody AdminDTO adminDTO) {
-        log.info("Deleting admin with name: {}", adminDTO.getName());
+        log.info("Deleting current authenticated admin");
         AdminResponseDTO adminResponseDTO = adminServices.deleteAdmin(adminDTO);
-        log.info("Admin deleted successfully with name: {}", adminDTO.getName());
-
+        log.info("Admin deleted successfully");
         return ResponseEntity.ok(adminResponseDTO);
     }
-
     @GetMapping("/count")
     public Long getAdminCount() {
         log.info("Fetching admin count");
