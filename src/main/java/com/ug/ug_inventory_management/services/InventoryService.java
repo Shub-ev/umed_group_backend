@@ -49,17 +49,7 @@ public class InventoryService {
         this.inventoryLogRepository=inventoryLogRepository;
     }
 
-    /*  #### Correct this comment
-     * saveRecord(CreateInventoryRecordDTO):
-     * Creates record and save it to database.
-     *
-     * @param CreateInventoryRecordDTO:
-     * This DTO provides,
-     * 1. templateId
-     * 2. unitName
-     * 3. values
-     * To the service method & method saves this data into InventoryRecord and InventoryValue
-     */
+
     @Transactional
     public void addInventory(@NotNull CreateInventoryRecordDTO request) {
         // A. Store record
@@ -77,7 +67,7 @@ public class InventoryService {
         for (TemplateField field : fields) {
             String value = request.getValues().get(field.getFieldName());
 
-            // ✅ VALIDATION (important)
+            // VALIDATION
             if (value == null) {
                 // #### Handle exception properly
                 throw new RuntimeException(
@@ -97,50 +87,6 @@ public class InventoryService {
 
 
 
-//     ✅ FETCH INVENTORY (DYNAMIC TABLE)
-    public List<Map<String, String>> getInventory(@NotNull Long templateId, @NotNull String unitName) {
-        log.info("Fetching Inventory of template ID: ", templateId);
-        List<InventoryRecord> records = inventoryRecordRepository.findByTemplate_Id(templateId);
-
-        List<TemplateField> fields =
-                templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(templateId);
-
-        Map<Long, String> fieldMap = fields.stream()
-                .collect(Collectors.toMap(
-                        TemplateField::getId,
-                        TemplateField::getFieldName
-                ));
-
-        List<Map<String, String>> result = new ArrayList<>();
-
-        for (InventoryRecord record : records) {
-            Map<String, String> row = new LinkedHashMap<>();
-
-            if(record.getUnitName().equals(unitName)){
-                List<InventoryValue> values =
-                        inventoryValueRepository.findByInventoryRecord_Id(record.getId());
-
-                for (TemplateField field : fields) {
-                    row.put(field.getFieldName(), "");
-                }
-
-                for (InventoryValue val : values) {
-                    String fieldName = fieldMap.get(val.getFieldId());
-                    if (fieldName != null) {
-                        row.put(fieldName, val.getValue());
-                    }
-                }
-
-                row.put("recordId", record.getId().toString());
-                result.add(row);
-            }
-        }
-
-        return result;
-    }
-
-
-
     private int safeParse(String value) {
         try {
             return (value == null || value.trim().isEmpty())
@@ -152,66 +98,11 @@ public class InventoryService {
     }
 
 
-    public List<Map<String, String>> getUnitWiseSummary(Long templateId) {
-        List<InventoryRecord> records =
-                inventoryRecordRepository.findByTemplate_Id(templateId);
 
-        List<TemplateField> fields =
-                templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(templateId);
-
-        Map<Long, String> fieldMap = fields.stream()
-                .collect(Collectors.toMap(
-                        TemplateField::getId,
-                        TemplateField::getFieldName
-                ));
-
-
-        Map<String, InventoryRecord> latestRecordPerUnit = new HashMap<>();
-
-        for (InventoryRecord record : records) {
-            String unitName = record.getUnitName();
-
-            if (!latestRecordPerUnit.containsKey(unitName) ||
-                    record.getId() > latestRecordPerUnit.get(unitName).getId()) {
-                latestRecordPerUnit.put(unitName, record);
-            }
-        }
-
-        List<Map<String, String>> result = new ArrayList<>();
-
-        for (Map.Entry<String, InventoryRecord> entry : latestRecordPerUnit.entrySet()) {
-            String unitId = entry.getKey();
-            InventoryRecord record = entry.getValue();
-
-            List<InventoryValue> values =
-                    inventoryValueRepository.findByInventoryRecord_Id(record.getId());
-
-            Map<String, String> row = new LinkedHashMap<>();
-            row.put("unitId", String.valueOf(unitId));
-
-            // initialize all fields
-            for (TemplateField field : fields) {
-                row.put(field.getFieldName(), "");
-            }
-
-            // fill actual values
-            for (InventoryValue val : values) {
-                String fieldName = fieldMap.get(val.getFieldId());
-                if (fieldName != null) {
-                    row.put(fieldName, val.getValue());
-                }
-            }
-
-            result.add(row);
-        }
-
-        return result;
-    }
 
 
     public List<Map<String, String>> getInventorySummary(Long templateId) {
 
-        // ❗ REMOVE unitId filter
         List<InventoryRecord> records =
                 inventoryRecordRepository.findByTemplate_Id(templateId);
 
@@ -225,7 +116,6 @@ public class InventoryService {
             List<InventoryValue> values =
                     inventoryValueRepository.findByInventoryRecord_Id(record.getId());
 
-            // 🔥 OPTIMIZATION (important)
             Map<Long, String> valueMap = new HashMap<>();
             for (InventoryValue val : values) {
                 valueMap.put(val.getFieldId(), val.getValue());
@@ -233,8 +123,8 @@ public class InventoryService {
 
             Map<String, String> row = new LinkedHashMap<>();
 
-            // ✅ ADD UNIT INFO (VERY IMPORTANT)
-            row.put("unitName", String.valueOf(record.getUnitName()));
+            row.put("recordId", String.valueOf(record.getId()));
+            row.put("unitName", record.getUnitName());
 
             for (TemplateField field : fields) {
                 row.put(
@@ -252,16 +142,30 @@ public class InventoryService {
 
     @Transactional
     public ResponseEntity<?> updateInventory(InventoryUpdateRecordDTO req) {
-        log.info("Update Inventory: " + req.getTemplateId());
+
+        //  Fetch record
+        InventoryRecord record = inventoryRecordRepository
+                .findById(req.getRecordId())
+                .orElseThrow(() -> new RuntimeException("Record not found"));
+
+        //  SECURITY CHECK (use DB value, not trusting frontend blindly)
+        if (!record.getUnitName().equals(req.getUnitName())) {
+            return ResponseEntity.status(403)
+                    .body("You can only update your unit data");
+        }
+
+        log.info("Update Inventory: {}", req.getTemplateId());
+
         List<InventoryValue> values =
                 inventoryValueRepository.findByInventoryRecord_Id(req.getRecordId());
+
         if (values.isEmpty()) {
             return ResponseEntity.badRequest().body("No inventory found for this record");
         }
 
-        log.info("Values: " + values.toString());
+        log.info("Values: {}", values);
 
-        // ✅ Fetch all fields in ONE query (performance fix)
+        // Fetch all fields in ONE query (performance fix)
         Map<Long, String> fieldMap = templateFieldRepository
                 .findByTemplate_IdOrderByDisplayOrderAsc(req.getTemplateId())
                 .stream()
@@ -288,7 +192,7 @@ public class InventoryService {
                     .body("Template must contain inward, outward and stock fields");
         }
 
-        // ✅ Safe parsing
+        // Safe parsing
         int inward = safeParse(inwardField.getValue());
         int outward = safeParse(outwardField.getValue());
 
@@ -322,7 +226,8 @@ public class InventoryService {
                 List.of(inwardField, outwardField, stockField)
         );
 
-        InventoryLog log = new InventoryLog(
+        //  renamed variable to avoid conflict with Logger
+        InventoryLog inventoryLog = new InventoryLog(
                 req.getTemplateId(),
                 req.getUnitName(),
                 action.name(),
@@ -331,19 +236,15 @@ public class InventoryService {
                 newStock,
                 req.geteId()
         );
-        System.out.println("DEBUG → Before event publish");
-        publisher.publishEvent(new InventoryAuditEvent(log));
-        System.out.println("DEBUG → Before event publish");
+
+        log.info("Publishing inventory audit event");
+        publisher.publishEvent(new InventoryAuditEvent(inventoryLog));
 
         return ResponseEntity.ok("Stock updated successfully");
     }
 
 
 
-
-
-    // Employee logs – fetch logs for their unit
-    // Use injected instance, not the interface name
     public List<InventoryLog> getEmployeeLogs(Long eId) {
         return inventoryLogRepository.findByPerformedByOrderByCreatedAtDesc(eId);
     }
