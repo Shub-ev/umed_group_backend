@@ -32,7 +32,7 @@ public class EmployeeResponseDTO {
     // Getters
     public Long getId() { return id; }
 
-    public Long geteId() { return eId; }
+    public Long getEId() { return eId; }
 
     public String getUnitName() { return unitName; }
 
