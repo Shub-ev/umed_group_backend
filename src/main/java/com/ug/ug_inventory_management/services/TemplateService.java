@@ -92,6 +92,41 @@ public class TemplateService {
 
     }
 
+
+    @Transactional
+    public void addFieldToTemplate(Long templateId, TemplateField fieldDTO) {
+
+        Template template = templateRepository.findById(templateId)
+                .orElseThrow(() -> new RuntimeException("Template not found"));
+
+        String fieldName = fieldDTO.getFieldName().trim().toUpperCase();
+
+        if (FIXED_FIELDS.contains(fieldName)) {
+            throw new RuntimeException(fieldName + " is a default field");
+        }
+
+        boolean exists = templateFieldRepository
+                .existsByTemplate_IdAndFieldNameIgnoreCase(templateId, fieldName);
+
+        if (exists) {
+            throw new RuntimeException("Field already exists");
+        }
+
+        // Get last display order (NO LOOP — optimized)
+        Integer maxOrder = templateFieldRepository
+                .findMaxDisplayOrder(templateId);
+
+        int nextOrder = (maxOrder == null ? 1 : maxOrder + 1);
+
+        TemplateField field = new TemplateField();
+        field.setFieldName(fieldName);
+        field.setFieldType(fieldDTO.getFieldType());
+        field.setTemplate(template);
+        field.setDisplayOrder(nextOrder);
+
+        templateFieldRepository.save(field);
+    }
+
     public List<Template> getAllTemplates() {
         return templateRepository.findAll();
     }
