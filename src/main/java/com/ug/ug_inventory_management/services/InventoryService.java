@@ -64,23 +64,37 @@ public class InventoryService {
         List<TemplateField> fields =
                 templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(request.getTemplateId());
 
-        for (TemplateField field : fields) {
-            String value = request.getValues().get(field.getFieldName());
 
-            // VALIDATION
+
+        Map<String, String> requestValues =
+                request.getValues() != null
+                        ? request.getValues()
+                        : new HashMap<>();
+
+        for (TemplateField field : fields) {
+
+            String value = requestValues.get(field.getFieldName());
+
+            //  KEY CHANGE: allow NULL for new fields
             if (value == null) {
-                // #### Handle exception properly
-                throw new RuntimeException(
-                        "Missing value for field: " + field.getFieldName()
-                );
+
+                // OPTIONAL: default handling
+                if (field.getFieldName().equalsIgnoreCase("INWARD") ||
+                        field.getFieldName().equalsIgnoreCase("OUTWARD") ||
+                        field.getFieldName().equalsIgnoreCase("STOCK")) {
+
+                    value = "0"; // numeric defaults
+                } else {
+                    value = ""; // string fields
+                }
             }
 
-            // B. Store field to InventoryValue table
             InventoryValue inventoryValue = new InventoryValue(
                     inventoryRecord,
                     field.getId(),
                     value
-                );
+            );
+
             inventoryValueRepository.save(inventoryValue);
         }
     }
