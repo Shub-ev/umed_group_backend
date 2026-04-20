@@ -44,6 +44,16 @@ public class GlobalExceptionHandler {
         ), HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(UnitNameNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUnitNameNotFoundException(UnitNameNotFoundException exception) {
+        log.warn("Unit name not found:", exception.getMessage());
+        return new ResponseEntity<>(new ErrorResponse(
+                LocalDateTime.now(),
+                exception.getMessage(),
+                HttpStatus.NOT_FOUND.value()
+        ), HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException exception) {
         log.warn("Validation failed: {}", exception.getMessage());
