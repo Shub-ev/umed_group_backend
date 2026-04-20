@@ -6,10 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/unit-name")
@@ -29,5 +28,13 @@ public class UnitNameController {
         UnitNameDTO unitNameRes = unitNameServices.addUnitName(unitNameDTO);
         log.info("Created unit: {}", unitNameDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(unitNameRes);
+    }
+
+    @GetMapping("/get-units")
+    public ResponseEntity<List<UnitNameDTO>> getUnits() {
+        log.info("Fetching all units");
+        List<UnitNameDTO> unitNames = unitNameServices.getUnits();
+        log.info("Unit Names fetched successfully!");
+        return ResponseEntity.ok(unitNames);
     }
 }

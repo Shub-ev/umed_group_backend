@@ -6,6 +6,8 @@ import com.ug.ug_inventory_management.models.UnitName;
 import com.ug.ug_inventory_management.repositories.UnitNameRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UnitNameServices {
 
@@ -22,6 +24,18 @@ public class UnitNameServices {
         }
 
         UnitName unitName = unitNameRepository.save(new UnitName(unitNameDTO.getUnitName().trim()));
-        return unitNameDTO;
+        return new UnitNameDTO(unitName.getUnitName());
+    }
+
+    public UnitNameDTO convertToDTO(UnitName unitName) {
+        return new UnitNameDTO(unitName.getUnitName());
+    }
+
+    public List<UnitNameDTO> getUnits() {
+        List<UnitName> unitNames = unitNameRepository.findAll();
+
+        return unitNames.stream()
+                .map(this::convertToDTO)
+                .toList();
     }
 }
