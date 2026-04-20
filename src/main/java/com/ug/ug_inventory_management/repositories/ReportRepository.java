@@ -27,8 +27,13 @@ public interface ReportRepository extends JpaRepository<InventoryLog, Long> {
         WHERE 
             (:fromDate IS NULL OR l.created_at >= :fromDate)
             AND (:toDate IS NULL OR l.created_at <= :toDate)
-            AND (:unit IS NULL OR l.unit_name = :unit)
+
+            -- partial match for unit
+            AND (:unit IS NULL OR LOWER(l.unit_name) LIKE LOWER(CONCAT('%', :unit, '%')))
+
+            -- strict match for ID
             AND (:templateId IS NULL OR t.id = :templateId)
+
         GROUP BY l.unit_name, t.id, t.template_name
     """, nativeQuery = true)
     List<Object[]> getReport(
