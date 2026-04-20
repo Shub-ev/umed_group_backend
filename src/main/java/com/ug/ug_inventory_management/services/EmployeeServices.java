@@ -6,12 +6,15 @@ import com.ug.ug_inventory_management.common.exceptions.IllegalArgumentException
 import com.ug.ug_inventory_management.common.exceptions.WrongPasswordException;
 import com.ug.ug_inventory_management.models.Employee;
 import com.ug.ug_inventory_management.repositories.EmployeeRepository;
+import com.ug.ug_inventory_management.repositories.UnitNameRepository;
 import com.ug.ug_inventory_management.security.JwtService;
 import org.jspecify.annotations.NonNull;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -24,10 +27,13 @@ public class EmployeeServices {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private static final Logger log = LoggerFactory.getLogger(EmployeeServices.class);
-    public EmployeeServices(EmployeeRepository employeeRepository,PasswordEncoder passwordEncoder, JwtService jwtService) {
+    private final UnitNameRepository unitNameRepository;
+
+    public EmployeeServices(EmployeeRepository employeeRepository,PasswordEncoder passwordEncoder, JwtService jwtService, UnitNameRepository unitNameRepository) {
         this.employeeRepository = employeeRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.unitNameRepository = unitNameRepository;
     }
 
     public EmployeeResponseDTO createEmployee(@NonNull CreateEmployeeDTO createEmployeeDTO){
@@ -40,6 +46,9 @@ public class EmployeeServices {
             throw new IllegalArgumentException("Employee unit name cannot be blank");
         }
         unitName = unitName.trim();
+        if(!unitNameRepository.existsByUnitName(unitName)){
+            throw new IllegalArgumentException("Unit name dose not exist");
+        }
 
         String password = createEmployeeDTO.getPassword();
         if(password == null || password.trim().isEmpty()){
@@ -121,6 +130,10 @@ public class EmployeeServices {
         }
         if (employeeUnitNameUpdateDTO.getNewUnitName() == null || employeeUnitNameUpdateDTO.getNewUnitName().trim().isEmpty()) {
             throw new IllegalArgumentException("Old unit name cannot be empty");
+        }
+
+        if(!unitNameRepository.existsByUnitName(employeeUnitNameUpdateDTO.getNewUnitName())){
+            throw new IllegalArgumentException("Employee unit name cannot be blank");
         }
 
         Employee foundEmployee = employeeRepository.findByeId(employeeUnitNameUpdateDTO.geteId())
