@@ -23,7 +23,7 @@ public class UnitNameServices {
         if(unitNameDTO.getUnitName().trim() == "") {
             throw new IllegalArgumentException("Unit Name must not be blank");
         }
-        if(unitNameRepository.existsById(unitNameDTO.getUnitName().trim())) {
+        if(unitNameRepository.existsByUnitName(unitNameDTO.getUnitName().trim())) {
             throw new IllegalArgumentException("Unit already exists with name: " + unitNameDTO.getUnitName().trim());
         }
         UnitName unitName = unitNameRepository.save(new UnitName(unitNameDTO.getUnitName().trim()));

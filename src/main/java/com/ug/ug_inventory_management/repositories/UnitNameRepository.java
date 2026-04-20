@@ -8,4 +8,5 @@ import java.util.Optional;
 public interface UnitNameRepository extends JpaRepository<UnitName, String> {
     Optional<UnitName> findByUnitName(String unitName);
     void deleteByUnitName(String unitName);
+    boolean existsByUnitName(String unitName);
 }
