@@ -1,4 +1,6 @@
 package com.ug.ug_inventory_management.controllers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import com.ug.ug_inventory_management.services.InventoryService;
 import com.ug.ug_inventory_management.common.dtos.CreateInventoryRecordDTO;
@@ -16,6 +18,7 @@ import java.util.Map;
 @RequestMapping("/inventory")
 public class InventoryController {
 
+    private final Logger log = LoggerFactory.getLogger(InventoryController.class);
     private final InventoryService inventoryService;
 
     public InventoryController(InventoryService inventoryService) {
@@ -43,26 +46,30 @@ public class InventoryController {
     }
 
 
-    @GetMapping("/logs/employee/{eId}")
-    public ResponseEntity<?> getEmployeeLogs(
-            @PathVariable Long eId,
-            @RequestParam(required = false) String templateName,
-            @RequestParam(required = false) ActionType action
-    ) {
-        return ResponseEntity.ok(
-                inventoryService.getEmployeeLogsFiltered(eId, templateName, action)
-        );
-    }
+    // Commented till adminLogs are completed
+//    @GetMapping("/logs/employee/{eId}")
+//    public ResponseEntity<?> getEmployeeLogs(
+//            @PathVariable Long eId,
+//            @RequestParam(required = false) String templateName,
+//            @RequestParam(required = false) ActionType action
+//    ) {
+//        return ResponseEntity.ok(
+//                inventoryService.getEmployeeLogsFiltered(eId, templateName, action)
+//        );
+//    }
 
 
     @GetMapping("/logs/admin")
     public ResponseEntity<?> getAdminLogs(
             @RequestParam(required = false) String unitName,
             @RequestParam(required = false) String templateName,
-            @RequestParam(required = false) ActionType action
+            @RequestParam(required = false) ActionType action,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size
     ) {
+        log.info("Fetching logs for unit: {}, template: {}, action{}", unitName, templateName, action);
         return ResponseEntity.ok(
-                inventoryService.getLogsForAdminFiltered(unitName, templateName, action)
+                inventoryService.getLogsForAdminFiltered( unitName, templateName, action, page, size)
         );
     }
 
