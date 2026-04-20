@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class InventoryUpdateRecordDTO {
 
     private Long templateId;
+    private String templateName;
     private Long recordId;
     private int changeQty;
     private ActionType action; // INWARD / OUTWARD
@@ -18,13 +19,14 @@ public class InventoryUpdateRecordDTO {
     public InventoryUpdateRecordDTO() {
     }
 
-    public InventoryUpdateRecordDTO(Long templateId, Long recordId, int changeQty, ActionType action, Long eId, String unitName) {
+    public InventoryUpdateRecordDTO(Long templateId, Long recordId, int changeQty, ActionType action, Long eId, String unitName,String templateName) {
         this.templateId = templateId;
         this.recordId = recordId;
         this.changeQty = changeQty;
         this.action = action;
         this.eId = eId;
         this.unitName = unitName;
+        this.templateName=templateName;
     }
 
 
@@ -42,13 +44,15 @@ public class InventoryUpdateRecordDTO {
         return recordId;
     }
 
-    public Long geteId() { return eId; }
+    public Long getEId() { return eId; }
 
     public String getUnitName() { return unitName;}
 
+    public String getTemplateName() {
+        return templateName;
+    }
 
-
-    public void setTemplateId(Long templateId) {
+    public void setTemplatEId(Long templateId) {
         this.templateId = templateId;
     }
 
@@ -62,5 +66,9 @@ public class InventoryUpdateRecordDTO {
 
     public void setRecordId(Long recordId) {
         this.recordId = recordId;
+    }
+
+    public void setTemplateName(String templateName) {
+        this.templateName = templateName;
     }
 }
