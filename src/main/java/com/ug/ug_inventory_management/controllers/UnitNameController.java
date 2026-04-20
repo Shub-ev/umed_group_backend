@@ -30,6 +30,13 @@ public class UnitNameController {
         return ResponseEntity.status(HttpStatus.CREATED).body(unitNameRes);
     }
 
+    @DeleteMapping("/delete-unit")
+    public ResponseEntity<UnitNameDTO> deleteUnit(@RequestBody UnitNameDTO unitNameDTO) {
+        log.info("Delete unit with name: {}", unitNameDTO.getUnitName());
+        unitNameServices.deleteUnitName(unitNameDTO);
+        return ResponseEntity.ok(unitNameDTO);
+    }
+
     @GetMapping("/get-units")
     public ResponseEntity<List<UnitNameDTO>> getUnits() {
         log.info("Fetching all units");
