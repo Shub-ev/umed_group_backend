@@ -6,6 +6,8 @@ import com.ug.ug_inventory_management.common.dtos.InventoryUpdateRecordDTO;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 //import com.ug.ug_inventory_management.common.security.CustomUserDetails;
+import com.ug.ug_inventory_management.enums.ActionType;
+
 
 import java.util.List;
 import java.util.Map;
@@ -42,16 +44,26 @@ public class InventoryController {
 
 
     @GetMapping("/logs/employee/{eId}")
-    public ResponseEntity<?> getEmployeeLogs(@PathVariable Long eId) {
-        return ResponseEntity.ok(inventoryService.getEmployeeLogs(eId));
+    public ResponseEntity<?> getEmployeeLogs(
+            @PathVariable Long eId,
+            @RequestParam(required = false) String templateName,
+            @RequestParam(required = false) ActionType action
+    ) {
+        return ResponseEntity.ok(
+                inventoryService.getEmployeeLogsFiltered(eId, templateName, action)
+        );
     }
+
 
     @GetMapping("/logs/admin")
     public ResponseEntity<?> getAdminLogs(
             @RequestParam(required = false) String unitName,
-            @RequestParam(required = false) Long templateId
+            @RequestParam(required = false) String templateName,
+            @RequestParam(required = false) ActionType action
     ) {
-        return ResponseEntity.ok(inventoryService.getLogsForAdmin(unitName, templateId));
+        return ResponseEntity.ok(
+                inventoryService.getLogsForAdminFiltered(unitName, templateName, action)
+        );
     }
 
     @GetMapping("/logs/units")
