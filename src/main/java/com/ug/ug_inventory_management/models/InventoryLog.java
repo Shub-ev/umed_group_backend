@@ -1,5 +1,5 @@
 package com.ug.ug_inventory_management.models;
-
+import com.ug.ug_inventory_management.enums.ActionType;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 @Entity
@@ -12,13 +12,18 @@ public class InventoryLog {
 
     private Long templateId;
 
+    private String templateName;
+
     private String unitName;
 
-    private String action;
+    @Enumerated(EnumType.STRING)  // Stores enum as String in database
+    private ActionType action;
 
     private Integer changeQty;
     private Integer previousQty;
     private Integer newQty;
+
+
 
     @Column(name = "performed_by")
     private Long performedBy;
@@ -32,9 +37,9 @@ public class InventoryLog {
         // Required by JPA
     }
 
-    public InventoryLog(Long templateId, String unitName, String action,
+    public InventoryLog(Long templateId, String unitName, ActionType action,
                         Integer changeQty, Integer previousQty,
-                        Integer newQty, Long performedBy) {
+                        Integer newQty, Long performedBy,String templateName) {
         this.templateId = templateId;
         this.unitName = unitName;
         this.action = action;
@@ -42,6 +47,7 @@ public class InventoryLog {
         this.previousQty = previousQty;
         this.newQty = newQty;
         this.performedBy = performedBy;
+        this.templateName=templateName;
     }
 
     public Long getId() {
@@ -56,7 +62,7 @@ public class InventoryLog {
         return unitName;
     }
 
-    public String getAction() {
+    public ActionType getAction() {
         return action;
     }
 
@@ -80,5 +86,8 @@ public class InventoryLog {
         return createdAt;
     }
 
+    public String getTemplateName() {
+        return templateName;
+    }
 }
 
