@@ -68,7 +68,9 @@ public class ReportController {
             @RequestParam String from,
             @RequestParam String to,
             @RequestParam(required = false) String unit,
-            @RequestParam(required = false) Long templateId,
+            @RequestParam(required = false) String templateName, // ✅ NEW
+            @RequestParam(required = false) Long templateId,     // optional fallback
+            @RequestParam(required = false) String title,        // ✅ NEW
             HttpServletResponse response
     ) throws IOException {
 
@@ -78,11 +80,17 @@ public class ReportController {
         req.setFromDate(LocalDateTime.parse(from, formatter));
         req.setToDate(LocalDateTime.parse(to, formatter));
         req.setUnit(unit);
-        req.setTemplateId(templateId);
+        req.setTemplateName(templateName); // ✅ important
+        req.setTemplateId(templateId);     // optional
 
         List<ReportResponseDTO> data = reportService.getReport(req);
 
-        reportService.exportToExcel(data, response);
+        // ✅ fallback title if not provided
+        String finalTitle = (title != null && !title.isBlank())
+                ? title
+                : "Report from " + from + " to " + to;
+
+        reportService.exportToExcel(data, response, finalTitle);
     }
 
     // -----------------------------
@@ -93,7 +101,9 @@ public class ReportController {
             @RequestParam String from,
             @RequestParam String to,
             @RequestParam(required = false) String unit,
+            @RequestParam(required = false) String templateName, // ✅ NEW
             @RequestParam(required = false) Long templateId,
+            @RequestParam(required = false) String title,        // ✅ NEW
             HttpServletResponse response
     ) throws Exception {
 
@@ -103,10 +113,15 @@ public class ReportController {
         req.setFromDate(LocalDateTime.parse(from, formatter));
         req.setToDate(LocalDateTime.parse(to, formatter));
         req.setUnit(unit);
+        req.setTemplateName(templateName); // ✅ important
         req.setTemplateId(templateId);
 
         List<ReportResponseDTO> data = reportService.getReport(req);
 
-        reportService.exportToPdf(data, response);
+        String finalTitle = (title != null && !title.isBlank())
+                ? title
+                : "Report from " + from + " to " + to;
+
+        reportService.exportToPdf(data, response, finalTitle);
     }
 }
