@@ -1,29 +1,32 @@
 package com.ug.ug_inventory_management.services;
 
 import com.ug.ug_inventory_management.repositories.ReportRepository;
+import com.ug.ug_inventory_management.repositories.TemplateRepository;
 import com.ug.ug_inventory_management.common.dtos.ReportRequestDTO;
 import com.ug.ug_inventory_management.common.dtos.ReportResponseDTO;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Row;
+
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
-import com.itextpdf.text.Document;
-import com.itextpdf.text.Paragraph;
-import com.itextpdf.text.pdf.PdfWriter;
-import com.itextpdf.text.pdf.PdfPTable;
+
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.*;
+
 import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
-import java.util.List;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class ReportService {
 
     private final ReportRepository repo;
+    private final TemplateRepository templateRepo;
 
-    public ReportService(ReportRepository repo) {
+    public ReportService(ReportRepository repo, TemplateRepository templateRepo) {
         this.repo = repo;
+        this.templateRepo = templateRepo;
     }
 
     public List<ReportResponseDTO> getReport(ReportRequestDTO req) {
@@ -31,29 +34,38 @@ public class ReportService {
         LocalDateTime to = req.getToDate();
         LocalDateTime from = req.getFromDate();
 
-        // ✅ DEFAULT: last 7 days always safe
-        if (to == null) {
-            to = LocalDateTime.now();
-        }
+        // ✅ default last 7 days
+        if (to == null) to = LocalDateTime.now();
+        if (from == null) from = to.minusDays(7);
 
-        if (from == null) {
-            from = to.minusDays(7);
-        }
-
-        // safety: if user sends reversed dates
+        // ✅ swap if wrong order
         if (from.isAfter(to)) {
             LocalDateTime temp = from;
             from = to;
             to = temp;
         }
 
+        // ✅ unit (partial search handled in query)
         String unit = (req.getUnit() == null || req.getUnit().isBlank())
                 ? null
-                : req.getUnit();
+                : req.getUnit().trim();
 
-        Long templateId = (req.getTemplateId() != null && req.getTemplateId() > 0)
-                ? req.getTemplateId()
-                : null;
+        // ✅ templateName → templateId
+        Long templateId = null;
+
+        if (req.getTemplateName() != null && !req.getTemplateName().isBlank()) {
+            templateId = templateRepo
+                    .findByTemplateNameIgnoreCase(req.getTemplateName().trim()) // ✅ FIXED
+                    .map(t -> t.getId())
+                    .orElse(null);
+
+            // ⚠️ if name invalid → return empty
+            if (templateId == null) {
+                return List.of();
+            }
+        } else if (req.getTemplateId() != null && req.getTemplateId() > 0) {
+            templateId = req.getTemplateId();
+        }
 
         List<Object[]> rows = repo.getReport(from, to, unit, templateId);
 
@@ -72,8 +84,11 @@ public class ReportService {
         }).toList();
     }
 
-
-    public void exportToExcel(List<ReportResponseDTO> data, HttpServletResponse response) throws IOException {
+    // =========================
+    // EXCEL EXPORT
+    // =========================
+    public void exportToExcel(List<ReportResponseDTO> data, HttpServletResponse response, String title)
+            throws IOException {
 
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=report.xlsx");
@@ -81,8 +96,12 @@ public class ReportService {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Report");
 
+        // Title
+        Row titleRow = sheet.createRow(0);
+        titleRow.createCell(0).setCellValue(title);
+
         // Header
-        Row header = sheet.createRow(0);
+        Row header = sheet.createRow(1);
         header.createCell(0).setCellValue("Unit");
         header.createCell(1).setCellValue("Template");
         header.createCell(2).setCellValue("Inward");
@@ -90,7 +109,7 @@ public class ReportService {
         header.createCell(4).setCellValue("Stock");
 
         // Data
-        int rowNum = 1;
+        int rowNum = 2;
         for (ReportResponseDTO r : data) {
             Row row = sheet.createRow(rowNum++);
             row.createCell(0).setCellValue(r.getUnit());
@@ -104,8 +123,11 @@ public class ReportService {
         workbook.close();
     }
 
-
-    public void exportToPdf(List<ReportResponseDTO> data, HttpServletResponse response) throws Exception {
+    // =========================
+    // PDF EXPORT
+    // =========================
+    public void exportToPdf(List<ReportResponseDTO> data, HttpServletResponse response, String title)
+            throws Exception {
 
         response.setContentType("application/pdf");
         response.setHeader("Content-Disposition", "attachment; filename=report.pdf");
@@ -115,7 +137,7 @@ public class ReportService {
 
         document.open();
 
-        document.add(new Paragraph("Inventory Report\n\n"));
+        document.add(new Paragraph(title + "\n\n"));
 
         PdfPTable table = new PdfPTable(5);
 
