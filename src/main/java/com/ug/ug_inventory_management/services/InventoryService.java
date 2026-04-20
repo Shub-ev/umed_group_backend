@@ -1,4 +1,7 @@
+//package com.ug.ug_inventory_management.services;
+
 package com.ug.ug_inventory_management.services;
+
 import com.ug.ug_inventory_management.common.events.InventoryAuditEvent;
 import com.ug.ug_inventory_management.models.InventoryLog;
 import org.slf4j.Logger;
@@ -21,7 +24,6 @@ import com.ug.ug_inventory_management.repositories.InventoryLogRepository;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
 
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -33,73 +35,95 @@ public class InventoryService {
     private final TemplateFieldRepository templateFieldRepository;
     private final TemplateRepository templateRepository;
     private final ApplicationEventPublisher publisher;
-    private  final InventoryLogRepository inventoryLogRepository;
+    private final InventoryLogRepository inventoryLogRepository;
 
     private static final Logger log = LoggerFactory.getLogger(InventoryService.class);
 
     public InventoryService(InventoryRecordRepository inventoryRecordRepository,
                             InventoryValueRepository inventoryValueRepository,
                             TemplateFieldRepository templateFieldRepository,
-                            TemplateRepository templateRepository,ApplicationEventPublisher publisher,InventoryLogRepository inventoryLogRepository) {
+                            TemplateRepository templateRepository,
+                            ApplicationEventPublisher publisher,
+                            InventoryLogRepository inventoryLogRepository) {
         this.inventoryRecordRepository = inventoryRecordRepository;
         this.inventoryValueRepository = inventoryValueRepository;
         this.templateFieldRepository = templateFieldRepository;
         this.templateRepository = templateRepository;
         this.publisher = publisher;
-        this.inventoryLogRepository=inventoryLogRepository;
+        this.inventoryLogRepository = inventoryLogRepository;
     }
-
 
     @Transactional
     public void addInventory(@NotNull CreateInventoryRecordDTO request) {
-        // A. Store record
+
         Template template = templateRepository.findById(request.getTemplateId())
                 .orElseThrow(() -> new RuntimeException("Template not found"));
-        InventoryRecord inventoryRecord = new InventoryRecord(
-                    template,
-                    request.getUnitName()
-                );
+
+        InventoryRecord inventoryRecord = new InventoryRecord(template, request.getUnitName());
         inventoryRecordRepository.save(inventoryRecord);
 
         List<TemplateField> fields =
                 templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(request.getTemplateId());
 
-
-
         Map<String, String> requestValues =
-                request.getValues() != null
-                        ? request.getValues()
-                        : new HashMap<>();
+                request.getValues() != null ? request.getValues() : new HashMap<>();
+
+        InventoryValue inwardField = null;
+        InventoryValue outwardField = null;
+        InventoryValue stockField = null;
+        List<InventoryValue> savedValues = new ArrayList<>();
 
         for (TemplateField field : fields) {
 
             String value = requestValues.get(field.getFieldName());
+            String fieldNameLower = field.getFieldName().toLowerCase();
 
-            //  KEY CHANGE: allow NULL for new fields
             if (value == null) {
-
-                // OPTIONAL: default handling
-                if (field.getFieldName().equalsIgnoreCase("INWARD") ||
-                        field.getFieldName().equalsIgnoreCase("OUTWARD") ||
-                        field.getFieldName().equalsIgnoreCase("STOCK")) {
-
-                    value = "0"; // numeric defaults
+                if (fieldNameLower.equals("inward") ||
+                        fieldNameLower.equals("outward") ||
+                        fieldNameLower.equals("stock")) {
+                    value = "0";
                 } else {
-                    value = ""; // string fields
+                    value = "";
                 }
             }
 
-            InventoryValue inventoryValue = new InventoryValue(
-                    inventoryRecord,
-                    field.getId(),
-                    value
+            InventoryValue inventoryValue =
+                    new InventoryValue(inventoryRecord, field.getId(), value);
+
+            savedValues.add(inventoryValue);
+
+            if (fieldNameLower.contains("inward")) inwardField = inventoryValue;
+            else if (fieldNameLower.contains("outward")) outwardField = inventoryValue;
+            else if (fieldNameLower.contains("stock")) stockField = inventoryValue;
+        }
+
+        inventoryValueRepository.saveAll(savedValues);
+
+        // LOG CREATION
+        if (inwardField != null && outwardField != null && stockField != null) {
+
+            int inward = safeParse(inwardField.getValue());
+            int outward = safeParse(outwardField.getValue());
+
+            int previousStock = inward - outward;
+            int newStock = inward - outward;
+
+            InventoryLog inventoryLog = new InventoryLog(
+                    request.getTemplateId(),
+                    request.getUnitName(),
+                    ActionType.INWARD,
+                    inward,
+                    previousStock,
+                    newStock,
+                    request.getEId(),
+                    template.getTemplateName() != null ? template.getTemplateName() : "-"
             );
 
-            inventoryValueRepository.save(inventoryValue);
+            log.info("Publishing inventory audit event for new inventory");
+            publisher.publishEvent(new InventoryAuditEvent(inventoryLog));
         }
     }
-
-
 
     private int safeParse(String value) {
         try {
@@ -110,10 +134,6 @@ public class InventoryService {
             return 0;
         }
     }
-
-
-
-
 
     public List<Map<String, String>> getInventorySummary(Long templateId) {
 
@@ -141,10 +161,8 @@ public class InventoryService {
             row.put("unitName", record.getUnitName());
 
             for (TemplateField field : fields) {
-                row.put(
-                        field.getFieldName(),
-                        valueMap.getOrDefault(field.getId(), "")
-                );
+                row.put(field.getFieldName(),
+                        valueMap.getOrDefault(field.getId(), ""));
             }
 
             result.add(row);
@@ -153,40 +171,36 @@ public class InventoryService {
         return result;
     }
 
-
     @Transactional
     public ResponseEntity<?> updateInventory(InventoryUpdateRecordDTO req) {
 
-        //  Fetch record
         InventoryRecord record = inventoryRecordRepository
                 .findById(req.getRecordId())
                 .orElseThrow(() -> new RuntimeException("Record not found"));
 
-        //  SECURITY CHECK (use DB value, not trusting frontend blindly)
         if (!record.getUnitName().equals(req.getUnitName())) {
             return ResponseEntity.status(403)
                     .body("You can only update your unit data");
         }
 
-        log.info("Update Inventory: {}", req.getTemplateId());
+        Template template = templateRepository.findById(req.getTemplateId())
+                .orElseThrow(() -> new RuntimeException("Template not found"));
 
         List<InventoryValue> values =
                 inventoryValueRepository.findByInventoryRecord_Id(req.getRecordId());
 
         if (values.isEmpty()) {
-            return ResponseEntity.badRequest().body("No inventory found for this record");
+            return ResponseEntity.badRequest().body("No inventory found");
         }
 
-        log.info("Values: {}", values);
-
-        // Fetch all fields in ONE query (performance fix)
-        Map<Long, String> fieldMap = templateFieldRepository
-                .findByTemplate_IdOrderByDisplayOrderAsc(req.getTemplateId())
-                .stream()
-                .collect(Collectors.toMap(
-                        TemplateField::getId,
-                        f -> f.getFieldName().toLowerCase()
-                ));
+        Map<Long, String> fieldMap =
+                templateFieldRepository
+                        .findByTemplate_IdOrderByDisplayOrderAsc(req.getTemplateId())
+                        .stream()
+                        .collect(Collectors.toMap(
+                                TemplateField::getId,
+                                f -> f.getFieldName().toLowerCase()
+                        ));
 
         InventoryValue inwardField = null;
         InventoryValue outwardField = null;
@@ -201,12 +215,6 @@ public class InventoryService {
             else if (fieldName.contains("stock")) stockField = v;
         }
 
-        if (inwardField == null || outwardField == null || stockField == null) {
-            return ResponseEntity.badRequest()
-                    .body("Template must contain inward, outward and stock fields");
-        }
-
-        // Safe parsing
         int inward = safeParse(inwardField.getValue());
         int outward = safeParse(outwardField.getValue());
 
@@ -215,7 +223,6 @@ public class InventoryService {
         ActionType action = req.getAction();
 
         switch (action) {
-
             case INWARD:
                 inward += qty;
                 inwardField.setValue(String.valueOf(inward));
@@ -228,9 +235,6 @@ public class InventoryService {
                 outward += qty;
                 outwardField.setValue(String.valueOf(outward));
                 break;
-
-            default:
-                return ResponseEntity.badRequest().body("Invalid action");
         }
 
         int newStock = inward - outward;
@@ -240,38 +244,40 @@ public class InventoryService {
                 List.of(inwardField, outwardField, stockField)
         );
 
-        //  renamed variable to avoid conflict with Logger
+
         InventoryLog inventoryLog = new InventoryLog(
                 req.getTemplateId(),
                 req.getUnitName(),
-                action.name(),
+                action,
                 qty,
                 previousStock,
                 newStock,
-                req.geteId()
+                req.getEId(),
+                template.getTemplateName() != null ? template.getTemplateName() : "-"
         );
 
-        log.info("Publishing inventory audit event");
         publisher.publishEvent(new InventoryAuditEvent(inventoryLog));
 
         return ResponseEntity.ok("Stock updated successfully");
     }
-
-
 
     public List<InventoryLog> getEmployeeLogs(Long eId) {
         return inventoryLogRepository.findByPerformedByOrderByCreatedAtDesc(eId);
     }
 
     public List<InventoryLog> getLogsForAdmin(String unitName, Long templateId) {
-        log.info("Admin Logs request:\nUnit Name : {}\nTemplate Id : {}", unitName, templateId);
-        if((unitName == null || unitName.trim().equals("")) && (templateId == null || templateId == 0)) {
+
+        if ((unitName == null || unitName.trim().isEmpty())
+                && (templateId == null || templateId == 0)) {
             return inventoryLogRepository.findAll();
         }
-        if(templateId == null){
-            return inventoryLogRepository.findByUnitNameOrderByCreatedAtDesc(unitName);
+
+        if (templateId == null) {
+            return inventoryLogRepository
+                    .findByUnitNameOrderByCreatedAtDesc(unitName);
         } else {
-            return inventoryLogRepository.findByUnitNameAndTemplateIdOrderByCreatedAtDesc(unitName, templateId);
+            return inventoryLogRepository
+                    .findByUnitNameAndTemplateIdOrderByCreatedAtDesc(unitName, templateId);
         }
     }
 
@@ -280,7 +286,48 @@ public class InventoryService {
     }
 
 
+    // ================= EMPLOYEE FILTER =================
+    public List<InventoryLog> getEmployeeLogsFiltered(
+            Long eId,
+            String templateName,
+            ActionType action
+    ) {
+        List<InventoryLog> logs =
+                inventoryLogRepository.findByPerformedByOrderByCreatedAtDesc(eId);
+
+        return logs.stream()
+                .filter(log ->
+                        (templateName == null || templateName.isBlank()
+                                || log.getTemplateName().toLowerCase().contains(templateName.toLowerCase()))
+                )
+                .filter(log ->
+                        (action == null || log.getAction() == action)
+                )
+                .collect(Collectors.toList());
+    }
+
+
+    // ================= ADMIN FILTER =================
+    public List<InventoryLog> getLogsForAdminFiltered(
+            String unitName,
+            String templateName,
+            ActionType action
+    ) {
+        List<InventoryLog> logs = inventoryLogRepository.findAll();
+
+        return logs.stream()
+                .filter(log ->
+                        (unitName == null || unitName.isBlank()
+                                || log.getUnitName().toLowerCase().contains(unitName.toLowerCase()))
+                )
+                .filter(log ->
+                        (templateName == null || templateName.isBlank()
+                                || log.getTemplateName().toLowerCase().contains(templateName.toLowerCase()))
+                )
+                .filter(log ->
+                        (action == null || log.getAction() == action)
+                )
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                .collect(Collectors.toList());
+    }
 }
-
-
-
