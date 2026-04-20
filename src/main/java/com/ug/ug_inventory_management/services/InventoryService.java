@@ -7,6 +7,10 @@ import com.ug.ug_inventory_management.models.InventoryLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import com.ug.ug_inventory_management.common.dtos.CreateInventoryRecordDTO;
@@ -261,24 +265,57 @@ public class InventoryService {
         return ResponseEntity.ok("Stock updated successfully");
     }
 
-    public List<InventoryLog> getEmployeeLogs(Long eId) {
-        return inventoryLogRepository.findByPerformedByOrderByCreatedAtDesc(eId);
-    }
+//    public List<InventoryLog> getEmployeeLogs(Long eId) {
+//        return inventoryLogRepository.findByPerformedByOrderByCreatedAtDesc(eId);
+//    }
 
-    public List<InventoryLog> getLogsForAdmin(String unitName, Long templateId) {
+    public Page<InventoryLog> getLogsForAdminFiltered(
+            String unitName,
+            String templateName,
+            ActionType action,
+            int page,
+            int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
-        if ((unitName == null || unitName.trim().isEmpty())
-                && (templateId == null || templateId == 0)) {
-            return inventoryLogRepository.findAll();
+        // ✅ All filters applied
+        if (unitName != null && templateName != null && action != null) {
+            return inventoryLogRepository
+                    .findByUnitNameAndTemplateNameContainingIgnoreCaseAndAction(
+                            unitName, templateName, action, pageable);
         }
 
-        if (templateId == null) {
+        // ✅ Two filters
+        if (unitName != null && templateName != null) {
             return inventoryLogRepository
-                    .findByUnitNameOrderByCreatedAtDesc(unitName);
-        } else {
-            return inventoryLogRepository
-                    .findByUnitNameAndTemplateIdOrderByCreatedAtDesc(unitName, templateId);
+                    .findByUnitNameAndTemplateNameContainingIgnoreCase(unitName, templateName, pageable);
         }
+
+        if (unitName != null && action != null) {
+            return inventoryLogRepository
+                    .findByUnitNameAndAction(unitName, action, pageable);
+        }
+
+        if (templateName != null && action != null) {
+            return inventoryLogRepository
+                    .findByTemplateNameContainingIgnoreCaseAndAction(templateName, action, pageable);
+        }
+
+        // ✅ Single filters
+        if (unitName != null) {
+            return inventoryLogRepository.findByUnitName(unitName, pageable);
+        }
+
+        if (templateName != null) {
+            return inventoryLogRepository.findByTemplateNameContainingIgnoreCase(templateName, pageable);
+        }
+
+        if (action != null) {
+            return inventoryLogRepository.findByAction(action, pageable);
+        }
+
+        // ✅ No filters → return all
+        return inventoryLogRepository.findAll(pageable);
     }
 
     public List<String> getAllUnits() {
@@ -287,24 +324,25 @@ public class InventoryService {
 
 
     // ================= EMPLOYEE FILTER =================
-    public List<InventoryLog> getEmployeeLogsFiltered(
-            Long eId,
-            String templateName,
-            ActionType action
-    ) {
-        List<InventoryLog> logs =
-                inventoryLogRepository.findByPerformedByOrderByCreatedAtDesc(eId);
-
-        return logs.stream()
-                .filter(log ->
-                        (templateName == null || templateName.isBlank()
-                                || log.getTemplateName().toLowerCase().contains(templateName.toLowerCase()))
-                )
-                .filter(log ->
-                        (action == null || log.getAction() == action)
-                )
-                .collect(Collectors.toList());
-    }
+    // Commented till adminLogs are completed
+//    public List<InventoryLog> getEmployeeLogsFiltered(
+//            Long eId,
+//            String templateName,
+//            ActionType action
+//    ) {
+//        List<InventoryLog> logs =
+//                inventoryLogRepository.findByPerformedByOrderByCreatedAtDesc(eId);
+//
+//        return logs.stream()
+//                .filter(log ->
+//                        (templateName == null || templateName.isBlank()
+//                                || log.getTemplateName().toLowerCase().contains(templateName.toLowerCase()))
+//                )
+//                .filter(log ->
+//                        (action == null || log.getAction() == action)
+//                )
+//                .collect(Collectors.toList());
+//    }
 
 
     // ================= ADMIN FILTER =================

@@ -2,29 +2,39 @@ package com.ug.ug_inventory_management.repositories;
 
 import java.util.List;
 
+import com.ug.ug_inventory_management.enums.ActionType;
 import com.ug.ug_inventory_management.models.InventoryLog;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface InventoryLogRepository extends JpaRepository<InventoryLog, Long> {
 
-    // Existing
-    List<InventoryLog> findByUnitNameOrderByCreatedAtDesc(String unitName);
+    // ✅ Base filters with pagination
+    Page<InventoryLog> findByUnitName(String unitName, Pageable pageable);
 
-    List<InventoryLog> findByUnitNameAndTemplateIdOrderByCreatedAtDesc(String unitName, Long templateId);
+    Page<InventoryLog> findByTemplateNameContainingIgnoreCase(String templateName, Pageable pageable);
 
-    List<InventoryLog> findByPerformedByOrderByCreatedAtDesc(Long eId);
+    Page<InventoryLog> findByAction(ActionType action, Pageable pageable);
 
-    // ✅ NEW METHODS (IMPORTANT)
+    // ✅ Combined filters
+    Page<InventoryLog> findByUnitNameAndTemplateNameContainingIgnoreCase(
+            String unitName, String templateName, Pageable pageable
+    );
 
-    // Search by templateName
-    List<InventoryLog> findByTemplateNameContainingIgnoreCaseOrderByCreatedAtDesc(String templateName);
+    Page<InventoryLog> findByUnitNameAndAction(
+            String unitName, ActionType action, Pageable pageable
+    );
 
-    // Search by unit + templateName
-    List<InventoryLog> findByUnitNameAndTemplateNameContainingIgnoreCaseOrderByCreatedAtDesc(String unitName, String templateName);
+    Page<InventoryLog> findByTemplateNameContainingIgnoreCaseAndAction(
+            String templateName, ActionType action, Pageable pageable
+    );
 
-    // Optional: both flexible (OR condition)
-    List<InventoryLog> findByUnitNameContainingIgnoreCaseOrTemplateNameContainingIgnoreCaseOrderByCreatedAtDesc(String unitName, String templateName);
+    Page<InventoryLog> findByUnitNameAndTemplateNameContainingIgnoreCaseAndAction(
+            String unitName, String templateName, ActionType action, Pageable pageable
+    );
+
 
     // Units list
     @Query("SELECT DISTINCT r.unitName FROM InventoryRecord r")
