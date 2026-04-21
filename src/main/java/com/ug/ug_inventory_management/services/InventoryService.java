@@ -26,6 +26,7 @@ import com.ug.ug_inventory_management.repositories.TemplateRepository;
 import com.ug.ug_inventory_management.enums.ActionType;
 import com.ug.ug_inventory_management.repositories.InventoryLogRepository;
 import jakarta.validation.constraints.NotNull;
+import com.ug.ug_inventory_management.common.dtos.StockAlertDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -269,54 +270,54 @@ public class InventoryService {
 //        return inventoryLogRepository.findByPerformedByOrderByCreatedAtDesc(eId);
 //    }
 
-    public Page<InventoryLog> getLogsForAdminFiltered(
-            String unitName,
-            String templateName,
-            ActionType action,
-            int page,
-            int size
-    ) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-
-        // ✅ All filters applied
-        if (unitName != null && templateName != null && action != null) {
-            return inventoryLogRepository
-                    .findByUnitNameAndTemplateNameContainingIgnoreCaseAndAction(
-                            unitName, templateName, action, pageable);
-        }
-
-        // ✅ Two filters
-        if (unitName != null && templateName != null) {
-            return inventoryLogRepository
-                    .findByUnitNameAndTemplateNameContainingIgnoreCase(unitName, templateName, pageable);
-        }
-
-        if (unitName != null && action != null) {
-            return inventoryLogRepository
-                    .findByUnitNameAndAction(unitName, action, pageable);
-        }
-
-        if (templateName != null && action != null) {
-            return inventoryLogRepository
-                    .findByTemplateNameContainingIgnoreCaseAndAction(templateName, action, pageable);
-        }
-
-        // ✅ Single filters
-        if (unitName != null) {
-            return inventoryLogRepository.findByUnitName(unitName, pageable);
-        }
-
-        if (templateName != null) {
-            return inventoryLogRepository.findByTemplateNameContainingIgnoreCase(templateName, pageable);
-        }
-
-        if (action != null) {
-            return inventoryLogRepository.findByAction(action, pageable);
-        }
-
-        // ✅ No filters → return all
-        return inventoryLogRepository.findAll(pageable);
-    }
+//    public Page<InventoryLog> getLogsForAdminFiltered(
+//            String unitName,
+//            String templateName,
+//            ActionType action,
+//            int page,
+//            int size
+//    ) {
+//        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+//
+//        // ✅ All filters applied
+//        if (unitName != null && templateName != null && action != null) {
+//            return inventoryLogRepository
+//                    .findByUnitNameAndTemplateNameContainingIgnoreCaseAndAction(
+//                            unitName, templateName, action, pageable);
+//        }
+//
+//        // ✅ Two filters
+//        if (unitName != null && templateName != null) {
+//            return inventoryLogRepository
+//                    .findByUnitNameAndTemplateNameContainingIgnoreCase(unitName, templateName, pageable);
+//        }
+//
+//        if (unitName != null && action != null) {
+//            return inventoryLogRepository
+//                    .findByUnitNameAndAction(unitName, action, pageable);
+//        }
+//
+//        if (templateName != null && action != null) {
+//            return inventoryLogRepository
+//                    .findByTemplateNameContainingIgnoreCaseAndAction(templateName, action, pageable);
+//        }
+//
+//        // ✅ Single filters
+//        if (unitName != null) {
+//            return inventoryLogRepository.findByUnitName(unitName, pageable);
+//        }
+//
+//        if (templateName != null) {
+//            return inventoryLogRepository.findByTemplateNameContainingIgnoreCase(templateName, pageable);
+//        }
+//
+//        if (action != null) {
+//            return inventoryLogRepository.findByAction(action, pageable);
+//        }
+//
+//        // ✅ No filters → return all
+//        return inventoryLogRepository.findAll(pageable);
+//    }
 
     public List<String> getAllUnits() {
         return inventoryLogRepository.findAllUnits();
@@ -346,26 +347,96 @@ public class InventoryService {
 
 
     // ================= ADMIN FILTER =================
-    public List<InventoryLog> getLogsForAdminFiltered(
+
+    public Page<InventoryLog> getEmployeeLogsFiltered(
+            Long eId,
+            String templateName,
+            ActionType action,
+            int page,
+            int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        return inventoryLogRepository.findEmployeeLogs(
+                eId,
+                templateName,
+                action,
+                pageable
+        );
+    }
+
+    public Page<InventoryLog> getLogsForAdminFiltered(
             String unitName,
             String templateName,
-            ActionType action
+            ActionType action,
+            int page,
+            int size
     ) {
-        List<InventoryLog> logs = inventoryLogRepository.findAll();
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
-        return logs.stream()
-                .filter(log ->
-                        (unitName == null || unitName.isBlank()
-                                || log.getUnitName().toLowerCase().contains(unitName.toLowerCase()))
-                )
-                .filter(log ->
-                        (templateName == null || templateName.isBlank()
-                                || log.getTemplateName().toLowerCase().contains(templateName.toLowerCase()))
-                )
-                .filter(log ->
-                        (action == null || log.getAction() == action)
-                )
-                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
-                .collect(Collectors.toList());
+        return inventoryLogRepository.findFilteredLogs(
+                unitName,
+                templateName,
+                action,
+                pageable
+        );
+    }
+
+
+    public List<StockAlertDTO> getAllLowStockAlerts() {
+        List<StockAlertDTO> alerts = new ArrayList<>();
+
+        List<InventoryRecord> records = inventoryRecordRepository.findAll();
+
+        for (InventoryRecord record : records) {
+            if (record.getTemplate() == null) {
+                continue;
+            }
+
+            Long templateId = record.getTemplate().getId();
+
+            List<TemplateField> fields =
+                    templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(templateId);
+
+            List<InventoryValue> values =
+                    inventoryValueRepository.findByInventoryRecord_Id(record.getId());
+
+            Map<Long, String> valueMap = new HashMap<>();
+            for (InventoryValue value : values) {
+                valueMap.put(value.getFieldId(), value.getValue());
+            }
+
+            Integer stock = null;
+
+            for (TemplateField field : fields) {
+                String fieldName = field.getFieldName();
+                if (fieldName != null && fieldName.trim().toLowerCase().contains("stock")) {
+                    stock = safeParse(valueMap.get(field.getId()));
+                    break;
+                }
+            }
+
+            if (stock != null && stock < 10) {
+                alerts.add(new StockAlertDTO(
+                        record.getUnitName(),
+                        record.getTemplate().getTemplateName() != null
+                                ? record.getTemplate().getTemplateName()
+                                : "-",
+                        stock
+                ));
+            }
+        }
+
+        return alerts;
+    }
+
+    public List<StockAlertDTO> getLowStockAlertsForUnit(String unitName) {
+        if (unitName == null || unitName.trim().isEmpty()) {
+            return List.of();
+        }
+
+        return getAllLowStockAlerts().stream()
+                .filter(alert -> unitName.equals(alert.getUnitName()))
+                .toList();
     }
 }
