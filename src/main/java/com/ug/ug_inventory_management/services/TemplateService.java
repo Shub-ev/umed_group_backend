@@ -6,6 +6,8 @@ import com.ug.ug_inventory_management.models.TemplateField;
 import com.ug.ug_inventory_management.repositories.TemplateFieldRepository;
 import com.ug.ug_inventory_management.repositories.TemplateRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
 
@@ -125,6 +127,19 @@ public class TemplateService {
         field.setDisplayOrder(nextOrder);
 
         templateFieldRepository.save(field);
+    }
+
+
+    public Page<Template> getTemplates(String templateName, Pageable pageable) {
+
+        if (templateName == null || templateName.trim().isEmpty()) {
+            return templateRepository.findAll(pageable);
+        }
+
+        return templateRepository.findByTemplateNameContainingIgnoreCase(
+                templateName.trim(),
+                pageable
+        );
     }
 
     public List<Template> getAllTemplates() {
