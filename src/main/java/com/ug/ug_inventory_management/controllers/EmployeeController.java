@@ -60,12 +60,15 @@ public class EmployeeController {
 
     // Delete employee by employee himself
     @DeleteMapping("/delete")
-    public ResponseEntity<EmployeeResponseDTO> deleteEmployee(@RequestBody LoginEmployeeDTO loginEmployeeDTO) {
-        log.info("Deleting employee with ID: {}", loginEmployeeDTO.getEId());
-        EmployeeResponseDTO employeeResponseDTO = employeeServices.deleteEmployee(loginEmployeeDTO);
-        log.info("Employee deleted successfully with ID: {}", loginEmployeeDTO.getEId());
+    public ResponseEntity<EmployeeResponseDTO> deleteEmployee(@RequestBody EmployeePasswordVerifyDTO dto) {
 
-        return ResponseEntity.ok(employeeResponseDTO);
+        log.info("Employee self-delete request for ID: {}", dto.getEId());
+
+        EmployeeResponseDTO response = employeeServices.deleteSelfEmployee(dto);
+
+        log.info("Employee deleted successfully: {}", dto.getEId());
+
+        return ResponseEntity.ok(response);
     }
 
     // Delete employee by Admin (no need of password)
