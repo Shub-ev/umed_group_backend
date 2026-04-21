@@ -1,15 +1,15 @@
 package com.ug.ug_inventory_management.controllers;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.security.core.Authentication;
-import com.ug.ug_inventory_management.services.InventoryService;
+
 import com.ug.ug_inventory_management.common.dtos.CreateInventoryRecordDTO;
 import com.ug.ug_inventory_management.common.dtos.InventoryUpdateRecordDTO;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
-//import com.ug.ug_inventory_management.common.security.CustomUserDetails;
 import com.ug.ug_inventory_management.enums.ActionType;
-
+import com.ug.ug_inventory_management.security.CustomEmployeeDetails;
+import com.ug.ug_inventory_management.services.InventoryService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -25,39 +25,21 @@ public class InventoryController {
         this.inventoryService = inventoryService;
     }
 
-    // ✅ CREATE INVENTORY
     @PostMapping
     public String addInventory(@RequestBody CreateInventoryRecordDTO request) {
         inventoryService.addInventory(request);
         return "Inventory Saved";
     }
 
-
-    // #### Why {summary} name???
     @GetMapping("/summary/{templateId}")
     public List<Map<String, String>> getSummary(@PathVariable Long templateId) {
         return inventoryService.getInventorySummary(templateId);
     }
 
-//  --------------Authenticated User only make changes in the qty ----------  //
     @PostMapping("/update")
     public ResponseEntity<?> updateInventory(@RequestBody InventoryUpdateRecordDTO req) {
         return inventoryService.updateInventory(req);
     }
-
-
-    // Commented till adminLogs are completed
-//    @GetMapping("/logs/employee/{eId}")
-//    public ResponseEntity<?> getEmployeeLogs(
-//            @PathVariable Long eId,
-//            @RequestParam(required = false) String templateName,
-//            @RequestParam(required = false) ActionType action
-//    ) {
-//        return ResponseEntity.ok(
-//                inventoryService.getEmployeeLogsFiltered(eId, templateName, action)
-//        );
-//    }
-
 
     @GetMapping("/logs/admin")
     public ResponseEntity<?> getAdminLogs(
@@ -67,16 +49,37 @@ public class InventoryController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size
     ) {
-        log.info("Fetching logs for unit: {}, template: {}, action{}", unitName, templateName, action);
+        log.info("Admin logs fetch → unit: {}, template: {}, action: {}",
+                unitName, templateName, action);
+
         return ResponseEntity.ok(
-                inventoryService.getLogsForAdminFiltered( unitName, templateName, action, page, size)
+                inventoryService.getLogsForAdminFiltered(unitName, templateName, action, page, size)
         );
     }
 
+    @GetMapping("/logs/employee")
+    public ResponseEntity<?> getEmployeeLogs(
+            Authentication authentication,
+            @RequestParam(required = false) String templateName,
+            @RequestParam(required = false) ActionType action,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        CustomEmployeeDetails employeeDetails =
+                (CustomEmployeeDetails) authentication.getPrincipal();
+
+        Long eId = employeeDetails.getEmployee().getEId();
+
+        log.info("Employee logs fetch → eId: {}, template: {}, action: {}",
+                eId, templateName, action);
+
+        return ResponseEntity.ok(
+                inventoryService.getEmployeeLogsFiltered(eId, templateName, action, page, size)
+        );
+    }
     @GetMapping("/logs/units")
     public ResponseEntity<?> getUnits() {
         return ResponseEntity.ok(inventoryService.getAllUnits());
     }
-
-
 }
+
