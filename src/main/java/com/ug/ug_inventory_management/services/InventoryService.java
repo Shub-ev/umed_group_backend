@@ -102,7 +102,8 @@ public class InventoryService {
             ) {
                 value = "0";
             } else {
-                value = "";
+                if(value == null)
+                    value = "";
             }
 
             InventoryValue inventoryValue =
@@ -119,20 +120,13 @@ public class InventoryService {
         // save recode values
         inventoryValueRepository.saveAll(savedValues);
 
-        /*      Create LOG      */
-        int inward = safeParse(inwardField.getValue());
-        int outward = safeParse(outwardField.getValue());
-
-        int previousStock = inward - outward;
-        int newStock = inward - outward;
-
         InventoryLog inventoryLog = new InventoryLog(
                 request.getTemplateId(),
                 request.getUnitName(),
                 ActionType.CREATE,
-                inward,
-                previousStock,
-                newStock,
+                0,
+                0,
+                0,
                 request.getEId(),
                 template.getTemplateName() != null ? template.getTemplateName() : "-"
         );
