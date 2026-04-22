@@ -40,4 +40,14 @@ public class CreateTemplateDTO {
     public void setFields(List<TemplateField> templateFields) {
         this.templateFields = templateFields;
     }
+
+
+    //toString()
+    @Override
+    public String toString() {
+        return "CreateTemplateDTO{" +
+                "templateName='" + templateName + '\'' +
+                ", templateFields=" + templateFields +
+                '}';
+    }
 }
