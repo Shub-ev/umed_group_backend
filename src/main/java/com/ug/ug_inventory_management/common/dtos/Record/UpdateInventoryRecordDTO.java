@@ -1,11 +1,11 @@
 
-package com.ug.ug_inventory_management.common.dtos;
+package com.ug.ug_inventory_management.common.dtos.Record;
 import com.ug.ug_inventory_management.enums.ActionType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 // ADD documentation comments
 @Schema(description = "")
-public class InventoryUpdateRecordDTO {
+public class UpdateInventoryRecordDTO {
 
     private Long templateId;
     private String templateName;
@@ -16,10 +16,10 @@ public class InventoryUpdateRecordDTO {
     private String unitName;
 
 
-    public InventoryUpdateRecordDTO() {
+    public UpdateInventoryRecordDTO() {
     }
 
-    public InventoryUpdateRecordDTO(Long templateId, Long recordId, int changeQty, ActionType action, Long eId, String unitName,String templateName) {
+    public UpdateInventoryRecordDTO(Long templateId, Long recordId, int changeQty, ActionType action, Long eId, String unitName, String templateName) {
         this.templateId = templateId;
         this.recordId = recordId;
         this.changeQty = changeQty;

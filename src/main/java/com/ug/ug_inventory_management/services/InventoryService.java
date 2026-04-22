@@ -13,18 +13,20 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import com.ug.ug_inventory_management.common.dtos.CreateInventoryRecordDTO;
+import com.ug.ug_inventory_management.common.dtos.Record.CreateInventoryRecordDTO;
 import com.ug.ug_inventory_management.models.InventoryRecord;
 import com.ug.ug_inventory_management.models.InventoryValue;
 import com.ug.ug_inventory_management.models.Template;
 import com.ug.ug_inventory_management.models.TemplateField;
-import com.ug.ug_inventory_management.common.dtos.InventoryUpdateRecordDTO;
+import com.ug.ug_inventory_management.common.dtos.Record.UpdateInventoryRecordDTO;
 import com.ug.ug_inventory_management.enums.ActionType;
 import jakarta.validation.constraints.NotNull;
 import com.ug.ug_inventory_management.common.dtos.StockAlertDTO;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -61,16 +63,23 @@ public class InventoryService {
     @Transactional
     public void addInventory(@NotNull CreateInventoryRecordDTO request) {
 
+        // validate template ID
         Template template = templateRepository.findById(request.getTemplateId())
-                .orElseThrow(() -> new RuntimeException("Template not found"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Template not found"
+                ));
 
         // Check if unit name exists
         if(!unitNameRepository.existsByUnitName(request.getUnitName().trim())) {
             throw new IllegalArgumentException("Unit name does not exist");
         }
+
+        // create new Record
         InventoryRecord inventoryRecord = new InventoryRecord(template, request.getUnitName());
         inventoryRecordRepository.save(inventoryRecord);
 
+        // extract template fields
         List<TemplateField> fields =
                 templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(request.getTemplateId());
 
@@ -181,7 +190,7 @@ public class InventoryService {
     }
 
     @Transactional
-    public ResponseEntity<?> updateInventory(InventoryUpdateRecordDTO req) {
+    public ResponseEntity<?> updateInventory(UpdateInventoryRecordDTO req) {
 
         InventoryRecord record = inventoryRecordRepository
                 .findById(req.getRecordId())

@@ -1,7 +1,7 @@
 package com.ug.ug_inventory_management.controllers;
 
-import com.ug.ug_inventory_management.common.dtos.CreateInventoryRecordDTO;
-import com.ug.ug_inventory_management.common.dtos.InventoryUpdateRecordDTO;
+import com.ug.ug_inventory_management.common.dtos.Record.CreateInventoryRecordDTO;
+import com.ug.ug_inventory_management.common.dtos.Record.UpdateInventoryRecordDTO;
 import com.ug.ug_inventory_management.enums.ActionType;
 import com.ug.ug_inventory_management.security.CustomEmployeeDetails;
 import com.ug.ug_inventory_management.services.InventoryService;
@@ -38,7 +38,7 @@ public class InventoryController {
     }
 
     @PostMapping("/update")
-    public ResponseEntity<?> updateInventory(@RequestBody InventoryUpdateRecordDTO req) {
+    public ResponseEntity<?> updateInventory(@RequestBody UpdateInventoryRecordDTO req) {
         return inventoryService.updateInventory(req);
     }
 
