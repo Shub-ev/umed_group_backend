@@ -26,11 +26,11 @@ public class TemplateController {
     }
 
     @PostMapping
-    public Map<String, String> createTemplate(@RequestBody CreateTemplateDTO request) {
+    public ResponseEntity<?> createTemplate(@RequestBody CreateTemplateDTO request) {
         log.info("Creating new template: {}", request);
         templateService.createTemplate(request);
         log.info("Template created!");
-        return Map.of("message", "Template Created");
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping
