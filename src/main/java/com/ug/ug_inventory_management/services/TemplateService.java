@@ -38,11 +38,7 @@ public class TemplateService {
         Template template = new Template(request.getTemplateName());
         templateRepository.save(template);
 
-        // ✅ Define fixed fields
-
         System.out.println("Fields: " + request.getFields());
-
-        // ✅ Normalize user input
         List<TemplateField> requestFields = request.getFields();
 
         List<String> fieldNames = requestFields.stream()
@@ -51,13 +47,13 @@ public class TemplateService {
 
         // ✅ 1. Check duplicate fields from user
         if (fieldNames.size() != new java.util.HashSet<>(fieldNames).size()) {
-            throw new RuntimeException("Duplicate field names are not allowed");
+            throw new IllegalArgumentException("Duplicate field names are not allowed");
         }
 
         // ✅ 2. Prevent adding fixed fields manually
         for (String name : fieldNames) {
             if (FIXED_FIELDS.contains(name)) {
-                throw new RuntimeException(name + " is a default field, no need to add it");
+                throw new IllegalArgumentException(name + " is a default field, no need to add it");
             }
         }
 
