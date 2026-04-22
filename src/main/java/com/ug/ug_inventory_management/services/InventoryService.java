@@ -26,6 +26,7 @@ import com.ug.ug_inventory_management.enums.ActionType;
 import jakarta.validation.constraints.NotNull;
 import com.ug.ug_inventory_management.common.dtos.StockAlertDTO;
 import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
@@ -75,8 +76,18 @@ public class InventoryService {
             throw new IllegalArgumentException("Unit name does not exist");
         }
 
+        // compare hash of this record with other records for duplication
+        String rawString = request.getTemplateId().toString() +
+                request.getUnitName().toString().trim() +
+                new TreeMap<>(request.getValues()).toString();
+        String hash = DigestUtils.md5DigestAsHex(rawString.getBytes());
+
+        if(inventoryRecordRepository.existsByRecordHash(hash)){
+            throw new IllegalArgumentException("Same record already exist");
+        }
+
         // create new Record
-        InventoryRecord inventoryRecord = new InventoryRecord(template, request.getUnitName());
+        InventoryRecord inventoryRecord = new InventoryRecord(template, request.getUnitName(), hash);
         inventoryRecordRepository.save(inventoryRecord);
 
         // extract template fields
