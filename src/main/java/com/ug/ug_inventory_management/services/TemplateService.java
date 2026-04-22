@@ -1,6 +1,7 @@
 package com.ug.ug_inventory_management.services;
 
 import com.ug.ug_inventory_management.common.dtos.CreateTemplateDTO;
+import com.ug.ug_inventory_management.common.exceptions.IllegalArgumentException;
 import com.ug.ug_inventory_management.models.Template;
 import com.ug.ug_inventory_management.models.TemplateField;
 import com.ug.ug_inventory_management.repositories.TemplateFieldRepository;
