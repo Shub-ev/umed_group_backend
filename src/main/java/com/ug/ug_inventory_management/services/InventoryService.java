@@ -3,7 +3,9 @@
 package com.ug.ug_inventory_management.services;
 
 import com.ug.ug_inventory_management.common.events.InventoryAuditEvent;
+import com.ug.ug_inventory_management.common.exceptions.IllegalArgumentException;
 import com.ug.ug_inventory_management.models.InventoryLog;
+import com.ug.ug_inventory_management.repositories.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -18,13 +20,8 @@ import com.ug.ug_inventory_management.models.InventoryRecord;
 import com.ug.ug_inventory_management.models.InventoryValue;
 import com.ug.ug_inventory_management.models.Template;
 import com.ug.ug_inventory_management.models.TemplateField;
-import com.ug.ug_inventory_management.repositories.InventoryRecordRepository;
-import com.ug.ug_inventory_management.repositories.InventoryValueRepository;
-import com.ug.ug_inventory_management.repositories.TemplateFieldRepository;
 import com.ug.ug_inventory_management.common.dtos.InventoryUpdateRecordDTO;
-import com.ug.ug_inventory_management.repositories.TemplateRepository;
 import com.ug.ug_inventory_management.enums.ActionType;
-import com.ug.ug_inventory_management.repositories.InventoryLogRepository;
 import jakarta.validation.constraints.NotNull;
 import com.ug.ug_inventory_management.common.dtos.StockAlertDTO;
 import org.springframework.stereotype.Service;
@@ -41,6 +38,7 @@ public class InventoryService {
     private final TemplateRepository templateRepository;
     private final ApplicationEventPublisher publisher;
     private final InventoryLogRepository inventoryLogRepository;
+    private final UnitNameRepository unitNameRepository;
 
     private static final Logger log = LoggerFactory.getLogger(InventoryService.class);
 
@@ -49,13 +47,15 @@ public class InventoryService {
                             TemplateFieldRepository templateFieldRepository,
                             TemplateRepository templateRepository,
                             ApplicationEventPublisher publisher,
-                            InventoryLogRepository inventoryLogRepository) {
+                            InventoryLogRepository inventoryLogRepository,
+                            UnitNameRepository unitNameRepository) {
         this.inventoryRecordRepository = inventoryRecordRepository;
         this.inventoryValueRepository = inventoryValueRepository;
         this.templateFieldRepository = templateFieldRepository;
         this.templateRepository = templateRepository;
         this.publisher = publisher;
         this.inventoryLogRepository = inventoryLogRepository;
+        this.unitNameRepository = unitNameRepository;
     }
 
     @Transactional
@@ -64,6 +64,10 @@ public class InventoryService {
         Template template = templateRepository.findById(request.getTemplateId())
                 .orElseThrow(() -> new RuntimeException("Template not found"));
 
+        // Check if unit name exists
+        if(!unitNameRepository.existsByUnitName(request.getUnitName().trim())) {
+            throw new IllegalArgumentException("Unit name does not exist");
+        }
         InventoryRecord inventoryRecord = new InventoryRecord(template, request.getUnitName());
         inventoryRecordRepository.save(inventoryRecord);
 
