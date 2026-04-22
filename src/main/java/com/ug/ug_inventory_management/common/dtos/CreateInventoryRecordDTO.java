@@ -63,4 +63,16 @@ public class CreateInventoryRecordDTO {
     public void setEId(Long eId) {
         this.eId = eId;
     }
+
+
+    // toStirng()
+    @Override
+    public String toString() {
+        return "CreateInventoryRecordDTO{" +
+                "templateId=" + templateId +
+                ", eId=" + eId +
+                ", unitName='" + unitName + '\'' +
+                ", values=" + values +
+                '}';
+    }
 }
