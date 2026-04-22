@@ -4,6 +4,8 @@ import com.ug.ug_inventory_management.common.dtos.ReportRequestDTO;
 import com.ug.ug_inventory_management.common.dtos.ReportResponseDTO;
 import com.ug.ug_inventory_management.services.ReportService;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +19,7 @@ import java.util.List;
 public class ReportController {
 
     private final ReportService reportService;
+    private final Logger log = LoggerFactory.getLogger(ReportController.class);
 
     public ReportController(ReportService reportService) {
         this.reportService = reportService;
@@ -32,9 +35,8 @@ public class ReportController {
             @RequestParam(required = false) String unit,
             @RequestParam(required = false) Long templateId
     ) {
-
+        log.info("Fetching Report from: {} to: {}", from, to);
         DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
-
         LocalDateTime fromDate = null;
         LocalDateTime toDate = null;
 
@@ -57,7 +59,9 @@ public class ReportController {
         req.setUnit(unit);
         req.setTemplateId(templateId);
 
-        return ResponseEntity.ok(reportService.getReport(req));
+        List<ReportResponseDTO> responseDTOList = reportService.getReport(req);
+        log.info("Fetch report completed");
+        return ResponseEntity.ok(responseDTOList);
     }
 
     // -----------------------------
