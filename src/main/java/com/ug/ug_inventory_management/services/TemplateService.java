@@ -31,7 +31,7 @@ public class TemplateService {
     public void createTemplate(@NotNull CreateTemplateDTO request) {
 
         if (templateRepository.existsByTemplateName(request.getTemplateName())) {
-            throw new RuntimeException("Template already exists");
+            throw new IllegalArgumentException("Template with same name already exists");
         }
 
         Template template = new Template(request.getTemplateName());
