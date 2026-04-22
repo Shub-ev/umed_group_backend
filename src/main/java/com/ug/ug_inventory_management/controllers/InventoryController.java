@@ -27,6 +27,7 @@ public class InventoryController {
 
     @PostMapping
     public String addInventory(@RequestBody CreateInventoryRecordDTO request) {
+        log.info("Create new inventory: {}", request);
         inventoryService.addInventory(request);
         return "Inventory Saved";
     }
