@@ -21,11 +21,11 @@ import java.util.List;
 @Service
 public class ReportService {
 
-    private final ReportRepository repo;
+    private final ReportRepository reportRepository;
     private final TemplateRepository templateRepo;
 
-    public ReportService(ReportRepository repo, TemplateRepository templateRepo) {
-        this.repo = repo;
+    public ReportService(ReportRepository reportRepository, TemplateRepository templateRepo) {
+        this.reportRepository = reportRepository;
         this.templateRepo = templateRepo;
     }
 
@@ -67,7 +67,7 @@ public class ReportService {
             templateId = req.getTemplateId();
         }
 
-        List<Object[]> rows = repo.getReport(from, to, unit, templateId);
+        List<Object[]> rows = reportRepository.getReport(from, to, unit, templateId);
 
         return rows.stream().map(r -> {
             ReportResponseDTO dto = new ReportResponseDTO();
