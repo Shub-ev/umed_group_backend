@@ -20,4 +20,5 @@ import java.util.List;
 public interface InventoryRecordRepository extends JpaRepository<InventoryRecord, Long> {
     List<InventoryRecord> findByTemplate_IdAndUnitName(Long templateId, String unitName);
     List<InventoryRecord> findByTemplate_Id(Long templateId);
+    boolean existsByRecordHash(String hash);
 }
