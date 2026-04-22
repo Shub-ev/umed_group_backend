@@ -26,13 +26,20 @@ public class InventoryRecord {
     @OneToMany(mappedBy = "inventoryRecord", cascade = CascadeType.ALL)
     private List<InventoryValue> values;
 
+
+    // Constructor
+    @Column(unique = true)
+    private String recordHash;
+
     public InventoryRecord() {
     }
 
-    public InventoryRecord(Template template, String unitName) {
+    public InventoryRecord(Template template, String unitName, String recordHash) {
         this.template = template;
         this.unitName = unitName;
+        this.recordHash = recordHash;
     }
+
 
     // Getters
     public Long getId() { return id; }
@@ -41,11 +48,15 @@ public class InventoryRecord {
 
     public String getUnitName() { return unitName; }
 
+    public String getRecordHash() { return recordHash; }
+
 
     // Setters
     public void setTemplate(Template template) { this.template = template; }
 
     public void setUnitName(String unitName) { this.unitName = unitName; }
+
+    public void setRecordHash(String recordHash) { this.recordHash = recordHash; }
 
 
     // toString
@@ -53,7 +64,9 @@ public class InventoryRecord {
     public String toString() {
         return "InventoryRecord{" +
                 "id=" + id +
+                ", template=" + template +
                 ", unitName='" + unitName + '\'' +
+                ", recordHash='" + recordHash + '\'' +
                 '}';
     }
 }
