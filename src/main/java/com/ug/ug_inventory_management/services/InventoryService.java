@@ -92,18 +92,17 @@ public class InventoryService {
         List<InventoryValue> savedValues = new ArrayList<>();
 
         for (TemplateField field : fields) {
-
             String value = requestValues.get(field.getFieldName());
             String fieldNameLower = field.getFieldName().toLowerCase();
 
-            if (value == null) {
-                if (fieldNameLower.equals("inward") ||
-                        fieldNameLower.equals("outward") ||
-                        fieldNameLower.equals("stock")) {
-                    value = "0";
-                } else {
-                    value = "";
-                }
+            // set track values to 0
+            if ( fieldNameLower.equals("inward") ||
+                 fieldNameLower.equals("outward") ||
+                 fieldNameLower.equals("stock")
+            ) {
+                value = "0";
+            } else {
+                value = "";
             }
 
             InventoryValue inventoryValue =
@@ -111,36 +110,35 @@ public class InventoryService {
 
             savedValues.add(inventoryValue);
 
+            // keep track of stock values for log
             if (fieldNameLower.contains("inward")) inwardField = inventoryValue;
             else if (fieldNameLower.contains("outward")) outwardField = inventoryValue;
             else if (fieldNameLower.contains("stock")) stockField = inventoryValue;
         }
 
+        // save recode values
         inventoryValueRepository.saveAll(savedValues);
 
-        // LOG CREATION
-        if (inwardField != null && outwardField != null && stockField != null) {
+        /*      Create LOG      */
+        int inward = safeParse(inwardField.getValue());
+        int outward = safeParse(outwardField.getValue());
 
-            int inward = safeParse(inwardField.getValue());
-            int outward = safeParse(outwardField.getValue());
+        int previousStock = inward - outward;
+        int newStock = inward - outward;
 
-            int previousStock = inward - outward;
-            int newStock = inward - outward;
+        InventoryLog inventoryLog = new InventoryLog(
+                request.getTemplateId(),
+                request.getUnitName(),
+                ActionType.CREATE,
+                inward,
+                previousStock,
+                newStock,
+                request.getEId(),
+                template.getTemplateName() != null ? template.getTemplateName() : "-"
+        );
 
-            InventoryLog inventoryLog = new InventoryLog(
-                    request.getTemplateId(),
-                    request.getUnitName(),
-                    ActionType.INWARD,
-                    inward,
-                    previousStock,
-                    newStock,
-                    request.getEId(),
-                    template.getTemplateName() != null ? template.getTemplateName() : "-"
-            );
-
-            log.info("Publishing inventory audit event for new inventory");
-            publisher.publishEvent(new InventoryAuditEvent(inventoryLog));
-        }
+        log.info("Publishing inventory audit event for new inventory");
+        publisher.publishEvent(new InventoryAuditEvent(inventoryLog));
     }
 
     private int safeParse(String value) {
