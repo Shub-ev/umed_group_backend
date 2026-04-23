@@ -37,5 +37,5 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            pkill ug_inventory_management || true
+            sudo fuser -k 8082/tcp || true
             nohup java -jar /home/shubham/target/ug_inventory_management*.jar > app.log 2>&1 &
