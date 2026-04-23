@@ -38,4 +38,4 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             sudo fuser -k 8082/tcp || true
-            nohup java -jar /home/shubham/target/ug_inventory_management*.jar > app.log 2>&1 &
+            nohup java -jar /home/shubham/target/ug_inventory_management*.jar >> app.log 2>&1 &
