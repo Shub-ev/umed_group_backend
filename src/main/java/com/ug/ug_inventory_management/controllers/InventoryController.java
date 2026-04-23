@@ -32,6 +32,14 @@ public class InventoryController {
         return "Inventory Saved";
     }
 
+    @DeleteMapping("/{recordId}")
+    public ResponseEntity<?> deleteInventory(
+            @PathVariable Long recordId,
+            @RequestParam String unitName   // or eId (better)
+    ) {
+        return inventoryService.deleteInventory(recordId, unitName);
+    }
+
     @GetMapping("/summary/{templateId}")
     public List<Map<String, String>> getSummary(@PathVariable Long templateId) {
         return inventoryService.getInventorySummary(templateId);
