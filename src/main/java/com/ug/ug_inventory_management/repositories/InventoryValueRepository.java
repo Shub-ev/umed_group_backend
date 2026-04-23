@@ -24,6 +24,7 @@ WHERE r.template.id = :templateId
 
 
     List<InventoryValue> findByInventoryRecord_Id(Long recordId);
+    void deleteByInventoryRecord_Id(Long recordId);
 }
 
 
