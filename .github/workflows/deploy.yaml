@@ -37,5 +37,5 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            pkill java || true
-            nohup java -jar /home/shubham/target/*.jar > app.log 2>&1 &
+            pkill ug_inventory_management || true
+            nohup java -jar /home/shubham/target/ug_inventory_management*.jar > app.log 2>&1 &
