@@ -156,6 +156,29 @@ public class InventoryService {
         }
     }
 
+
+
+    @Transactional
+    public ResponseEntity<?> deleteInventory(Long recordId, String unitName) {
+
+        InventoryRecord record = inventoryRecordRepository.findById(recordId)
+                .orElseThrow(() -> new RuntimeException("Record not found"));
+
+        // employee can delete only his own record
+        if (!record.getUnitName().equals(unitName)) {
+            return ResponseEntity.status(403)
+                    .body("You can only delete your own record");
+        }
+
+        // delete child values first
+        inventoryValueRepository.deleteByInventoryRecord_Id(recordId);
+
+        // delete main record
+        inventoryRecordRepository.delete(record);
+
+        return ResponseEntity.ok("Record deleted successfully");
+    }
+
     public List<Map<String, String>> getInventorySummary(Long templateId) {
 
         List<InventoryRecord> records =
