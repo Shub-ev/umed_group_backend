@@ -38,4 +38,4 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             pkill java || true
-            nohup java -jar /home/shubham/app/*.jar > app.log 2>&1 &
+            nohup java -jar /home/shubham/target/*.jar > app.log 2>&1 &
