@@ -28,7 +28,7 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_KEY }}
           source: "target/*.jar"
-          target: "/home/shubham/"
+          target: "/home/shubham/ug_inventory_app/spring_app"
 
       - name: Restart App on Server
         uses: appleboy/ssh-action@v1.0.3
@@ -38,4 +38,4 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             fuser -k 8082/tcp || true
-            nohup java -jar /home/shubham/target/ug_inventory_management*.jar >> app.log 2>&1 &
+            nohup java -jar /home/shubham/ug_inventory_app/spring_app/target/ug_inventory_management*.jar >> app.log 2>&1 &
