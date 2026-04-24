@@ -3,7 +3,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 public enum ActionType {
     INWARD,
     OUTWARD,
-    CREATE;
+    CREATE,
+    DELETE;
     @JsonCreator
     public static ActionType fromString(String value) {
         return ActionType.valueOf(value.toUpperCase());
