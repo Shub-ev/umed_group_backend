@@ -185,9 +185,11 @@ public class InventoryService {
                 eId,
                 record.getTemplate().getTemplateName()
         );
-
         // delete main record
         inventoryRecordRepository.delete(record);
+
+        log.info("Publishing inventory audit event for deleted inventory");
+        publisher.publishEvent(new InventoryAuditEvent(inventoryLog));
 
         return ResponseEntity.ok("Record deleted successfully");
     }
