@@ -14,6 +14,7 @@ import com.ug.ug_inventory_management.models.TemplateField;
 import java.util.List;
 import java.util.Map;
 
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/templates")
 public class TemplateController {
