@@ -10,10 +10,10 @@
 		<version>4.0.2</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.ug</groupId>
+	<groupId>online.umedgroup</groupId>
 	<artifactId>ug_inventory_management</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<name>ug_inventory_management</name>
 	<description>Peoject for Umed Group</description>
 	<url/>
@@ -110,6 +110,7 @@
 	</dependencies>
 
 	<build>
+		<finalName>inventory_app</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
