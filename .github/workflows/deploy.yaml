@@ -27,7 +27,7 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_KEY }}
-          source: "target/*.jar"
+          source: "target/inventory_app.jar"
           target: "/home/shubham/ug_inventory_app/spring_app"
 
       - name: Restart App on Server
