@@ -42,4 +42,5 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             fuser -k 8082/tcp || true
+            export BOOTSTRAP_ADMIN_PASSWORD=${{ secrets.BOOTSTRAP_ADMIN_PASSWORD }}
             nohup java -jar /home/shubham/ug_inventory_app/spring_app/inventory_app.jar >> app.log 2>&1 &
