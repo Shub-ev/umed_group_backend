@@ -160,7 +160,7 @@ public class InventoryService {
 
 
     @Transactional
-    public ResponseEntity<?> deleteInventory(Long recordId, String unitName) {
+    public ResponseEntity<?> deleteInventory(Long recordId, Long eId, String unitName) {
 
         InventoryRecord record = inventoryRecordRepository.findById(recordId)
                 .orElseThrow(() -> new RuntimeException("Record not found"));
@@ -173,6 +173,18 @@ public class InventoryService {
 
         // delete child values first
         inventoryValueRepository.deleteByInventoryRecord_Id(recordId);
+
+        // create delete log
+        InventoryLog inventoryLog = new InventoryLog(
+                record.getTemplate().getId(),
+                unitName,
+                ActionType.DELETE,
+                0,
+                0,
+                0,
+                eId,
+                record.getTemplate().getTemplateName()
+        );
 
         // delete main record
         inventoryRecordRepository.delete(record);
