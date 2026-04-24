@@ -29,6 +29,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           source: "target/inventory_app.jar"
           target: "/home/shubham/ug_inventory_app/spring_app"
+          strip_components: 1
 
       - name: Debug JAR Output
         run: ls -lah target/
