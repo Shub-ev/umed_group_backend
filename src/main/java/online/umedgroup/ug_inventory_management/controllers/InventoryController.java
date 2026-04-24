@@ -33,12 +33,13 @@ public class InventoryController {
         return "Inventory Saved";
     }
 
-    @DeleteMapping("/{recordId}")
+    @DeleteMapping("/{recordId}/{eId}")
     public ResponseEntity<?> deleteInventory(
             @PathVariable Long recordId,
+            @PathVariable Long eId,
             @RequestParam String unitName   // or eId (better)
     ) {
-        return inventoryService.deleteInventory(recordId, unitName);
+        return inventoryService.deleteInventory(recordId, eId, unitName);
     }
 
     @GetMapping("/summary/{templateId}")
