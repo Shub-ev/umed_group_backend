@@ -24,32 +24,48 @@ public class Template {
     @Column(unique = true, nullable = false)
     private String templateName;
 
+    private String mainField;
+
     @OneToMany(mappedBy = "template", cascade = CascadeType.ALL)
     private List<TemplateField> fields;
 
+
+    // constructors
     public Template() {
     }
+    public Template(String templateName, String mainField) {
+        this.templateName = templateName;
+        this.mainField = mainField;
+    }
 
+
+    // getters
     public Template(String templateName) {
         this.templateName = templateName;
     }
 
     public Long getId() { return id; }
 
+    public String getMainField() { return mainField; }
+
     public String getTemplateName() { return templateName; }
 
+
+    // setters
     public void setTemplateName(String templateName) {
         this.templateName = templateName;
     }
 
+    public void setMainField(String mainField) { this.mainField = mainField; }
 
     // toString
+
     @Override
     public String toString() {
         return "Template{" +
                 "id=" + id +
                 ", templateName='" + templateName + '\'' +
-                ", fields=" + fields +
+                ", mainField='" + mainField + '\'' +
                 '}';
     }
 }
