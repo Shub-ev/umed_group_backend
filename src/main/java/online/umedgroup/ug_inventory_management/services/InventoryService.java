@@ -144,6 +144,7 @@ public class InventoryService {
         }
 
         inventoryValueRepository.saveAll(savedValues);
+        Long recordId = inventoryRecord.getId();
 
         InventoryLog inventoryLog = new InventoryLog(
                 request.getTemplateId(),
@@ -423,6 +424,7 @@ public class InventoryService {
         stockField.setValue(String.valueOf(newStock));
 
         inventoryValueRepository.saveAll(List.of(inwardField, outwardField, stockField));
+        Long recordId = req.getRecordId();
 
         InventoryLog inventoryLog = new InventoryLog(
                 req.getTemplateId(),
