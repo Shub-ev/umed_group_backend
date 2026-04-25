@@ -88,6 +88,17 @@ public class InventoryController {
                 inventoryService.getEmployeeLogsFiltered(eId, templateName, action, page, size)
         );
     }
+
+    @GetMapping("/records/{templateId}")
+    public ResponseEntity<?> searchRecord(
+            @PathVariable Long templateId,
+            @RequestParam String field
+            ) {
+        log.info("Search records in template {} with main field value: {}", templateId, field);
+        List<Map<String, String>> result = inventoryService.searchFromInventory(templateId, field);
+        return ResponseEntity.ok(result);
+    }
+
     @GetMapping("/logs/units")
     public ResponseEntity<?> getUnits() {
         return ResponseEntity.ok(inventoryService.getAllUnits());
