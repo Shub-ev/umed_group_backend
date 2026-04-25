@@ -72,31 +72,46 @@ public class InventoryService {
                         "Template not found"
                 ));
 
+
+        String mainFieldName = template.getMainField();
+
+        log.info("Template main field: {}", mainFieldName);
+
         // Check if unit name exists
-        if(!unitNameRepository.existsByUnitName(request.getUnitName().trim())) {
+        if (!unitNameRepository.existsByUnitName(request.getUnitName().trim())) {
             throw new IllegalArgumentException("Unit name does not exist");
         }
 
         // compare hash of this record with other records for duplication
         String rawString = request.getTemplateId().toString() +
-                request.getUnitName().toString().trim() +
+                request.getUnitName().trim() +
                 new TreeMap<>(request.getValues()).toString();
+
         String hash = DigestUtils.md5DigestAsHex(rawString.getBytes());
 
-        if(inventoryRecordRepository.existsByRecordHash(hash)){
+        if (inventoryRecordRepository.existsByRecordHash(hash)) {
             throw new IllegalArgumentException("Same record already exist");
         }
 
         // create new Record
-        InventoryRecord inventoryRecord = new InventoryRecord(template, request.getUnitName(), hash);
+        InventoryRecord inventoryRecord =
+                new InventoryRecord(template, request.getUnitName(), hash);
         inventoryRecordRepository.save(inventoryRecord);
 
-        // extract template fields
+
         List<TemplateField> fields =
                 templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(request.getTemplateId());
 
         Map<String, String> requestValues =
                 request.getValues() != null ? request.getValues() : new HashMap<>();
+
+        // ✅ Get main field VALUE from request
+        String mainFieldValue = "-";
+        if (mainFieldName != null && requestValues.containsKey(mainFieldName)) {
+            mainFieldValue = requestValues.get(mainFieldName);
+        }
+
+        log.info("Main field value for this record: {}", mainFieldValue);
 
         InventoryValue inwardField = null;
         InventoryValue outwardField = null;
@@ -107,14 +122,12 @@ public class InventoryService {
             String value = requestValues.get(field.getFieldName());
             String fieldNameLower = field.getFieldName().toLowerCase();
 
-            // set track values to 0
-            if ( fieldNameLower.equals("inward") ||
-                 fieldNameLower.equals("outward") ||
-                 fieldNameLower.equals("stock")
-            ) {
+            if (fieldNameLower.equals("inward") ||
+                    fieldNameLower.equals("outward") ||
+                    fieldNameLower.equals("stock")) {
                 value = "0";
             } else {
-                if(value == null)
+                if (value == null)
                     value = "";
             }
 
@@ -123,13 +136,11 @@ public class InventoryService {
 
             savedValues.add(inventoryValue);
 
-            // keep track of stock values for log
             if (fieldNameLower.contains("inward")) inwardField = inventoryValue;
             else if (fieldNameLower.contains("outward")) outwardField = inventoryValue;
             else if (fieldNameLower.contains("stock")) stockField = inventoryValue;
         }
 
-        // save recode values
         inventoryValueRepository.saveAll(savedValues);
 
         InventoryLog inventoryLog = new InventoryLog(
