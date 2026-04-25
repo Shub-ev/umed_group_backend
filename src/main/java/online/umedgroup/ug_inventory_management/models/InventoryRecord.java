@@ -64,7 +64,6 @@ public class InventoryRecord {
     public String toString() {
         return "InventoryRecord{" +
                 "id=" + id +
-                ", template=" + template +
                 ", unitName='" + unitName + '\'' +
                 ", recordHash='" + recordHash + '\'' +
                 '}';
