@@ -236,72 +236,24 @@ public class InventoryService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Field value is required");
         }
 
-        // 1. Get template
+        // 1. Extract template and its main field
         Template template = templateRepository.findById(templateId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "No template found with id " + templateId
                 ));
-
         String mainFieldName = template.getMainField();
 
-        // 2. Get main field
-        TemplateField mainField = templateFieldRepository
-                .findByTemplate_IdAndFieldNameIgnoreCase(templateId, mainFieldName)
+        // 2. Find mainField Id
+        TemplateField mainFieldId = templateFieldRepository.findByTemplate_IdAndFieldNameIgnoreCase(templateId, mainFieldName)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "Main field not found in template"
+                        "Main field not found"
                 ));
 
-        // 3. Find matching values
-        List<InventoryValue> matchedValues =
-                inventoryValueRepository.findByFieldIdAndValueContainingIgnoreCase(
-                        mainField.getId(),
-                        field.trim()
-                );
+        log.info("Main field Id: {}", mainFieldId);
 
-        // 4. Get matching record IDs
-        Set<Long> recordIds = matchedValues.stream()
-                .map(v -> v.getInventoryRecord().getId())
-                .collect(Collectors.toSet());
-
-        if (recordIds.isEmpty()) return new ArrayList<>();
-
-        // 5. Fetch records
-        List<InventoryRecord> records =
-                inventoryRecordRepository.findAllById(recordIds);
-
-        // 6. Fetch fields
-        List<TemplateField> fields =
-                templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(templateId);
-
-        List<Map<String, String>> result = new ArrayList<>();
-
-        for (InventoryRecord record : records) {
-
-            // SAME as your summary method 👇
-            List<InventoryValue> values =
-                    inventoryValueRepository.findByInventoryRecord_Id(record.getId());
-
-            Map<Long, String> valueMap = new HashMap<>();
-            for (InventoryValue val : values) {
-                valueMap.put(val.getFieldId(), val.getValue());
-            }
-
-            Map<String, String> row = new LinkedHashMap<>();
-
-            row.put("recordId", String.valueOf(record.getId()));
-            row.put("unitName", record.getUnitName());
-
-            for (TemplateField f : fields) {
-                row.put(f.getFieldName(),
-                        valueMap.getOrDefault(f.getId(), ""));
-            }
-
-            result.add(row);
-        }
-
-        return result;
+        return null;
     }
 
     @Transactional
