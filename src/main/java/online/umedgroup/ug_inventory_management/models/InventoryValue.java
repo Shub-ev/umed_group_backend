@@ -89,4 +89,15 @@ public class InventoryValue {
     public void setValue(String value) {
         this.value = value;
     }
+
+
+    // toString()
+    @Override
+    public String toString() {
+        return "InventoryValue{" +
+                "id=" + id +
+                ", fieldId=" + fieldId +
+                ", value='" + value + '\'' +
+                '}';
+    }
 }
