@@ -14,6 +14,7 @@ public class InventoryLog {
 
     private String templateName;
 
+
     private String unitName;
 
     @Enumerated(EnumType.STRING)  // Stores enum as String in database
@@ -22,6 +23,8 @@ public class InventoryLog {
     private Integer changeQty;
     private Integer previousQty;
     private Integer newQty;
+
+    private String mainFieldValue;
 
 
 
@@ -39,7 +42,7 @@ public class InventoryLog {
 
     public InventoryLog(Long templateId, String unitName, ActionType action,
                         Integer changeQty, Integer previousQty,
-                        Integer newQty, Long performedBy,String templateName) {
+                        Integer newQty, Long performedBy,String templateName,String mainFieldValue) {
         this.templateId = templateId;
         this.unitName = unitName;
         this.action = action;
@@ -48,6 +51,7 @@ public class InventoryLog {
         this.newQty = newQty;
         this.performedBy = performedBy;
         this.templateName=templateName;
+        this.mainFieldValue=mainFieldValue;
     }
 
     public Long getId() {
@@ -88,6 +92,15 @@ public class InventoryLog {
 
     public String getTemplateName() {
         return templateName;
+    }
+
+
+    public String getMainFieldValue() {
+        return mainFieldValue;
+    }
+
+    public void setMainFieldValue(String mainFieldValue) {
+        this.mainFieldValue = mainFieldValue;
     }
 }
 

@@ -1,12 +1,23 @@
-//package com.ug.ug_inventory_management.services;
-
 package online.umedgroup.ug_inventory_management.services;
 
+import online.umedgroup.ug_inventory_management.common.dtos.Record.CreateInventoryRecordDTO;
+import online.umedgroup.ug_inventory_management.common.dtos.Record.UpdateInventoryRecordDTO;
+import online.umedgroup.ug_inventory_management.common.dtos.StockAlertDTO;
 import online.umedgroup.ug_inventory_management.common.events.InventoryAuditEvent;
 import online.umedgroup.ug_inventory_management.common.exceptions.IllegalArgumentException;
+import online.umedgroup.ug_inventory_management.enums.ActionType;
 import online.umedgroup.ug_inventory_management.models.InventoryLog;
-import online.umedgroup.ug_inventory_management.repositories.*;
-import online.umedgroup.ug_inventory_management.repositories.*;
+import online.umedgroup.ug_inventory_management.models.InventoryRecord;
+import online.umedgroup.ug_inventory_management.models.InventoryValue;
+import online.umedgroup.ug_inventory_management.models.Template;
+import online.umedgroup.ug_inventory_management.models.TemplateField;
+import online.umedgroup.ug_inventory_management.repositories.InventoryLogRepository;
+import online.umedgroup.ug_inventory_management.repositories.InventoryRecordRepository;
+import online.umedgroup.ug_inventory_management.repositories.InventoryValueRepository;
+import online.umedgroup.ug_inventory_management.repositories.TemplateFieldRepository;
+import online.umedgroup.ug_inventory_management.repositories.TemplateRepository;
+import online.umedgroup.ug_inventory_management.repositories.UnitNameRepository;
+import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -16,21 +27,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
-import online.umedgroup.ug_inventory_management.common.dtos.Record.CreateInventoryRecordDTO;
-import online.umedgroup.ug_inventory_management.models.InventoryRecord;
-import online.umedgroup.ug_inventory_management.models.InventoryValue;
-import online.umedgroup.ug_inventory_management.models.Template;
-import online.umedgroup.ug_inventory_management.models.TemplateField;
-import online.umedgroup.ug_inventory_management.common.dtos.Record.UpdateInventoryRecordDTO;
-import online.umedgroup.ug_inventory_management.enums.ActionType;
-import jakarta.validation.constraints.NotNull;
-import online.umedgroup.ug_inventory_management.common.dtos.StockAlertDTO;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -65,27 +74,29 @@ public class InventoryService {
     @Transactional
     public void addInventory(@NotNull CreateInventoryRecordDTO request) {
 
-        // validate template ID
         Template template = templateRepository.findById(request.getTemplateId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Template not found"
                 ));
 
-
         String mainFieldName = template.getMainField();
-
         log.info("Template main field: {}", mainFieldName);
 
-        // Check if unit name exists
-        if (!unitNameRepository.existsByUnitName(request.getUnitName().trim())) {
+        String unitName = request.getUnitName() == null ? "" : request.getUnitName().trim();
+        if (unitName.isEmpty()) {
+            throw new IllegalArgumentException("Unit name is required");
+        }
+
+        if (!unitNameRepository.existsByUnitName(unitName)) {
             throw new IllegalArgumentException("Unit name does not exist");
         }
 
-        // compare hash of this record with other records for duplication
-        String rawString = request.getTemplateId().toString() +
-                request.getUnitName().trim() +
-                new TreeMap<>(request.getValues()).toString();
+        Map<String, String> requestValues = normalizeValueMap(request.getValues());
+
+        String rawString = request.getTemplateId().toString()
+                + unitName
+                + new TreeMap<>(requestValues).toString();
 
         String hash = DigestUtils.md5DigestAsHex(rawString.getBytes());
 
@@ -93,42 +104,33 @@ public class InventoryService {
             throw new IllegalArgumentException("Same record already exist");
         }
 
-        // create new Record
-        InventoryRecord inventoryRecord =
-                new InventoryRecord(template, request.getUnitName(), hash);
+        InventoryRecord inventoryRecord = new InventoryRecord(template, unitName, hash);
         inventoryRecordRepository.save(inventoryRecord);
-
 
         List<TemplateField> fields =
                 templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(request.getTemplateId());
 
-        Map<String, String> requestValues =
-                request.getValues() != null ? request.getValues() : new HashMap<>();
-
-        // ✅ Get main field VALUE from request
-        String mainFieldValue = "-";
-        if (mainFieldName != null && requestValues.containsKey(mainFieldName)) {
-            mainFieldValue = requestValues.get(mainFieldName);
-        }
-
+        String mainFieldValue = resolveMainFieldValue(mainFieldName, requestValues);
         log.info("Main field value for this record: {}", mainFieldValue);
 
         InventoryValue inwardField = null;
         InventoryValue outwardField = null;
         InventoryValue stockField = null;
+
         List<InventoryValue> savedValues = new ArrayList<>();
 
         for (TemplateField field : fields) {
-            String value = requestValues.get(field.getFieldName());
-            String fieldNameLower = field.getFieldName().toLowerCase();
+            String fieldName = field.getFieldName();
+            String fieldKey = normalizeKey(fieldName);
 
-            if (fieldNameLower.equals("inward") ||
-                    fieldNameLower.equals("outward") ||
-                    fieldNameLower.equals("stock")) {
+            String value = requestValues.get(fieldKey);
+
+            if ("inward".equals(fieldKey) ||
+                    "outward".equals(fieldKey) ||
+                    "stock".equals(fieldKey)) {
                 value = "0";
-            } else {
-                if (value == null)
-                    value = "";
+            } else if (value == null) {
+                value = "";
             }
 
             InventoryValue inventoryValue =
@@ -136,16 +138,16 @@ public class InventoryService {
 
             savedValues.add(inventoryValue);
 
-            if (fieldNameLower.contains("inward")) inwardField = inventoryValue;
-            else if (fieldNameLower.contains("outward")) outwardField = inventoryValue;
-            else if (fieldNameLower.contains("stock")) stockField = inventoryValue;
+            if (fieldKey != null && fieldKey.contains("inward")) inwardField = inventoryValue;
+            else if (fieldKey != null && fieldKey.contains("outward")) outwardField = inventoryValue;
+            else if (fieldKey != null && fieldKey.contains("stock")) stockField = inventoryValue;
         }
 
         inventoryValueRepository.saveAll(savedValues);
 
         InventoryLog inventoryLog = new InventoryLog(
                 request.getTemplateId(),
-                request.getUnitName(),
+                unitName,
                 ActionType.CREATE,
                 0,
                 0,
@@ -153,22 +155,11 @@ public class InventoryService {
                 request.getEId(),
                 template.getTemplateName() != null ? template.getTemplateName() : "-"
         );
+        inventoryLog.setMainFieldValue(mainFieldValue);
 
         log.info("Publishing inventory audit event for new inventory");
         publisher.publishEvent(new InventoryAuditEvent(inventoryLog));
     }
-
-    private int safeParse(String value) {
-        try {
-            return (value == null || value.trim().isEmpty())
-                    ? 0
-                    : Integer.parseInt(value);
-        } catch (NumberFormatException e) {
-            return 0;
-        }
-    }
-
-
 
     @Transactional
     public ResponseEntity<?> deleteInventory(Long recordId, Long eId, String unitName) {
@@ -176,28 +167,45 @@ public class InventoryService {
         InventoryRecord record = inventoryRecordRepository.findById(recordId)
                 .orElseThrow(() -> new RuntimeException("Record not found"));
 
-        // employee can delete only his own record
-        if (!record.getUnitName().equals(unitName)) {
+        String cleanedUnitName = unitName == null ? "" : unitName.trim();
+        if (!Objects.equals(record.getUnitName(), cleanedUnitName)) {
             return ResponseEntity.status(403)
                     .body("You can only delete your own record");
         }
 
-        // delete child values first
-        inventoryValueRepository.deleteByInventoryRecord_Id(recordId);
+        Template template = record.getTemplate();
+        if (template == null) {
+            return ResponseEntity.status(404).body("Template not found for record");
+        }
 
-        // create delete log
+        String mainFieldName = template.getMainField();
+
+        List<TemplateField> fields =
+                templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(template.getId());
+
+        List<InventoryValue> values =
+                inventoryValueRepository.findByInventoryRecord_Id(recordId);
+
+        Map<Long, String> valueByFieldId = buildValueByFieldIdMap(values);
+        Map<String, String> fieldNameValueMap = buildFieldNameValueMap(fields, valueByFieldId);
+
+        String mainFieldValue = resolveMainFieldValue(mainFieldName, fieldNameValueMap);
+        log.info("Delete log main field value: {}", mainFieldValue);
+
+        inventoryValueRepository.deleteByInventoryRecord_Id(recordId);
+        inventoryRecordRepository.delete(record);
+
         InventoryLog inventoryLog = new InventoryLog(
-                record.getTemplate().getId(),
-                unitName,
+                template.getId(),
+                cleanedUnitName,
                 ActionType.DELETE,
                 0,
                 0,
                 0,
                 eId,
-                record.getTemplate().getTemplateName()
+                template.getTemplateName() != null ? template.getTemplateName() : "-"
         );
-        // delete main record
-        inventoryRecordRepository.delete(record);
+        inventoryLog.setMainFieldValue(mainFieldValue);
 
         log.info("Publishing inventory audit event for deleted inventory");
         publisher.publishEvent(new InventoryAuditEvent(inventoryLog));
@@ -207,11 +215,19 @@ public class InventoryService {
 
     public List<Map<String, String>> getInventorySummary(Long templateId) {
 
+        Template template = templateRepository.findById(templateId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "No template found with id " + templateId
+                ));
+
         List<InventoryRecord> records =
                 inventoryRecordRepository.findByTemplate_Id(templateId);
 
         List<TemplateField> fields =
                 templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(templateId);
+
+        String mainFieldName = template.getMainField();
 
         List<Map<String, String>> result = new ArrayList<>();
 
@@ -220,19 +236,18 @@ public class InventoryService {
             List<InventoryValue> values =
                     inventoryValueRepository.findByInventoryRecord_Id(record.getId());
 
-            Map<Long, String> valueMap = new HashMap<>();
-            for (InventoryValue val : values) {
-                valueMap.put(val.getFieldId(), val.getValue());
-            }
+            Map<Long, String> valueByFieldId = buildValueByFieldIdMap(values);
+            Map<String, String> fieldNameValueMap = buildFieldNameValueMap(fields, valueByFieldId);
 
             Map<String, String> row = new LinkedHashMap<>();
-
             row.put("recordId", String.valueOf(record.getId()));
             row.put("unitName", record.getUnitName());
+            row.put("mainFieldName", mainFieldName != null ? mainFieldName : "-");
+            row.put("mainFieldValue", resolveMainFieldValue(mainFieldName, fieldNameValueMap));
 
             for (TemplateField field : fields) {
-                row.put(field.getFieldName(),
-                        valueMap.getOrDefault(field.getId(), ""));
+                String fieldName = field.getFieldName();
+                row.put(fieldName, valueByFieldId.getOrDefault(field.getId(), ""));
             }
 
             result.add(row);
@@ -247,40 +262,47 @@ public class InventoryService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Template id is required");
         }
 
-        // 1. Extract template and its main field
         Template template = templateRepository.findById(templateId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "No template found with id " + templateId
                 ));
-        String mainFieldName = template.getMainField();
 
-        // 2. Find mainField Id
-        TemplateField mainFieldId = templateFieldRepository.findByTemplate_IdAndFieldNameIgnoreCase(templateId, mainFieldName)
+        String mainFieldName = template.getMainField();
+        if (mainFieldName == null || mainFieldName.trim().isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Main field not configured for this template"
+            );
+        }
+
+        List<TemplateField> fields =
+                templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(templateId);
+
+        TemplateField mainField = fields.stream()
+                .filter(f -> f.getFieldName() != null
+                        && f.getFieldName().equalsIgnoreCase(mainFieldName.trim()))
+                .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Main field not found"
                 ));
 
-        // 3. Get Inventory values with same field id and value(field)
         List<InventoryValue> matchedValues = inventoryValueRepository.findByFieldIdAndValueIgnoreCase(
-                mainFieldId.getId(),
+                mainField.getId(),
                 field.trim()
         );
 
-        // 4. Get matched record IDs with above inventory values
         Set<Long> recordIds = matchedValues.stream()
                 .map(v -> v.getInventoryRecord().getId())
                 .collect(Collectors.toSet());
 
-        // 5. Fetch all records by ids
+        if (recordIds.isEmpty()) {
+            return List.of();
+        }
+
         List<InventoryRecord> records = inventoryRecordRepository.findAllById(recordIds);
 
-        // 6. Fetch all template fields
-        List<TemplateField> fields =
-                templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(templateId);
-
-        // 7. Build Response
         List<Map<String, String>> result = new ArrayList<>();
 
         for (InventoryRecord record : records) {
@@ -288,19 +310,18 @@ public class InventoryService {
             List<InventoryValue> values =
                     inventoryValueRepository.findByInventoryRecord_Id(record.getId());
 
-            Map<Long, String> valueMap = new HashMap<>();
-            for (InventoryValue val : values) {
-                valueMap.put(val.getFieldId(), val.getValue());
-            }
+            Map<Long, String> valueByFieldId = buildValueByFieldIdMap(values);
+            Map<String, String> fieldNameValueMap = buildFieldNameValueMap(fields, valueByFieldId);
 
             Map<String, String> row = new LinkedHashMap<>();
-
             row.put("recordId", String.valueOf(record.getId()));
             row.put("unitName", record.getUnitName());
+            row.put("mainFieldName", mainFieldName);
+            row.put("mainFieldValue", resolveMainFieldValue(mainFieldName, fieldNameValueMap));
 
             for (TemplateField f : fields) {
-                row.put(f.getFieldName(),
-                        valueMap.getOrDefault(f.getId(), ""));
+                String fieldName = f.getFieldName();
+                row.put(fieldName, valueByFieldId.getOrDefault(f.getId(), ""));
             }
 
             result.add(row);
@@ -316,7 +337,8 @@ public class InventoryService {
                 .findById(req.getRecordId())
                 .orElseThrow(() -> new RuntimeException("Record not found"));
 
-        if (!record.getUnitName().equals(req.getUnitName())) {
+        String cleanedUnitName = req.getUnitName() == null ? "" : req.getUnitName().trim();
+        if (!Objects.equals(record.getUnitName(), cleanedUnitName)) {
             return ResponseEntity.status(403)
                     .body("You can only update your unit data");
         }
@@ -331,21 +353,28 @@ public class InventoryService {
             return ResponseEntity.badRequest().body("No inventory found");
         }
 
-        Map<Long, String> fieldMap =
-                templateFieldRepository
-                        .findByTemplate_IdOrderByDisplayOrderAsc(req.getTemplateId())
-                        .stream()
-                        .collect(Collectors.toMap(
-                                TemplateField::getId,
-                                f -> f.getFieldName().toLowerCase()
-                        ));
+        List<TemplateField> fields =
+                templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(req.getTemplateId());
+
+        Map<Long, String> fieldIdToLowerName = buildFieldIdToLowerNameMap(fields);
+
+        Map<String, String> fieldNameValueMap = new HashMap<>();
+        for (InventoryValue v : values) {
+            String fieldName = fieldIdToLowerName.get(v.getFieldId());
+            if (fieldName != null) {
+                fieldNameValueMap.put(fieldName, v.getValue());
+            }
+        }
+
+        String mainFieldName = template.getMainField();
+        String mainFieldValue = resolveMainFieldValue(mainFieldName, fieldNameValueMap);
 
         InventoryValue inwardField = null;
         InventoryValue outwardField = null;
         InventoryValue stockField = null;
 
         for (InventoryValue v : values) {
-            String fieldName = fieldMap.get(v.getFieldId());
+            String fieldName = fieldIdToLowerName.get(v.getFieldId());
             if (fieldName == null) continue;
 
             if (fieldName.contains("inward")) inwardField = v;
@@ -353,10 +382,18 @@ public class InventoryService {
             else if (fieldName.contains("stock")) stockField = v;
         }
 
+        if (inwardField == null || outwardField == null || stockField == null) {
+            return ResponseEntity.badRequest().body("Required stock fields not found");
+        }
+
+        if (req.getAction() == null) {
+            return ResponseEntity.badRequest().body("Action is required");
+        }
+
         int inward = safeParse(inwardField.getValue());
         int outward = safeParse(outwardField.getValue());
-
         int previousStock = inward - outward;
+
         int qty = req.getChangeQty();
         ActionType action = req.getAction();
 
@@ -373,19 +410,19 @@ public class InventoryService {
                 outward += qty;
                 outwardField.setValue(String.valueOf(outward));
                 break;
+
+            default:
+                return ResponseEntity.badRequest().body("Invalid action");
         }
 
         int newStock = inward - outward;
         stockField.setValue(String.valueOf(newStock));
 
-        inventoryValueRepository.saveAll(
-                List.of(inwardField, outwardField, stockField)
-        );
-
+        inventoryValueRepository.saveAll(List.of(inwardField, outwardField, stockField));
 
         InventoryLog inventoryLog = new InventoryLog(
                 req.getTemplateId(),
-                req.getUnitName(),
+                cleanedUnitName,
                 action,
                 qty,
                 previousStock,
@@ -393,97 +430,20 @@ public class InventoryService {
                 req.getEId(),
                 template.getTemplateName() != null ? template.getTemplateName() : "-"
         );
+        inventoryLog.setMainFieldValue(mainFieldValue);
 
         publisher.publishEvent(new InventoryAuditEvent(inventoryLog));
 
         return ResponseEntity.ok("Stock updated successfully");
     }
 
-//    public List<InventoryLog> getEmployeeLogs(Long eId) {
-//        return inventoryLogRepository.findByPerformedByOrderByCreatedAtDesc(eId);
-//    }
-
-//    public Page<InventoryLog> getLogsForAdminFiltered(
-//            String unitName,
-//            String templateName,
-//            ActionType action,
-//            int page,
-//            int size
-//    ) {
-//        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-//
-//        // ✅ All filters applied
-//        if (unitName != null && templateName != null && action != null) {
-//            return inventoryLogRepository
-//                    .findByUnitNameAndTemplateNameContainingIgnoreCaseAndAction(
-//                            unitName, templateName, action, pageable);
-//        }
-//
-//        // ✅ Two filters
-//        if (unitName != null && templateName != null) {
-//            return inventoryLogRepository
-//                    .findByUnitNameAndTemplateNameContainingIgnoreCase(unitName, templateName, pageable);
-//        }
-//
-//        if (unitName != null && action != null) {
-//            return inventoryLogRepository
-//                    .findByUnitNameAndAction(unitName, action, pageable);
-//        }
-//
-//        if (templateName != null && action != null) {
-//            return inventoryLogRepository
-//                    .findByTemplateNameContainingIgnoreCaseAndAction(templateName, action, pageable);
-//        }
-//
-//        // ✅ Single filters
-//        if (unitName != null) {
-//            return inventoryLogRepository.findByUnitName(unitName, pageable);
-//        }
-//
-//        if (templateName != null) {
-//            return inventoryLogRepository.findByTemplateNameContainingIgnoreCase(templateName, pageable);
-//        }
-//
-//        if (action != null) {
-//            return inventoryLogRepository.findByAction(action, pageable);
-//        }
-//
-//        // ✅ No filters → return all
-//        return inventoryLogRepository.findAll(pageable);
-//    }
-
     public List<String> getAllUnits() {
         return inventoryLogRepository.findAllUnits();
     }
 
-
-    // ================= EMPLOYEE FILTER =================
-    // Commented till adminLogs are completed
-//    public List<InventoryLog> getEmployeeLogsFiltered(
-//            Long eId,
-//            String templateName,
-//            ActionType action
-//    ) {
-//        List<InventoryLog> logs =
-//                inventoryLogRepository.findByPerformedByOrderByCreatedAtDesc(eId);
-//
-//        return logs.stream()
-//                .filter(log ->
-//                        (templateName == null || templateName.isBlank()
-//                                || log.getTemplateName().toLowerCase().contains(templateName.toLowerCase()))
-//                )
-//                .filter(log ->
-//                        (action == null || log.getAction() == action)
-//                )
-//                .collect(Collectors.toList());
-//    }
-
-
-    // ================= ADMIN FILTER =================
-
     public Page<InventoryLog> getEmployeeLogsFiltered(
             Long eId,
-            String templateName,
+            String mainFieldValue,
             ActionType action,
             int page,
             int size
@@ -492,7 +452,7 @@ public class InventoryService {
 
         return inventoryLogRepository.findEmployeeLogs(
                 eId,
-                templateName,
+                mainFieldValue,
                 action,
                 pageable
         );
@@ -500,7 +460,7 @@ public class InventoryService {
 
     public Page<InventoryLog> getLogsForAdminFiltered(
             String unitName,
-            String templateName,
+            String mainFieldValue,
             ActionType action,
             int page,
             int size
@@ -509,17 +469,17 @@ public class InventoryService {
 
         return inventoryLogRepository.findFilteredLogs(
                 unitName,
-                templateName,
+                mainFieldValue,
                 action,
                 pageable
         );
     }
 
-
     public List<StockAlertDTO> getAllLowStockAlerts() {
         List<StockAlertDTO> alerts = new ArrayList<>();
-
         List<InventoryRecord> records = inventoryRecordRepository.findAll();
+
+        Map<Long, List<TemplateField>> fieldsCache = new HashMap<>();
 
         for (InventoryRecord record : records) {
             if (record.getTemplate() == null) {
@@ -528,23 +488,21 @@ public class InventoryService {
 
             Long templateId = record.getTemplate().getId();
 
-            List<TemplateField> fields =
-                    templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(templateId);
+            List<TemplateField> fields = fieldsCache.computeIfAbsent(
+                    templateId,
+                    id -> templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(id)
+            );
 
             List<InventoryValue> values =
                     inventoryValueRepository.findByInventoryRecord_Id(record.getId());
 
-            Map<Long, String> valueMap = new HashMap<>();
-            for (InventoryValue value : values) {
-                valueMap.put(value.getFieldId(), value.getValue());
-            }
+            Map<Long, String> valueByFieldId = buildValueByFieldIdMap(values);
 
             Integer stock = null;
-
             for (TemplateField field : fields) {
                 String fieldName = field.getFieldName();
                 if (fieldName != null && fieldName.trim().toLowerCase().contains("stock")) {
-                    stock = safeParse(valueMap.get(field.getId()));
+                    stock = safeParse(valueByFieldId.get(field.getId()));
                     break;
                 }
             }
@@ -571,5 +529,74 @@ public class InventoryService {
         return getAllLowStockAlerts().stream()
                 .filter(alert -> unitName.equals(alert.getUnitName()))
                 .toList();
+    }
+
+    private Map<String, String> normalizeValueMap(Map<String, String> source) {
+        Map<String, String> normalized = new HashMap<>();
+        if (source == null) {
+            return normalized;
+        }
+
+        for (Map.Entry<String, String> entry : source.entrySet()) {
+            String key = normalizeKey(entry.getKey());
+            if (key != null && !key.isEmpty()) {
+                normalized.put(key, entry.getValue());
+            }
+        }
+        return normalized;
+    }
+
+    private Map<Long, String> buildValueByFieldIdMap(List<InventoryValue> values) {
+        Map<Long, String> valueByFieldId = new HashMap<>();
+        for (InventoryValue value : values) {
+            valueByFieldId.put(value.getFieldId(), value.getValue());
+        }
+        return valueByFieldId;
+    }
+
+    private Map<String, String> buildFieldNameValueMap(List<TemplateField> fields, Map<Long, String> valueByFieldId) {
+        Map<String, String> fieldNameValueMap = new HashMap<>();
+        for (TemplateField field : fields) {
+            String fieldName = normalizeKey(field.getFieldName());
+            if (fieldName != null && !fieldName.isEmpty()) {
+                fieldNameValueMap.put(fieldName, valueByFieldId.getOrDefault(field.getId(), ""));
+            }
+        }
+        return fieldNameValueMap;
+    }
+
+    private Map<Long, String> buildFieldIdToLowerNameMap(List<TemplateField> fields) {
+        Map<Long, String> fieldIdToLowerName = new HashMap<>();
+        for (TemplateField field : fields) {
+            String fieldName = normalizeKey(field.getFieldName());
+            if (fieldName != null && !fieldName.isEmpty()) {
+                fieldIdToLowerName.put(field.getId(), fieldName);
+            }
+        }
+        return fieldIdToLowerName;
+    }
+
+    private String resolveMainFieldValue(String mainFieldName, Map<String, String> fieldNameValueMap) {
+        String key = normalizeKey(mainFieldName);
+        if (key == null || key.isEmpty()) {
+            return "-";
+        }
+
+        String value = fieldNameValueMap.get(key);
+        return (value == null || value.trim().isEmpty()) ? "-" : value.trim();
+    }
+
+    private String normalizeKey(String value) {
+        return value == null ? null : value.trim().toLowerCase();
+    }
+
+    private int safeParse(String value) {
+        try {
+            return (value == null || value.trim().isEmpty())
+                    ? 0
+                    : Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 }
