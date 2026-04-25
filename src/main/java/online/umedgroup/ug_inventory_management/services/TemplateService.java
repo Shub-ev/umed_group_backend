@@ -32,12 +32,10 @@ public class TemplateService {
     @Transactional
     public void createTemplate(@NotNull CreateTemplateDTO request) {
 
+        // 1. check template with same name
         if (templateRepository.existsByTemplateName(request.getTemplateName())) {
             throw new IllegalArgumentException("Template with same name already exists");
         }
-
-        Template template = new Template(request.getTemplateName());
-        templateRepository.save(template);
 
         System.out.println("Fields: " + request.getFields());
         List<TemplateField> requestFields = request.getFields();
@@ -46,17 +44,27 @@ public class TemplateService {
                 .map(f -> f.getFieldName().trim().toUpperCase())
                 .toList();
 
-        // ✅ 1. Check duplicate fields from user
+        // 2. check if mainField is present in fields
+        String mainField = request.getMainField().trim().toUpperCase();
+        if(!fieldNames.contains(mainField)) {
+            throw new IllegalArgumentException("mainField must match one of the template fields");
+        }
+
+        // 3. Check duplicate fields from user
         if (fieldNames.size() != new java.util.HashSet<>(fieldNames).size()) {
             throw new IllegalArgumentException("Duplicate field names are not allowed");
         }
 
-        // ✅ 2. Prevent adding fixed fields manually
+        // 4. Prevent adding fixed fields manually
         for (String name : fieldNames) {
             if (FIXED_FIELDS.contains(name)) {
                 throw new IllegalArgumentException(name + " is a default field, no need to add it");
             }
         }
+
+        // Save template
+        Template template = new Template(request.getTemplateName(), mainField);
+        templateRepository.save(template);
 
         // ✅ 3. Save USER fields
         int order = 1;
@@ -72,11 +80,8 @@ public class TemplateService {
 
         // ✅ 2. Save FIXED fields LAST
         for (String fixed : FIXED_FIELDS) {
-
             TemplateField field = new TemplateField();
-
             field.setFieldName(fixed);
-
             if (fixed.equals("BY")) {
                 field.setFieldType(FieldType.STRING);
             } else {
@@ -84,12 +89,9 @@ public class TemplateService {
             }
 
             field.setTemplate(template);
-
             field.setDisplayOrder(order++); // continues
-
             templateFieldRepository.save(field);
         }
-
     }
 
 
