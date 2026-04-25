@@ -45,6 +45,9 @@ public class TemplateService {
                 .toList();
 
         // 2. check if mainField is present in fields
+        if(request.getMainField() == null) {
+            throw new IllegalArgumentException("Main field cannot be empty!");
+        }
         String mainField = request.getMainField().trim().toUpperCase();
         if(!fieldNames.contains(mainField)) {
             throw new IllegalArgumentException("mainField must match one of the template fields");
