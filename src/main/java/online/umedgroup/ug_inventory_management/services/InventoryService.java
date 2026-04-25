@@ -253,7 +253,7 @@ public class InventoryService {
         log.info("Main field Id: {}", mainFieldId.getId());
 
         // 3. Get Inventory values with same field id and value(field)
-        List<InventoryValue> matchedValues = inventoryValueRepository.findByFieldIdAndValueContainingIgnoreCase(
+        List<InventoryValue> matchedValues = inventoryValueRepository.findByFieldIdAndValueIgnoreCase(
                 mainFieldId.getId(),
                 field.trim()
         );
