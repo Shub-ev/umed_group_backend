@@ -26,7 +26,7 @@ WHERE r.template.id = :templateId
     List<InventoryValue> findByInventoryRecord_Id(Long recordId);
     void deleteByInventoryRecord_Id(Long recordId);
 
-    List<InventoryValue> findByFieldIdAndValueContainingIgnoreCase(Long fieldId, String value);
+    List<InventoryValue> findByFieldIdAndValueIgnoreCase(Long fieldId, String value);
 
     List<InventoryValue> findByInventoryRecord_Template_Id(Long templateId);
 }
