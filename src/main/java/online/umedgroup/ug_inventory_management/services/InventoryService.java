@@ -119,7 +119,7 @@ public class InventoryService {
         List<InventoryValue> savedValues = new ArrayList<>();
 
         for (TemplateField field : fields) {
-            String value = requestValues.get(field.getFieldName());
+            String value = requestValues.get(field.getFieldName()).trim();
             String fieldNameLower = field.getFieldName().toLowerCase();
 
             if (fieldNameLower.equals("inward") ||
