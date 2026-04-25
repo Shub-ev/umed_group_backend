@@ -64,20 +64,17 @@ public class ReportService {
             templateId = req.getTemplateId();
         }
 
-        reportRepository.getMainFieldReport(
+        // ✅ FIXED: correct repository call
+        List<Object[]> rows = reportRepository.getMainFieldReport(
                 from,
                 to,
                 unit,
-                (req.getMainField() == null || req.getMainField().isBlank())
-                        ? null
-                        : req.getMainField().trim(),
                 templateId
         );
 
         return rows.stream().map(r -> {
             ReportResponseDTO dto = new ReportResponseDTO();
 
-            // ⚠️ INDEX MUST MATCH QUERY EXACTLY
             dto.setUnit((String) r[0]);
             dto.setTemplateId(((Number) r[1]).longValue());
             dto.setTemplateName((String) r[2]);
@@ -91,7 +88,6 @@ public class ReportService {
             return dto;
         }).toList();
     }
-
     // =========================
     // DETAIL REPORT (NEW)
     // =========================
