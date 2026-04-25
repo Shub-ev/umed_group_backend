@@ -265,7 +265,42 @@ public class InventoryService {
                 .collect(Collectors.toSet());
         log.info("Matched Record IDs: {}", recordIds);
 
-        return null;
+        // 5. Fetch all records by ids
+        List<InventoryRecord> records = inventoryRecordRepository.findAllById(recordIds);
+        log.info("All matching records: {}", records);
+
+        // 6. Fetch all template fields
+        List<TemplateField> fields =
+                templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(templateId);
+        log.info("All template fields: {}", fields);
+
+        // 7. Build Response
+        List<Map<String, String>> result = new ArrayList<>();
+
+        for (InventoryRecord record : records) {
+
+            List<InventoryValue> values =
+                    inventoryValueRepository.findByInventoryRecord_Id(record.getId());
+
+            Map<Long, String> valueMap = new HashMap<>();
+            for (InventoryValue val : values) {
+                valueMap.put(val.getFieldId(), val.getValue());
+            }
+
+            Map<String, String> row = new LinkedHashMap<>();
+
+            row.put("recordId", String.valueOf(record.getId()));
+            row.put("unitName", record.getUnitName());
+
+            for (TemplateField f : fields) {
+                row.put(f.getFieldName(),
+                        valueMap.getOrDefault(f.getId(), ""));
+            }
+
+            result.add(row);
+        }
+
+        return result;
     }
 
     @Transactional
