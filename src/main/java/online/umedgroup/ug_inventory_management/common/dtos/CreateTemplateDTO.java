@@ -10,14 +10,18 @@ public class CreateTemplateDTO {
     @Schema(description = "Name of the template")
     private String templateName;
 
+    @Schema(description = "Name of main field")
+    private String mainField;
+
     @Schema(description = "List of fields to add into the template")
     private List<TemplateField> templateFields;
 
     public CreateTemplateDTO() {
     }
 
-    public CreateTemplateDTO(String templateName, List<TemplateField> templateFields) {
+    public CreateTemplateDTO(String templateName, String mainField, List<TemplateField> templateFields) {
         this.templateName = templateName;
+        this.mainField = mainField;
         this.templateFields = templateFields;
     }
 
@@ -30,6 +34,8 @@ public class CreateTemplateDTO {
     public List<TemplateField> getFields() {
         return templateFields;
     }
+
+    public String getMainField() { return mainField; }
 
 
     // Setters
@@ -47,6 +53,7 @@ public class CreateTemplateDTO {
     public String toString() {
         return "CreateTemplateDTO{" +
                 "templateName='" + templateName + '\'' +
+                ", mainField='" + mainField + '\'' +
                 ", templateFields=" + templateFields +
                 '}';
     }
