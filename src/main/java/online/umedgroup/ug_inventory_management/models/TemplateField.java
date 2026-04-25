@@ -74,7 +74,6 @@ public class TemplateField {
     public String toString() {
         return "TemplateField{" +
                 "id=" + id +
-                ", template=" + template +
                 ", fieldName='" + fieldName + '\'' +
                 ", fieldType=" + fieldType +
                 '}';
