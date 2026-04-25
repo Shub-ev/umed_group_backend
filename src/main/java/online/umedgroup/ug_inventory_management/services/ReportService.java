@@ -64,8 +64,14 @@ public class ReportService {
             templateId = req.getTemplateId();
         }
 
-        List<Object[]> rows = reportRepository.getMainFieldReport(
-                from, to, unit, templateId
+        reportRepository.getMainFieldReport(
+                from,
+                to,
+                unit,
+                (req.getMainField() == null || req.getMainField().isBlank())
+                        ? null
+                        : req.getMainField().trim(),
+                templateId
         );
 
         return rows.stream().map(r -> {
