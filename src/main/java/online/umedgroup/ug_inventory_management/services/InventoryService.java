@@ -250,29 +250,24 @@ public class InventoryService {
                         HttpStatus.NOT_FOUND,
                         "Main field not found"
                 ));
-        log.info("Main field Id: {}", mainFieldId.getId());
 
         // 3. Get Inventory values with same field id and value(field)
         List<InventoryValue> matchedValues = inventoryValueRepository.findByFieldIdAndValueIgnoreCase(
                 mainFieldId.getId(),
                 field.trim()
         );
-        log.info("Matched Values: {}", matchedValues);
 
         // 4. Get matched record IDs with above inventory values
         Set<Long> recordIds = matchedValues.stream()
                 .map(v -> v.getInventoryRecord().getId())
                 .collect(Collectors.toSet());
-        log.info("Matched Record IDs: {}", recordIds);
 
         // 5. Fetch all records by ids
         List<InventoryRecord> records = inventoryRecordRepository.findAllById(recordIds);
-        log.info("All matching records: {}", records);
 
         // 6. Fetch all template fields
         List<TemplateField> fields =
                 templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(templateId);
-        log.info("All template fields: {}", fields);
 
         // 7. Build Response
         List<Map<String, String>> result = new ArrayList<>();
