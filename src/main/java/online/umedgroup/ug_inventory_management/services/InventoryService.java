@@ -154,7 +154,8 @@ public class InventoryService {
                 0,
                 request.getEId(),
                 template.getTemplateName() != null ? template.getTemplateName() : "-",
-                mainFieldValue
+                mainFieldValue,
+                recordId
         );
 //        inventoryLog.setMainFieldValue(mainFieldValue);
 
@@ -205,7 +206,8 @@ public class InventoryService {
                 0,
                 eId,
                 template.getTemplateName() != null ? template.getTemplateName() : "-",
-                mainFieldValue
+                mainFieldValue,
+                recordId
         );
 //        inventoryLog.setMainFieldValue(mainFieldValue);
 
@@ -431,7 +433,8 @@ public class InventoryService {
                 newStock,
                 req.getEId(),
                 template.getTemplateName() != null ? template.getTemplateName() : "-",
-                mainFieldValue
+                mainFieldValue,
+                recordId
         );
 //        inventoryLog.setMainFieldValue(mainFieldValue);
 

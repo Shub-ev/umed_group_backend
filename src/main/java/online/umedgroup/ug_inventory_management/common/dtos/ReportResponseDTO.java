@@ -9,6 +9,7 @@ public class ReportResponseDTO {
     private Long totalInward;
     private Long totalOutward;
     private Long stock;
+    private String mainFieldValue;
 
     // getters & setters
 
@@ -58,5 +59,13 @@ public class ReportResponseDTO {
 
     public void setStock(Long stock) {
         this.stock = stock;
+    }
+
+    public String getMainFieldValue() {
+        return mainFieldValue;
+    }
+
+    public void setMainFieldValue(String mainFieldValue) {
+        this.mainFieldValue = mainFieldValue;
     }
 }

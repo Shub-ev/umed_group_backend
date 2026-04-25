@@ -34,6 +34,8 @@ public class InventoryLog {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
+     private  Long recordId;
+
 
 
     public InventoryLog() {
@@ -42,7 +44,7 @@ public class InventoryLog {
 
     public InventoryLog(Long templateId, String unitName, ActionType action,
                         Integer changeQty, Integer previousQty,
-                        Integer newQty, Long performedBy,String templateName,String mainFieldValue) {
+                        Integer newQty, Long performedBy,String templateName,String mainFieldValue,Long recordId) {
         this.templateId = templateId;
         this.unitName = unitName;
         this.action = action;
@@ -52,6 +54,7 @@ public class InventoryLog {
         this.performedBy = performedBy;
         this.templateName=templateName;
         this.mainFieldValue=mainFieldValue;
+        this.recordId=recordId;
     }
 
     public Long getId() {
@@ -102,5 +105,15 @@ public class InventoryLog {
     public void setMainFieldValue(String mainFieldValue) {
         this.mainFieldValue = mainFieldValue;
     }
+
+    public Long getRecordId() {
+        return recordId;
+    }
+
+    public void setRecordId(Long recordId) {
+        this.recordId = recordId;
+    }
+
+
 }
 
