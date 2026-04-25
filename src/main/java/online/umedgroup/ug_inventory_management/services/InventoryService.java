@@ -232,8 +232,8 @@ public class InventoryService {
 
     public List<Map<String, String>> searchFromInventory(Long templateId, String field) {
 
-        if (field == null || field.trim().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Field value is required");
+        if (templateId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Template id is required");
         }
 
         // 1. Extract template and its main field
