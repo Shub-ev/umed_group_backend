@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.List;
+import java.util.Optional;
 
 public interface TemplateFieldRepository extends JpaRepository<TemplateField, Long> {
     List<TemplateField> findByTemplate_IdOrderByDisplayOrderAsc(Long templateId);
@@ -13,4 +14,6 @@ public interface TemplateFieldRepository extends JpaRepository<TemplateField, Lo
 
     @Query("SELECT MAX(f.displayOrder) FROM TemplateField f WHERE f.template.id = :templateId")
     Integer findMaxDisplayOrder(@Param("templateId") Long templateId);
+
+    Optional<TemplateField> findByTemplate_IdAndFieldNameIgnoreCase(Long templateId, String fieldName);
 }

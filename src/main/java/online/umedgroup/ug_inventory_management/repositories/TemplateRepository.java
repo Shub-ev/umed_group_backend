@@ -13,4 +13,6 @@ public interface TemplateRepository extends JpaRepository<Template, Long> {
     Optional<Template> findByTemplateNameIgnoreCase(String templateName);
 
     Page<Template> findByTemplateNameContainingIgnoreCase(String templateName, Pageable pageable);
+
+    Optional<Template> findById(Long id);
 }

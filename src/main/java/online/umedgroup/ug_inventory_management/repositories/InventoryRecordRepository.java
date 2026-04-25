@@ -21,4 +21,5 @@ public interface InventoryRecordRepository extends JpaRepository<InventoryRecord
     List<InventoryRecord> findByTemplate_IdAndUnitName(Long templateId, String unitName);
     List<InventoryRecord> findByTemplate_Id(Long templateId);
     boolean existsByRecordHash(String hash);
+    List<InventoryRecord> findAllById(Iterable<Long> ids);
 }
