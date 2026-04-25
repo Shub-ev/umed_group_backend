@@ -251,7 +251,14 @@ public class InventoryService {
                         "Main field not found"
                 ));
 
-        log.info("Main field Id: {}", mainFieldId);
+        log.info("Main field Id: {}", mainFieldId.getId());
+
+        List<InventoryValue> matchedValues = inventoryValueRepository.findByFieldIdAndValueContainingIgnoreCase(
+                mainFieldId.getId(),
+                field.trim()
+        );
+
+        log.info("Matched Values: {}", matchedValues);
 
         return null;
     }
