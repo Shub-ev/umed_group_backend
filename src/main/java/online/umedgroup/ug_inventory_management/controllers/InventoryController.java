@@ -55,23 +55,23 @@ public class InventoryController {
     @GetMapping("/logs/admin")
     public ResponseEntity<?> getAdminLogs(
             @RequestParam(required = false) String unitName,
-            @RequestParam(required = false) String templateName,
+            @RequestParam(required = false) String mainFieldValue,
             @RequestParam(required = false) ActionType action,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size
     ) {
-        log.info("Admin logs fetch → unit: {}, template: {}, action: {}",
-                unitName, templateName, action);
+        log.info("Admin logs fetch → unit: {}, mainFieldValue: {}, action: {}",
+                unitName, mainFieldValue, action);
 
         return ResponseEntity.ok(
-                inventoryService.getLogsForAdminFiltered(unitName, templateName, action, page, size)
+                inventoryService.getLogsForAdminFiltered(unitName, mainFieldValue, action, page, size)
         );
     }
 
     @GetMapping("/logs/employee")
     public ResponseEntity<?> getEmployeeLogs(
             Authentication authentication,
-            @RequestParam(required = false) String templateName,
+            @RequestParam(required = false) String mainFieldValue,
             @RequestParam(required = false) ActionType action,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
@@ -81,11 +81,11 @@ public class InventoryController {
 
         Long eId = employeeDetails.getEmployee().getEId();
 
-        log.info("Employee logs fetch → eId: {}, template: {}, action: {}",
-                eId, templateName, action);
+        log.info("Employee logs fetch → eId: {}, mainFieldValue: {}, action: {}",
+                eId, mainFieldValue, action);
 
         return ResponseEntity.ok(
-                inventoryService.getEmployeeLogsFiltered(eId, templateName, action, page, size)
+                inventoryService.getEmployeeLogsFiltered(eId, mainFieldValue, action, page, size)
         );
     }
 
@@ -93,7 +93,7 @@ public class InventoryController {
     public ResponseEntity<?> searchRecord(
             @PathVariable Long templateId,
             @RequestParam String field
-            ) {
+    ) {
         log.info("Search records in template {} with main field value: {}", templateId, field);
         List<Map<String, String>> result = inventoryService.searchFromInventory(templateId, field);
         return ResponseEntity.ok(result);
