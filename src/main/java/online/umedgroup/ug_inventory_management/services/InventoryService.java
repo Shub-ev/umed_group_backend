@@ -250,15 +250,20 @@ public class InventoryService {
                         HttpStatus.NOT_FOUND,
                         "Main field not found"
                 ));
-
         log.info("Main field Id: {}", mainFieldId.getId());
 
+        // 3. Get Inventory values with same field id and value(field)
         List<InventoryValue> matchedValues = inventoryValueRepository.findByFieldIdAndValueContainingIgnoreCase(
                 mainFieldId.getId(),
                 field.trim()
         );
-
         log.info("Matched Values: {}", matchedValues);
+
+        // 4. Get matched record IDs with above inventory values
+        Set<Long> recordIds = matchedValues.stream()
+                .map(v -> v.getInventoryRecord().getId())
+                .collect(Collectors.toSet());
+        log.info("Matched Record IDs: {}", recordIds);
 
         return null;
     }
