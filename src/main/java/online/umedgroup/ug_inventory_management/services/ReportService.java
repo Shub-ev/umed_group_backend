@@ -50,6 +50,10 @@ public class ReportService {
                 ? null
                 : req.getUnit().trim();
 
+        String mainField = (req.getMainField() == null || req.getMainField().isBlank())
+                ? null
+                : req.getMainField().trim();
+
         Long templateId = null;
 
         if (req.getTemplateName() != null && !req.getTemplateName().isBlank()) {
@@ -64,11 +68,12 @@ public class ReportService {
             templateId = req.getTemplateId();
         }
 
-        // ✅ FIXED: correct repository call
+        // ✅ FIXED CALL (5 parameters)
         List<Object[]> rows = reportRepository.getMainFieldReport(
                 from,
                 to,
                 unit,
+                mainField,
                 templateId
         );
 
@@ -78,7 +83,6 @@ public class ReportService {
             dto.setUnit((String) r[0]);
             dto.setTemplateId(((Number) r[1]).longValue());
             dto.setTemplateName((String) r[2]);
-
             dto.setMainFieldValue((String) r[3]);
 
             dto.setTotalInward(r[4] != null ? ((Number) r[4]).longValue() : 0);
@@ -88,34 +92,6 @@ public class ReportService {
             return dto;
         }).toList();
     }
-    // =========================
-    // DETAIL REPORT (NEW)
-    // =========================
-    public List<Object[]> getDetailReport(ReportRequestDTO req) {
-
-        LocalDateTime to = req.getToDate();
-        LocalDateTime from = req.getFromDate();
-
-        if (to == null) to = LocalDateTime.now();
-        if (from == null) from = to.minusDays(7);
-
-        if (from.isAfter(to)) {
-            LocalDateTime temp = from;
-            from = to;
-            to = temp;
-        }
-
-        String unit = (req.getUnit() == null || req.getUnit().isBlank())
-                ? null
-                : req.getUnit().trim();
-
-        Long templateId = req.getTemplateId();
-
-        return reportRepository.getDetailReport(
-                from, to, unit, templateId
-        );
-    }
-
     // =========================
     // EXCEL EXPORT
     // =========================
