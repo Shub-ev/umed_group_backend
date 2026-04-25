@@ -153,9 +153,10 @@ public class InventoryService {
                 0,
                 0,
                 request.getEId(),
-                template.getTemplateName() != null ? template.getTemplateName() : "-"
+                template.getTemplateName() != null ? template.getTemplateName() : "-",
+                mainFieldValue
         );
-        inventoryLog.setMainFieldValue(mainFieldValue);
+//        inventoryLog.setMainFieldValue(mainFieldValue);
 
         log.info("Publishing inventory audit event for new inventory");
         publisher.publishEvent(new InventoryAuditEvent(inventoryLog));
@@ -203,9 +204,10 @@ public class InventoryService {
                 0,
                 0,
                 eId,
-                template.getTemplateName() != null ? template.getTemplateName() : "-"
+                template.getTemplateName() != null ? template.getTemplateName() : "-",
+                mainFieldValue
         );
-        inventoryLog.setMainFieldValue(mainFieldValue);
+//        inventoryLog.setMainFieldValue(mainFieldValue);
 
         log.info("Publishing inventory audit event for deleted inventory");
         publisher.publishEvent(new InventoryAuditEvent(inventoryLog));
@@ -428,9 +430,10 @@ public class InventoryService {
                 previousStock,
                 newStock,
                 req.getEId(),
-                template.getTemplateName() != null ? template.getTemplateName() : "-"
+                template.getTemplateName() != null ? template.getTemplateName() : "-",
+                mainFieldValue
         );
-        inventoryLog.setMainFieldValue(mainFieldValue);
+//        inventoryLog.setMainFieldValue(mainFieldValue);
 
         publisher.publishEvent(new InventoryAuditEvent(inventoryLog));
 
