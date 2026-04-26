@@ -3,6 +3,10 @@ package online.umedgroup.ug_inventory_management.repositories;
 import online.umedgroup.ug_inventory_management.models.InventoryValue;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import java.util.List;
+
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 @Repository
 public interface StockAlertRepository extends JpaRepository<InventoryValue, Long> {
