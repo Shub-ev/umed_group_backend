@@ -17,6 +17,7 @@ import online.umedgroup.ug_inventory_management.repositories.InventoryValueRepos
 import online.umedgroup.ug_inventory_management.repositories.TemplateFieldRepository;
 import online.umedgroup.ug_inventory_management.repositories.TemplateRepository;
 import online.umedgroup.ug_inventory_management.repositories.UnitNameRepository;
+import online.umedgroup.ug_inventory_management.repositories.StockAlertRepository;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +53,8 @@ public class InventoryService {
     private final ApplicationEventPublisher publisher;
     private final InventoryLogRepository inventoryLogRepository;
     private final UnitNameRepository unitNameRepository;
+    private final StockAlertRepository stockAlertRepository;
+
 
     private static final Logger log = LoggerFactory.getLogger(InventoryService.class);
 
@@ -61,7 +64,7 @@ public class InventoryService {
                             TemplateRepository templateRepository,
                             ApplicationEventPublisher publisher,
                             InventoryLogRepository inventoryLogRepository,
-                            UnitNameRepository unitNameRepository) {
+                            UnitNameRepository unitNameRepository,StockAlertRepository stockAlertRepository) {
         this.inventoryRecordRepository = inventoryRecordRepository;
         this.inventoryValueRepository = inventoryValueRepository;
         this.templateFieldRepository = templateFieldRepository;
@@ -69,6 +72,7 @@ public class InventoryService {
         this.publisher = publisher;
         this.inventoryLogRepository = inventoryLogRepository;
         this.unitNameRepository = unitNameRepository;
+        this.stockAlertRepository = stockAlertRepository;
     }
 
     @Transactional
@@ -483,51 +487,127 @@ public class InventoryService {
         );
     }
 
+    //main field ba
+//    public List<StockAlertDTO> getAllLowStockAlerts() {
+//
+//        List<InventoryRecord> records = inventoryRecordRepository.findAll();
+//
+//        Map<Long, List<TemplateField>> fieldsCache = new HashMap<>();
+//        Map<String, Integer> stockByUnitAndMainField = new HashMap<>();
+//        Map<String, StockAlertDTO> alertInfoByKey = new HashMap<>();
+//
+//        for (InventoryRecord record : records) {
+//
+//            if (record.getTemplate() == null) continue;
+//
+//            String unitName = record.getUnitName();
+//            if (unitName == null || unitName.trim().isEmpty()) continue;
+//
+//            Long templateId = record.getTemplate().getId();
+//
+//            List<TemplateField> fields = fieldsCache.computeIfAbsent(
+//                    templateId,
+//                    id -> templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(id)
+//            );
+//
+//            List<InventoryValue> values =
+//                    inventoryValueRepository.findByInventoryRecord_Id(record.getId());
+//
+//            Map<Long, String> valueByFieldId = buildValueByFieldIdMap(values);
+//
+//            String mainFieldName = record.getTemplate().getMainField();
+//
+//            String mainFieldValue = null;
+//            Integer stock = null;
+//
+//
+//            for (TemplateField field : fields) {
+//
+//                String fieldName = field.getFieldName();
+//                if (fieldName == null) continue;
+//
+//                //  mainField extraction
+//                if (mainFieldValue == null &&
+//                        fieldName.equalsIgnoreCase(mainFieldName)) {
+//
+//                    mainFieldValue = valueByFieldId.get(field.getId());
+//                }
+//
+//                //  stock extraction
+//                if (stock == null &&
+//                        fieldName.trim().toLowerCase().contains("stock")) {
+//
+//                    stock = safeParse(valueByFieldId.get(field.getId()));
+//                }
+//
+//                // if both found
+//                if (mainFieldValue != null && stock != null) {
+//                    break;
+//                }
+//            }
+//
+//            if (mainFieldValue == null || mainFieldValue.trim().isEmpty()) continue;
+//            if (stock == null) continue;
+//
+//            String key = unitName.trim().toLowerCase() + "|" + mainFieldValue.trim().toLowerCase();
+//
+//            stockByUnitAndMainField.merge(key, stock, Integer::sum);
+//
+//            alertInfoByKey.putIfAbsent(
+//                    key,
+//                    new StockAlertDTO(
+//                            unitName,
+//                            mainFieldValue,
+//                            record.getTemplate().getTemplateName() != null
+//                                    ? record.getTemplate().getTemplateName()
+//                                    : "-",
+//                            0
+//                    )
+//            );
+//        }
+//
+//        List<StockAlertDTO> alerts = new ArrayList<>();
+//
+//        for (Map.Entry<String, Integer> entry : stockByUnitAndMainField.entrySet()) {
+//
+//            Integer totalStock = entry.getValue();
+//
+//            if (totalStock < 10) {
+//                StockAlertDTO dto = alertInfoByKey.get(entry.getKey());
+//                if (dto != null) {
+//                    dto.setStock(totalStock);
+//                    alerts.add(dto);
+//                }
+//            }
+//        }
+//
+//        return alerts;
+//    }
+
     public List<StockAlertDTO> getAllLowStockAlerts() {
+
+        List<Object[]> results = stockAlertRepository
+                .findLowStockGrouped("stock", 10);
+
         List<StockAlertDTO> alerts = new ArrayList<>();
-        List<InventoryRecord> records = inventoryRecordRepository.findAll();
 
-        Map<Long, List<TemplateField>> fieldsCache = new HashMap<>();
+        for (Object[] row : results) {
 
-        for (InventoryRecord record : records) {
-            if (record.getTemplate() == null) {
-                continue;
-            }
+            String unitName = (String) row[0];
+            String mainFieldValue = (String) row[1];
+            Integer stock = ((Number) row[2]).intValue();
 
-            Long templateId = record.getTemplate().getId();
-
-            List<TemplateField> fields = fieldsCache.computeIfAbsent(
-                    templateId,
-                    id -> templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(id)
-            );
-
-            List<InventoryValue> values =
-                    inventoryValueRepository.findByInventoryRecord_Id(record.getId());
-
-            Map<Long, String> valueByFieldId = buildValueByFieldIdMap(values);
-
-            Integer stock = null;
-            for (TemplateField field : fields) {
-                String fieldName = field.getFieldName();
-                if (fieldName != null && fieldName.trim().toLowerCase().contains("stock")) {
-                    stock = safeParse(valueByFieldId.get(field.getId()));
-                    break;
-                }
-            }
-
-            if (stock != null && stock < 10) {
-                alerts.add(new StockAlertDTO(
-                        record.getUnitName(),
-                        record.getTemplate().getTemplateName() != null
-                                ? record.getTemplate().getTemplateName()
-                                : "-",
-                        stock
-                ));
-            }
+            alerts.add(new StockAlertDTO(
+                    unitName,
+                    mainFieldValue,
+                    "-", // optional templateName
+                    stock
+            ));
         }
 
         return alerts;
     }
+
 
     public List<StockAlertDTO> getLowStockAlertsForUnit(String unitName) {
         if (unitName == null || unitName.trim().isEmpty()) {
