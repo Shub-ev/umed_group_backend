@@ -15,11 +15,17 @@ public interface StockAlertRepository extends JpaRepository<InventoryValue, Long
         SELECT 
             r.unit_name,
             mf.value AS main_field_value,
-            SUM(CAST(sf.value AS SIGNED)) AS total_stock
+            SUM(
+                CASE 
+                    WHEN sf.value REGEXP '^[0-9]+$' 
+                    THEN CAST(sf.value AS SIGNED)
+                    ELSE 0
+                END
+            ) AS total_stock
         FROM inventory_records r
         JOIN templates t ON t.id = r.template_id
-        JOIN inventory_values mf ON mf.inventory_record_id = r.id
-        JOIN inventory_values sf ON sf.inventory_record_id = r.id
+        JOIN inventory_values mf ON mf.record_id = r.id
+        JOIN inventory_values sf ON sf.record_id = r.id
         JOIN template_fields tf1 ON tf1.id = mf.field_id
         JOIN template_fields tf2 ON tf2.id = sf.field_id
         WHERE 
