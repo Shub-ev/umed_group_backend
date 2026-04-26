@@ -65,6 +65,8 @@ public class ReportResponseDTO {
         return mainFieldValue;
     }
 
+
+
     public void setMainFieldValue(String mainFieldValue) {
         this.mainFieldValue = mainFieldValue;
     }
