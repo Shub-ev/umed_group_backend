@@ -2,6 +2,7 @@ package online.umedgroup.ug_inventory_management.security;
 
 import online.umedgroup.ug_inventory_management.filters.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,12 +12,17 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.*;
 import org.springframework.security.config.http.SessionCreationPolicy;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Value("${CORS_ORIGINS}")
+    private String corsOrigins;
 
     @Autowired
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
@@ -90,10 +96,10 @@ public class SecurityConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of(
-                "https://umedgroup.online",
-                "https://www.umedgroup.online"
-        ));
+        List<String> allowedOrigins = Arrays.stream(corsOrigins.split(","))
+                        .map(String::trim).toList();
+
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("*"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
