@@ -294,8 +294,9 @@ public class InventoryService {
                         HttpStatus.NOT_FOUND,
                         "Main field not found"
                 ));
+        log.info("mainField: {}", mainField);
 
-        List<InventoryValue> matchedValues = inventoryValueRepository.findByFieldIdAndValueIgnoreCase(
+        List<InventoryValue> matchedValues = inventoryValueRepository.findByFieldIdAndValueContainingIgnoreCase(
                 mainField.getId(),
                 field.trim()
         );
