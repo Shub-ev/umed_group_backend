@@ -129,6 +129,7 @@ public class InventoryService {
 
             String rawValue = requestValues.get(fieldKey);
             String value = (rawValue != null) ? rawValue.trim() : "";
+            log.info("Value of record: {}", value);
 
             if ("inward".equals(fieldKey) ||
                     "outward".equals(fieldKey) ||
