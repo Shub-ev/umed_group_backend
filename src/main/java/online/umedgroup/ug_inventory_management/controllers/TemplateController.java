@@ -12,7 +12,7 @@ import org.springframework.data.domain.Sort;
 import online.umedgroup.ug_inventory_management.models.TemplateField;
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:5173")
+//@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/templates")
 public class TemplateController {

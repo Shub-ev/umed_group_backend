@@ -68,7 +68,7 @@ public class InventoryController {
         );
     }
 
-    @GetMapping("/logs/employee")
+//    @GetMapping("/logs/employee")
     public ResponseEntity<?> getEmployeeLogs(
             Authentication authentication,
             @RequestParam(required = false) String mainFieldValue,

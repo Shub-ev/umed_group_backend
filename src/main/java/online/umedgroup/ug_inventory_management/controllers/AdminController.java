@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = "https://umedgroup.online")
+//@CrossOrigin(origins = "https://umedgroup.online")
 @RestController
 @RequestMapping("/hkfu")
 public class AdminController {
