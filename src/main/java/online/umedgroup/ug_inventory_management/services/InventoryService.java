@@ -127,14 +127,13 @@ public class InventoryService {
             String fieldName = field.getFieldName();
             String fieldKey = normalizeKey(fieldName);
 
-            String value = requestValues.get(fieldKey).trim();
+            String rawValue = requestValues.get(fieldKey);
+            String value = (rawValue != null) ? rawValue.trim() : "";
 
             if ("inward".equals(fieldKey) ||
                     "outward".equals(fieldKey) ||
                     "stock".equals(fieldKey)) {
                 value = "0";
-            } else if (value == null) {
-                value = "";
             }
 
             InventoryValue inventoryValue =
