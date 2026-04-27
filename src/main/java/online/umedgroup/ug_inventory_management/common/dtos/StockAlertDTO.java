@@ -3,14 +3,16 @@ package online.umedgroup.ug_inventory_management.common.dtos;
 public class StockAlertDTO {
 
     private String unitName;
+    private String mainFieldValue;
     private String templateName;
     private int stock;
 
     public StockAlertDTO() {
     }
 
-    public StockAlertDTO(String unitName, String templateName, int stock) {
+    public StockAlertDTO(String unitName, String mainFieldValue,String templateName, int stock) {
         this.unitName = unitName;
+        this.mainFieldValue=mainFieldValue;
         this.templateName = templateName;
         this.stock = stock;
     }
@@ -37,5 +39,13 @@ public class StockAlertDTO {
 
     public void setStock(int stock) {
         this.stock = stock;
+    }
+
+    public String getMainFieldValue() {
+        return mainFieldValue;
+    }
+
+    public void setMainFieldValue(String mainFieldValue) {
+        this.mainFieldValue = mainFieldValue;
     }
 }

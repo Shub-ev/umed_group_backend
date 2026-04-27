@@ -10,6 +10,7 @@ public class ReportRequestDTO {
     private String unit;
     private Long templateId;
     private  String templateName;
+    private String mainField;
 
     // getters & setters
     public LocalDateTime getFromDate() {
@@ -58,5 +59,13 @@ public class ReportRequestDTO {
 
     public void setTemplateName(String templateName) {
         this.templateName = templateName;
+    }
+
+    public String getMainField() {
+        return mainField;
+    }
+
+    public void setMainField(String mainField) {
+        this.mainField = mainField;
     }
 }
