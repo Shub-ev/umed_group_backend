@@ -127,7 +127,7 @@ public class InventoryService {
             String fieldName = field.getFieldName();
             String fieldKey = normalizeKey(fieldName);
 
-            String value = requestValues.get(fieldKey);
+            String value = requestValues.get(fieldKey).trim();
 
             if ("inward".equals(fieldKey) ||
                     "outward".equals(fieldKey) ||
