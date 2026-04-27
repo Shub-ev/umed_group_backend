@@ -85,7 +85,6 @@ public class InventoryService {
                 ));
 
         String mainFieldName = template.getMainField();
-        log.info("Template main field: {}", mainFieldName);
 
         String unitName = request.getUnitName() == null ? "" : request.getUnitName().trim();
         if (unitName.isEmpty()) {
@@ -115,7 +114,6 @@ public class InventoryService {
                 templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(request.getTemplateId());
 
         String mainFieldValue = resolveMainFieldValue(mainFieldName, requestValues);
-        log.info("Main field value for this record: {}", mainFieldValue);
 
         InventoryValue inwardField = null;
         InventoryValue outwardField = null;
@@ -165,7 +163,6 @@ public class InventoryService {
         );
 //        inventoryLog.setMainFieldValue(mainFieldValue);
 
-        log.info("Publishing inventory audit event for new inventory");
         publisher.publishEvent(new InventoryAuditEvent(inventoryLog));
     }
 
@@ -628,8 +625,10 @@ public class InventoryService {
 
         for (Map.Entry<String, String> entry : source.entrySet()) {
             String key = normalizeKey(entry.getKey());
+
             if (key != null && !key.isEmpty()) {
-                normalized.put(key, entry.getValue());
+                String value = entry.getValue();
+                normalized.put(key, value != null ? value.trim() : "");
             }
         }
         return normalized;
