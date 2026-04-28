@@ -23,7 +23,7 @@ public class InventoryRecord {
 
     private String unitName;
 
-    @OneToMany(mappedBy = "inventoryRecord", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "inventoryRecord", cascade = CascadeType.ALL,orphanRemoval = true)
     private List<InventoryValue> values;
 
 

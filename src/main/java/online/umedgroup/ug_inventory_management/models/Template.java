@@ -26,7 +26,7 @@ public class Template {
 
     private String mainField;
 
-    @OneToMany(mappedBy = "template", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "template", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TemplateField> fields;
 
 

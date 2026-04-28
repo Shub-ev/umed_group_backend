@@ -45,6 +45,7 @@ public class InventoryValue {
     @JoinColumn(name = "record_id")
     private InventoryRecord inventoryRecord;
 
+    @Column(name = "field_id", nullable = false)
     private Long fieldId;
 
     @Column(columnDefinition = "TEXT")
