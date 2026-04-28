@@ -72,4 +72,17 @@ public class TemplateController {
         templateService.addFieldToTemplate(templateId, field);
         return ResponseEntity.ok("Field added successfully");
     }
+
+    //delete API
+    @DeleteMapping("/{templateId}")
+    public ResponseEntity<?> deleteTemplate(@PathVariable Long templateId) {
+
+        log.info("Deleting template with id: {}", templateId);
+
+        templateService.deleteTemplate(templateId);
+
+        log.info("Template deleted successfully!");
+
+        return ResponseEntity.ok("Template deleted successfully");
+    }
 }

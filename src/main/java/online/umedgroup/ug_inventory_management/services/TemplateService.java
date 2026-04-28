@@ -5,8 +5,11 @@ import online.umedgroup.ug_inventory_management.common.exceptions.IllegalArgumen
 import online.umedgroup.ug_inventory_management.enums.FieldType;
 import online.umedgroup.ug_inventory_management.models.Template;
 import online.umedgroup.ug_inventory_management.models.TemplateField;
-import online.umedgroup.ug_inventory_management.repositories.TemplateFieldRepository;
 import online.umedgroup.ug_inventory_management.repositories.TemplateRepository;
+import online.umedgroup.ug_inventory_management.repositories.TemplateFieldRepository;
+import online.umedgroup.ug_inventory_management.repositories.InventoryRecordRepository;
+import online.umedgroup.ug_inventory_management.repositories.InventoryValueRepository;
+
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,12 +23,17 @@ public class TemplateService {
 
     private final TemplateRepository templateRepository;
     private final TemplateFieldRepository templateFieldRepository;
+    private final InventoryRecordRepository inventoryRecordRepository;
+    private final InventoryValueRepository inventoryValueRepository;
     private static final List<String> FIXED_FIELDS =
             List.of("INWARD", "OUTWARD", "STOCK", "BY");
 
-    public TemplateService(TemplateRepository templateRepository, TemplateFieldRepository templateFieldRepository) {
+    public TemplateService(TemplateRepository templateRepository, TemplateFieldRepository templateFieldRepository, InventoryRecordRepository inventoryRecordRepository,
+                           InventoryValueRepository inventoryValueRepository) {
         this.templateRepository = templateRepository;
         this.templateFieldRepository = templateFieldRepository;
+        this.inventoryRecordRepository = inventoryRecordRepository;
+        this.inventoryValueRepository = inventoryValueRepository;
     }
 
 
@@ -131,6 +139,22 @@ public class TemplateService {
 
         templateFieldRepository.save(field);
     }
+
+
+    // delete template
+    @Transactional
+    public void deleteTemplate(Long templateId) {
+
+        Template template = templateRepository.findById(templateId)
+                .orElseThrow(() -> new RuntimeException("Template not found"));
+
+        inventoryValueRepository.deleteByTemplateId(templateId);
+        inventoryRecordRepository.deleteByTemplateId(templateId);
+        templateFieldRepository.deleteByTemplateId(templateId);
+
+        templateRepository.delete(template);
+    }
+
 
 
     public Page<Template> getTemplates(String templateName, Pageable pageable) {
