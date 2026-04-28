@@ -1,5 +1,6 @@
 package online.umedgroup.ug_inventory_management.services;
 
+import online.umedgroup.ug_inventory_management.common.dtos.InventorySearchResponseDTO;
 import online.umedgroup.ug_inventory_management.common.dtos.Record.CreateInventoryRecordDTO;
 import online.umedgroup.ug_inventory_management.common.dtos.Record.UpdateInventoryRecordDTO;
 import online.umedgroup.ug_inventory_management.common.dtos.StockAlertDTO;
@@ -263,18 +264,20 @@ public class InventoryService {
         return result;
     }
 
-    public List<Map<String, String>> searchFromInventory(Long templateId, String field) {
+    public InventorySearchResponseDTO searchFromInventory(Long templateId, String field) {
 
         if (templateId == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Template id is required");
         }
 
+        // 1. Get Template
         Template template = templateRepository.findById(templateId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "No template found with id " + templateId
                 ));
 
+        // 2. Extract mainField of template
         String mainFieldName = template.getMainField();
         if (mainFieldName == null || mainFieldName.trim().isEmpty()) {
             throw new ResponseStatusException(
@@ -283,9 +286,11 @@ public class InventoryService {
             );
         }
 
+        // 3. Extract fields of template
         List<TemplateField> fields =
                 templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(templateId);
 
+        // 4. extract same main field from template Fields
         TemplateField mainField = fields.stream()
                 .filter(f -> f.getFieldName() != null
                         && f.getFieldName().equalsIgnoreCase(mainFieldName.trim()))
@@ -294,24 +299,33 @@ public class InventoryService {
                         HttpStatus.NOT_FOUND,
                         "Main field not found"
                 ));
-        log.info("mainField: {}", mainField);
 
+        // 5. Extract stock field for its field ID
+        TemplateField stockField = fields.stream()
+                .filter(f -> f.getFieldName().equals("STOCK"))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Table don't have STOCK attribute."));
+
+        // 6. Extract matching values from inventory for same field ID
         List<InventoryValue> matchedValues = inventoryValueRepository.findByFieldIdAndValueContainingIgnoreCase(
                 mainField.getId(),
                 field.trim()
         );
 
+        // 7. Find records with matched inventory values we extracted earlier
         Set<Long> recordIds = matchedValues.stream()
                 .map(v -> v.getInventoryRecord().getId())
                 .collect(Collectors.toSet());
 
         if (recordIds.isEmpty()) {
-            return List.of();
+            return new InventorySearchResponseDTO(List.of(), 0L);
         }
 
         List<InventoryRecord> records = inventoryRecordRepository.findAllById(recordIds);
 
         List<Map<String, String>> result = new ArrayList<>();
+
+        Long stockSum = 0L;
 
         for (InventoryRecord record : records) {
 
@@ -319,6 +333,10 @@ public class InventoryService {
                     inventoryValueRepository.findByInventoryRecord_Id(record.getId());
 
             Map<Long, String> valueByFieldId = buildValueByFieldIdMap(values);
+            log.info("Value of STOCK: {} in record: {}", valueByFieldId.get(stockField.getId()), record.getId());
+            // calculate stock sum
+            stockSum += safeParse(valueByFieldId.get(stockField.getId()));
+
             Map<String, String> fieldNameValueMap = buildFieldNameValueMap(fields, valueByFieldId);
 
             Map<String, String> row = new LinkedHashMap<>();
@@ -335,7 +353,7 @@ public class InventoryService {
             result.add(row);
         }
 
-        return result;
+        return new InventorySearchResponseDTO(result, stockSum);
     }
 
     @Transactional
