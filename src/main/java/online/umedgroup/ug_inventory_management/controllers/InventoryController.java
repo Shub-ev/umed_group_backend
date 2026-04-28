@@ -1,5 +1,6 @@
 package online.umedgroup.ug_inventory_management.controllers;
 
+import online.umedgroup.ug_inventory_management.common.dtos.InventorySearchResponseDTO;
 import online.umedgroup.ug_inventory_management.common.dtos.Record.CreateInventoryRecordDTO;
 import online.umedgroup.ug_inventory_management.common.dtos.Record.UpdateInventoryRecordDTO;
 import online.umedgroup.ug_inventory_management.enums.ActionType;
@@ -90,12 +91,12 @@ public class InventoryController {
     }
 
     @GetMapping("/records/{templateId}")
-    public ResponseEntity<?> searchRecord(
+    public ResponseEntity<InventorySearchResponseDTO> searchRecord(
             @PathVariable Long templateId,
             @RequestParam String field
     ) {
         log.info("Search records in template {} with main field value: {}", templateId, field);
-        List<Map<String, String>> result = inventoryService.searchFromInventory(templateId, field);
+        InventorySearchResponseDTO result = inventoryService.searchFromInventory(templateId, field);
         return ResponseEntity.ok(result);
     }
 
