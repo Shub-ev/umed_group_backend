@@ -6,9 +6,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
+import java.util.Map;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import online.umedgroup.ug_inventory_management.models.TemplateField;
 import java.util.List;
 
@@ -84,5 +87,19 @@ public class TemplateController {
         log.info("Template deleted successfully!");
 
         return ResponseEntity.ok("Template deleted successfully");
+    }
+
+    @PatchMapping("/{templateId}/fields/{fieldId}")
+    public ResponseEntity<?> renameField(
+            @PathVariable Long templateId,
+            @PathVariable Long fieldId,
+            @RequestBody Map<String, String> request
+    ) {
+        templateService.renameTemplateField(
+                templateId,
+                fieldId,
+                request.get("fieldName")
+        );
+        return ResponseEntity.ok("Field renamed successfully");
     }
 }
