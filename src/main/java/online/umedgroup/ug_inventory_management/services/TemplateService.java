@@ -106,46 +106,53 @@ public class TemplateService {
     }
 
 
-    @Transactional
-    public void renameTemplateField(Long templateId, Long fieldId, String newFieldName) {
+@Transactional
+public void renameTemplateField(Long templateId, Long fieldId, String newFieldName) {
 
-        if (newFieldName == null || newFieldName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Field name cannot be empty");
-        }
-
-        String normalizedNewName = newFieldName.trim().toUpperCase();
-
-        TemplateField field = templateFieldRepository.findById(fieldId)
-                .orElseThrow(() -> new RuntimeException("Field not found"));
-
-        if (!field.getTemplate().getId().equals(templateId)) {
-            throw new RuntimeException("Field does not belong to this template");
-        }
-
-        String oldName = field.getFieldName().trim().toUpperCase();
-
-        // fixed fields cannot be renamed
-        if (FIXED_FIELDS.contains(oldName)) {
-            throw new RuntimeException(oldName + " is a default field and cannot be renamed");
-        }
-
-        // new name also cannot be a fixed field
-        if (FIXED_FIELDS.contains(normalizedNewName)) {
-            throw new RuntimeException(normalizedNewName + " is a default field name");
-        }
-
-        // prevent duplicate field name in same template
-        boolean exists = templateFieldRepository
-                .existsByTemplate_IdAndFieldNameIgnoreCase(templateId, normalizedNewName);
-
-        if (exists) {
-            throw new RuntimeException("Field name already exists");
-        }
-
-        field.setFieldName(normalizedNewName);
-        templateFieldRepository.save(field);
+    if (newFieldName == null || newFieldName.trim().isEmpty()) {
+        throw new IllegalArgumentException("Field name cannot be empty");
     }
 
+    String normalizedNewName = newFieldName.trim().toUpperCase();
+
+    Template template = templateRepository.findById(templateId)
+            .orElseThrow(() -> new RuntimeException("Template not found"));
+
+    TemplateField field = templateFieldRepository.findById(fieldId)
+            .orElseThrow(() -> new RuntimeException("Field not found"));
+
+    if (!field.getTemplate().getId().equals(templateId)) {
+        throw new RuntimeException("Field does not belong to this template");
+    }
+
+    String oldName = field.getFieldName().trim().toUpperCase();
+
+    if (FIXED_FIELDS.contains(oldName)) {
+        throw new RuntimeException(oldName + " is a default field and cannot be renamed");
+    }
+
+    if (FIXED_FIELDS.contains(normalizedNewName)) {
+        throw new RuntimeException(normalizedNewName + " is a default field name");
+    }
+
+    // allow same field to keep same name, but block duplicates from other fields
+    templateFieldRepository.findByTemplate_IdAndFieldNameIgnoreCase(templateId, normalizedNewName)
+            .ifPresent(existing -> {
+                if (!existing.getId().equals(fieldId)) {
+                    throw new RuntimeException("Field name already exists");
+                }
+            });
+
+    field.setFieldName(normalizedNewName);
+    templateFieldRepository.save(field);
+
+    // keep templates.mainField in sync
+    if (template.getMainField() != null &&
+            template.getMainField().trim().equalsIgnoreCase(oldName)) {
+        template.setMainField(normalizedNewName);
+        templateRepository.save(template);
+    }
+}
 
     @Transactional
     public void addFieldToTemplate(Long templateId, TemplateField fieldDTO) {
