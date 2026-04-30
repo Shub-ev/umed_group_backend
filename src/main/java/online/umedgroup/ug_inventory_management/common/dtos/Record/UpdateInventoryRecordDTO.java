@@ -3,6 +3,8 @@ package online.umedgroup.ug_inventory_management.common.dtos.Record;
 import online.umedgroup.ug_inventory_management.enums.ActionType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.util.Map;
+
 // ADD documentation comments
 @Schema(description = "")
 public class UpdateInventoryRecordDTO {
@@ -14,12 +16,13 @@ public class UpdateInventoryRecordDTO {
     private ActionType action; // INWARD / OUTWARD
     private Long eId;
     private String unitName;
+    private Map<String, String> values;
 
 
     public UpdateInventoryRecordDTO() {
     }
 
-    public UpdateInventoryRecordDTO(Long templateId, Long recordId, int changeQty, ActionType action, Long eId, String unitName, String templateName) {
+    public UpdateInventoryRecordDTO(Long templateId, Long recordId, int changeQty, ActionType action, Long eId, String unitName, String templateName, Map<String, String> values) {
         this.templateId = templateId;
         this.recordId = recordId;
         this.changeQty = changeQty;
@@ -27,9 +30,11 @@ public class UpdateInventoryRecordDTO {
         this.eId = eId;
         this.unitName = unitName;
         this.templateName=templateName;
+        this.values = values;
     }
 
 
+    // getters
     public Long getTemplateId() { return templateId;}
 
     public int getChangeQty() {
@@ -52,6 +57,10 @@ public class UpdateInventoryRecordDTO {
         return templateName;
     }
 
+    public Map<String, String> getValues() { return values; }
+
+
+    // setters
     public void setTemplatEId(Long templateId) {
         this.templateId = templateId;
     }
@@ -70,5 +79,23 @@ public class UpdateInventoryRecordDTO {
 
     public void setTemplateName(String templateName) {
         this.templateName = templateName;
+    }
+
+    public void setValues(Map<String, String> values) { this.values = values; }
+
+
+    // toStirng()
+    @Override
+    public String toString() {
+        return "UpdateInventoryRecordDTO{" +
+                "templateId=" + templateId +
+                ", templateName='" + templateName + '\'' +
+                ", recordId=" + recordId +
+                ", changeQty=" + changeQty +
+                ", action=" + action +
+                ", eId=" + eId +
+                ", unitName='" + unitName + '\'' +
+                ", values=" + values +
+                '}';
     }
 }
