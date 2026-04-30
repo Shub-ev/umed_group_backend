@@ -50,6 +50,7 @@ public class InventoryController {
 
     @PostMapping("/update")
     public ResponseEntity<?> updateInventory(@RequestBody UpdateInventoryRecordDTO req) {
+        log.info("Update inventory record with: {}", req);
         return inventoryService.updateInventory(req);
     }
 
