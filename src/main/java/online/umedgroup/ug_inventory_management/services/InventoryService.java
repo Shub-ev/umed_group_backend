@@ -97,11 +97,13 @@ public class InventoryService {
         }
 
         Map<String, String> requestValues = normalizeValueMap(request.getValues());
-
-        String rawString = request.getTemplateId().toString()
-                + unitName
-                + new TreeMap<>(requestValues).toString();
-
+        log.info("Request value for log: {}", requestValues);
+        String rawString = generateHashRawString(
+                request.getTemplateId(),
+                unitName,
+                requestValues
+        );
+        log.info("Raw String for log: {}", rawString);
         String hash = DigestUtils.md5DigestAsHex(rawString.getBytes());
 
         if (inventoryRecordRepository.existsByRecordHash(hash)) {
@@ -128,8 +130,6 @@ public class InventoryService {
 
             String rawValue = requestValues.get(fieldKey);
             String value = (rawValue != null) ? rawValue.trim() : "";
-            log.info("Value of record: {}", value);
-            log.info("Length of record value: {}", value.length());
 
             if ("inward".equals(fieldKey) ||
                     "outward".equals(fieldKey) ||
@@ -358,32 +358,36 @@ public class InventoryService {
 
     @Transactional
     public ResponseEntity<?> updateInventory(UpdateInventoryRecordDTO req) {
-
+        // 1. Extract record
         InventoryRecord record = inventoryRecordRepository
                 .findById(req.getRecordId())
-                .orElseThrow(() -> new RuntimeException("Record not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Record not found"));
 
         String cleanedUnitName = req.getUnitName() == null ? "" : req.getUnitName().trim();
+
         if (!Objects.equals(record.getUnitName(), cleanedUnitName)) {
             return ResponseEntity.status(403)
                     .body("You can only update your unit data");
         }
 
+        // 2. Extract corresponding template
         Template template = templateRepository.findById(req.getTemplateId())
-                .orElseThrow(() -> new RuntimeException("Template not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Template not found"));
 
+        // 3. Extract inventory/record values
         List<InventoryValue> values =
                 inventoryValueRepository.findByInventoryRecord_Id(req.getRecordId());
-
         if (values.isEmpty()) {
             return ResponseEntity.badRequest().body("No inventory found");
         }
 
+        // 4. Extract template fields
         List<TemplateField> fields =
                 templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(req.getTemplateId());
 
         Map<Long, String> fieldIdToLowerName = buildFieldIdToLowerNameMap(fields);
 
+        // 5. Create map of MAP(fieldName, value(old values)) to update record
         Map<String, String> fieldNameValueMap = new HashMap<>();
         for (InventoryValue v : values) {
             String fieldName = fieldIdToLowerName.get(v.getFieldId());
@@ -391,14 +395,22 @@ public class InventoryService {
                 fieldNameValueMap.put(fieldName, v.getValue());
             }
         }
+        log.info("fieldNameValue Map: {}", fieldNameValueMap);
 
+        // 6. Update mainField value if changed
         String mainFieldName = template.getMainField();
-        String mainFieldValue = resolveMainFieldValue(mainFieldName, fieldNameValueMap);
 
+        if (req.getAction() == null) {
+            return ResponseEntity.badRequest().body("Action is required");
+        }
+        ActionType action = req.getAction();
+        int qty = req.getChangeQty();
+        if (qty < 0) return ResponseEntity.badRequest().body("Invalid quantity");
+
+        // 7. Track inward, outward, and stock
         InventoryValue inwardField = null;
         InventoryValue outwardField = null;
         InventoryValue stockField = null;
-
         for (InventoryValue v : values) {
             String fieldName = fieldIdToLowerName.get(v.getFieldId());
             if (fieldName == null) continue;
@@ -412,41 +424,79 @@ public class InventoryService {
             return ResponseEntity.badRequest().body("Required stock fields not found");
         }
 
-        if (req.getAction() == null) {
-            return ResponseEntity.badRequest().body("Action is required");
-        }
-
         int inward = safeParse(inwardField.getValue());
         int outward = safeParse(outwardField.getValue());
         int previousStock = inward - outward;
 
-        int qty = req.getChangeQty();
-        ActionType action = req.getAction();
+        // 8. Perform operations based on req action
+        if(action == ActionType.INWARD) {
+            inward += qty;
+            inwardField.setValue(String.valueOf(inward));
+        }
+        else if(action == ActionType.OUTWARD) {
+            if ((inward - outward) < qty) {
+                return ResponseEntity.badRequest().body("Not enough stock");
+            }
+            outward += qty;
+            outwardField.setValue(String.valueOf(outward));
+        } else if(action == ActionType.UPDATE) {
+            // Step 1: simulate updated values (DO NOT touch entity yet)
+            Map<String, String> simulatedMap = new HashMap<>(fieldNameValueMap);
 
-        switch (action) {
-            case INWARD:
-                inward += qty;
-                inwardField.setValue(String.valueOf(inward));
-                break;
+            for (Map.Entry<String, String> entry : req.getValues().entrySet()) {
+                simulatedMap.put(entry.getKey(), entry.getValue());
+            }
 
-            case OUTWARD:
-                if ((inward - outward) < qty) {
-                    return ResponseEntity.badRequest().body("Not enough stock");
+            // Step 2: generate hash from simulated data
+            String rawString = generateHashRawString(
+                    template.getId(),
+                    req.getUnitName(),
+                    simulatedMap
+            );
+
+            log.info("Raw String in Update: {}", rawString);
+
+            String newHash = DigestUtils.md5DigestAsHex(rawString.getBytes());
+            String oldRecordHash = record.getRecordHash();
+
+            // Step 3: validate BEFORE modifying DB
+            if (!newHash.equals(oldRecordHash) &&
+                    inventoryRecordRepository.existsByRecordHash(newHash)) {
+
+                return ResponseEntity.badRequest().body("Same record already exists");
+            }
+
+            // Step 4: NOW update actual entity
+            for(InventoryValue v: values){
+                String fieldName = fieldIdToLowerName.get(v.getFieldId());
+
+                if(fieldName == null) continue;
+
+                if (fieldName.equalsIgnoreCase("inward") ||
+                        fieldName.equalsIgnoreCase("outward") ||
+                        fieldName.equalsIgnoreCase("stock")) {
+                    continue;
                 }
-                outward += qty;
-                outwardField.setValue(String.valueOf(outward));
-                break;
 
-            default:
-                return ResponseEntity.badRequest().body("Invalid action");
+                if (req.getValues().containsKey(fieldName)) {
+                    v.setValue(req.getValues().get(fieldName));
+                }
+            }
+
+            // Step 5: update hash
+            record.setRecordHash(newHash);
+        } else {
+            return ResponseEntity.badRequest().body("Invalid action");
         }
 
         int newStock = inward - outward;
         stockField.setValue(String.valueOf(newStock));
+        inventoryValueRepository.saveAll(values);
+        log.info("Values Saved: {}", values);
 
-        inventoryValueRepository.saveAll(List.of(inwardField, outwardField, stockField));
+        String mainFieldValue = resolveMainFieldValue(mainFieldName, fieldNameValueMap);
+
         Long recordId = req.getRecordId();
-
         InventoryLog inventoryLog = new InventoryLog(
                 req.getTemplateId(),
                 cleanedUnitName,
@@ -460,7 +510,6 @@ public class InventoryService {
                 recordId
         );
 //        inventoryLog.setMainFieldValue(mainFieldValue);
-
         publisher.publishEvent(new InventoryAuditEvent(inventoryLog));
 
         return ResponseEntity.ok("Stock updated successfully");
@@ -705,5 +754,43 @@ public class InventoryService {
         } catch (NumberFormatException e) {
             return 0;
         }
+    }
+
+    private String generateHashRawString(Long templateId, String unitName, Map<String, String> values) {
+
+        Map<String, String> hashFields = new TreeMap<>();
+
+        for (Map.Entry<String, String> entry : values.entrySet()) {
+            String key = entry.getKey();
+
+            // ignore stock-related fields
+            if (key.equalsIgnoreCase("inward") ||
+                    key.equalsIgnoreCase("outward") ||
+                    key.equalsIgnoreCase("stock") ||
+                    key.equalsIgnoreCase("by")) {
+                continue;
+            }
+
+            String normalizedKey = key.toLowerCase();
+            String normalizedValue = entry.getValue() == null
+                    ? ""
+                    : entry.getValue().trim().toLowerCase();
+
+            hashFields.put(normalizedKey, normalizedValue);
+        }
+
+        StringBuilder raw = new StringBuilder();
+
+        raw.append(templateId)
+                .append(unitName.trim().toLowerCase());
+
+        for (Map.Entry<String, String> entry : hashFields.entrySet()) {
+            raw.append("|")
+                    .append(entry.getKey())
+                    .append("=")
+                    .append(entry.getValue());
+        }
+
+        return raw.toString();
     }
 }
