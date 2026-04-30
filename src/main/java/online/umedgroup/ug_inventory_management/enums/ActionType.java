@@ -4,7 +4,8 @@ public enum ActionType {
     INWARD,
     OUTWARD,
     CREATE,
-    DELETE;
+    DELETE,
+    UPDATE;
     @JsonCreator
     public static ActionType fromString(String value) {
         return ActionType.valueOf(value.toUpperCase());
