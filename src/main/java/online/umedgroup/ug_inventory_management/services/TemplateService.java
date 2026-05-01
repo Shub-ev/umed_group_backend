@@ -204,6 +204,29 @@ public void renameTemplateField(Long templateId, Long fieldId, String newFieldNa
     }
 
 
+    //rename template
+    @Transactional
+    public void renameTemplate(Long templateId, String newName) {
+
+        if (newName == null || newName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Template name cannot be empty");
+        }
+
+        String normalizedName = newName.trim().toUpperCase();
+
+        Template template = templateRepository.findById(templateId)
+                .orElseThrow(() -> new RuntimeException("Template not found"));
+
+        // prevent duplicate names
+        if (!template.getTemplateName().equalsIgnoreCase(normalizedName) &&
+                templateRepository.existsByTemplateName(normalizedName)) {
+            throw new RuntimeException("Template name already exists");
+        }
+
+        template.setTemplateName(normalizedName);
+        templateRepository.save(template);
+    }
+
 
     public Page<Template> getTemplates(String templateName, Pageable pageable) {
 

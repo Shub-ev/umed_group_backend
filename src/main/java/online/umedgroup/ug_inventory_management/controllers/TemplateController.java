@@ -102,4 +102,18 @@ public class TemplateController {
         );
         return ResponseEntity.ok("Field renamed successfully");
     }
+
+
+    @PatchMapping("/{templateId}")
+    public ResponseEntity<?> renameTemplate(
+            @PathVariable Long templateId,
+            @RequestBody Map<String, String> request
+    ) {
+        templateService.renameTemplate(
+                templateId,
+                request.get("templateName")
+        );
+
+        return ResponseEntity.ok("Template renamed successfully");
+    }
 }
