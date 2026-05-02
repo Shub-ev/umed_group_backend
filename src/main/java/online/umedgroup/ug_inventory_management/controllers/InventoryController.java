@@ -60,7 +60,7 @@ public class InventoryController {
             @RequestParam(required = false) String mainFieldValue,
             @RequestParam(required = false) ActionType action,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size
+            @RequestParam(defaultValue = "10") int size
     ) {
         log.info("Admin logs fetch → unit: {}, mainFieldValue: {}, action: {}",
                 unitName, mainFieldValue, action);
