@@ -653,7 +653,7 @@ public class InventoryService {
     public List<StockAlertDTO> getAllLowStockAlerts() {
 
         List<Object[]> results = stockAlertRepository
-                .findLowStockGrouped("stock", 10);
+                .findLowStockGrouped("stock", 5);
 
         List<StockAlertDTO> alerts = new ArrayList<>();
 
