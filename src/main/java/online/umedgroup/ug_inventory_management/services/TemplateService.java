@@ -3,17 +3,17 @@ package online.umedgroup.ug_inventory_management.services;
 import online.umedgroup.ug_inventory_management.common.dtos.CreateTemplateDTO;
 import online.umedgroup.ug_inventory_management.common.exceptions.IllegalArgumentException;
 import online.umedgroup.ug_inventory_management.enums.FieldType;
+import online.umedgroup.ug_inventory_management.models.Employee;
 import online.umedgroup.ug_inventory_management.models.Template;
 import online.umedgroup.ug_inventory_management.models.TemplateField;
-import online.umedgroup.ug_inventory_management.repositories.TemplateRepository;
-import online.umedgroup.ug_inventory_management.repositories.TemplateFieldRepository;
-import online.umedgroup.ug_inventory_management.repositories.InventoryRecordRepository;
-import online.umedgroup.ug_inventory_management.repositories.InventoryValueRepository;
+import online.umedgroup.ug_inventory_management.repositories.*;
 
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List; // ✅ ADD THIS
@@ -27,13 +27,15 @@ public class TemplateService {
     private final InventoryValueRepository inventoryValueRepository;
     private static final List<String> FIXED_FIELDS =
             List.of("INWARD", "OUTWARD", "STOCK", "BY");
+    private final EmployeeRepository employeeRepository;
 
     public TemplateService(TemplateRepository templateRepository, TemplateFieldRepository templateFieldRepository, InventoryRecordRepository inventoryRecordRepository,
-                           InventoryValueRepository inventoryValueRepository) {
+                           InventoryValueRepository inventoryValueRepository, EmployeeRepository employeeRepository) {
         this.templateRepository = templateRepository;
         this.templateFieldRepository = templateFieldRepository;
         this.inventoryRecordRepository = inventoryRecordRepository;
         this.inventoryValueRepository = inventoryValueRepository;
+        this.employeeRepository = employeeRepository;
     }
 
 
@@ -45,7 +47,6 @@ public class TemplateService {
             throw new IllegalArgumentException("Template with same name already exists");
         }
 
-        System.out.println("Fields: " + request.getFields());
         List<TemplateField> requestFields = request.getFields();
 
         List<String> fieldNames = requestFields.stream()
@@ -73,11 +74,24 @@ public class TemplateService {
             }
         }
 
+        // 5. Check isRestricted and if corresponding employees are present
+        if(request.isRestricted() && (request.getEmployeeIds() == null ||
+            request.getEmployeeIds().isEmpty())) {
+            throw new IllegalArgumentException("Restricted template must have at least one employee");
+        }
+
+        // 6. Extract employees for restricted templates
+        List<Employee> employees = employeeRepository.findAllById(request.getEmployeeIds());
+        if(employees.size() != request.getEmployeeIds().size()) {
+            throw new IllegalArgumentException("Some employee IDs are invalid");
+        }
+
         // Save template
-        Template template = new Template(request.getTemplateName(), mainField);
+        Template template = new Template(request.getTemplateName(), mainField, request.isRestricted());
+        template.setEmployees(employees);
         templateRepository.save(template);
 
-        // ✅ 3. Save USER fields
+        // 7. Save USER fields
         int order = 1;
           // ✅ 1. Save USER fields FIRST
         for (TemplateField fieldDTO : requestFields) {
@@ -106,53 +120,53 @@ public class TemplateService {
     }
 
 
-@Transactional
-public void renameTemplateField(Long templateId, Long fieldId, String newFieldName) {
+    @Transactional
+    public void renameTemplateField(Long templateId, Long fieldId, String newFieldName) {
 
-    if (newFieldName == null || newFieldName.trim().isEmpty()) {
-        throw new IllegalArgumentException("Field name cannot be empty");
+        if (newFieldName == null || newFieldName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Field name cannot be empty");
+        }
+
+        String normalizedNewName = newFieldName.trim().toUpperCase();
+
+        Template template = templateRepository.findById(templateId)
+                .orElseThrow(() -> new RuntimeException("Template not found"));
+
+        TemplateField field = templateFieldRepository.findById(fieldId)
+                .orElseThrow(() -> new RuntimeException("Field not found"));
+
+        if (!field.getTemplate().getId().equals(templateId)) {
+            throw new RuntimeException("Field does not belong to this template");
+        }
+
+        String oldName = field.getFieldName().trim().toUpperCase();
+
+        if (FIXED_FIELDS.contains(oldName)) {
+            throw new RuntimeException(oldName + " is a default field and cannot be renamed");
+        }
+
+        if (FIXED_FIELDS.contains(normalizedNewName)) {
+            throw new RuntimeException(normalizedNewName + " is a default field name");
+        }
+
+        // allow same field to keep same name, but block duplicates from other fields
+        templateFieldRepository.findByTemplate_IdAndFieldNameIgnoreCase(templateId, normalizedNewName)
+                .ifPresent(existing -> {
+                    if (!existing.getId().equals(fieldId)) {
+                        throw new RuntimeException("Field name already exists");
+                    }
+                });
+
+        field.setFieldName(normalizedNewName);
+        templateFieldRepository.save(field);
+
+        // keep templates.mainField in sync
+        if (template.getMainField() != null &&
+                template.getMainField().trim().equalsIgnoreCase(oldName)) {
+            template.setMainField(normalizedNewName);
+            templateRepository.save(template);
+        }
     }
-
-    String normalizedNewName = newFieldName.trim().toUpperCase();
-
-    Template template = templateRepository.findById(templateId)
-            .orElseThrow(() -> new RuntimeException("Template not found"));
-
-    TemplateField field = templateFieldRepository.findById(fieldId)
-            .orElseThrow(() -> new RuntimeException("Field not found"));
-
-    if (!field.getTemplate().getId().equals(templateId)) {
-        throw new RuntimeException("Field does not belong to this template");
-    }
-
-    String oldName = field.getFieldName().trim().toUpperCase();
-
-    if (FIXED_FIELDS.contains(oldName)) {
-        throw new RuntimeException(oldName + " is a default field and cannot be renamed");
-    }
-
-    if (FIXED_FIELDS.contains(normalizedNewName)) {
-        throw new RuntimeException(normalizedNewName + " is a default field name");
-    }
-
-    // allow same field to keep same name, but block duplicates from other fields
-    templateFieldRepository.findByTemplate_IdAndFieldNameIgnoreCase(templateId, normalizedNewName)
-            .ifPresent(existing -> {
-                if (!existing.getId().equals(fieldId)) {
-                    throw new RuntimeException("Field name already exists");
-                }
-            });
-
-    field.setFieldName(normalizedNewName);
-    templateFieldRepository.save(field);
-
-    // keep templates.mainField in sync
-    if (template.getMainField() != null &&
-            template.getMainField().trim().equalsIgnoreCase(oldName)) {
-        template.setMainField(normalizedNewName);
-        templateRepository.save(template);
-    }
-}
 
     @Transactional
     public void addFieldToTemplate(Long templateId, TemplateField fieldDTO) {
@@ -235,6 +249,33 @@ public void renameTemplateField(Long templateId, Long fieldId, String newFieldNa
         }
 
         return templateRepository.findByTemplateNameContainingIgnoreCase(
+                templateName.trim(),
+                pageable
+        );
+    }
+
+    public Page<Template> getEmployeeTemplates(
+            Long employeeId,
+            String templateName,
+            int page,
+            int size,
+            String sort
+    ) {
+
+        String[] sortParams = sort.split(",");
+        Sort.Direction direction = sortParams.length > 1 &&
+                sortParams[1].equalsIgnoreCase("desc")
+                ? Sort.Direction.DESC
+                : Sort.Direction.ASC;
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
+
+        if (templateName == null || templateName.trim().isEmpty()) {
+            return templateRepository.findEmployeeAccessibleTemplates(employeeId, pageable);
+        }
+
+        return templateRepository.findEmployeeAccessibleTemplatesByName(
+                employeeId,
                 templateName.trim(),
                 pageable
         );
