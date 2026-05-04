@@ -1,4 +1,5 @@
 package online.umedgroup.ug_inventory_management.common.dtos;
+import jakarta.validation.constraints.NotNull;
 import online.umedgroup.ug_inventory_management.models.TemplateField;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -8,6 +9,7 @@ import java.util.List;
 public class CreateTemplateDTO {
 
     @Schema(description = "Name of the template")
+    @NotNull
     private String templateName;
 
     @Schema(description = "Name of main field")
@@ -16,13 +18,24 @@ public class CreateTemplateDTO {
     @Schema(description = "List of fields to add into the template")
     private List<TemplateField> templateFields;
 
+    @Schema(description = "If template should be public or private")
+    @NotNull
+    private boolean isRestricted;
+
+    @Schema(description = "List of employee IDs if template is private")
+    private List<Long> employeeIds;
+
+
+    // constructors
     public CreateTemplateDTO() {
     }
 
-    public CreateTemplateDTO(String templateName, String mainField, List<TemplateField> templateFields) {
+    public CreateTemplateDTO(String templateName, String mainField, List<TemplateField> templateFields, boolean isRestricted, List<Long> employeeIds) {
         this.templateName = templateName;
         this.mainField = mainField;
         this.templateFields = templateFields;
+        this.isRestricted = isRestricted;
+        this.employeeIds = employeeIds;
     }
 
 
@@ -37,6 +50,10 @@ public class CreateTemplateDTO {
 
     public String getMainField() { return mainField; }
 
+    public boolean isRestricted() { return isRestricted; }
+
+    public List<Long> getEmployeeIds() { return employeeIds; }
+
 
     // Setters
     public void setTemplateName(String templateName) {
@@ -47,6 +64,12 @@ public class CreateTemplateDTO {
         this.templateFields = templateFields;
     }
 
+    public void setMainField(String mainField) { this.mainField = mainField; }
+
+    public void setRestricted(boolean restricted) { isRestricted = restricted; }
+
+    public void setEmployeeIds(List<Long> employeeIds) { this.employeeIds = employeeIds; }
+
 
     //toString()
     @Override
@@ -55,6 +78,8 @@ public class CreateTemplateDTO {
                 "templateName='" + templateName + '\'' +
                 ", mainField='" + mainField + '\'' +
                 ", templateFields=" + templateFields +
+                ", isRestricted=" + isRestricted +
+                ", employeeIds=" + employeeIds +
                 '}';
     }
 }
