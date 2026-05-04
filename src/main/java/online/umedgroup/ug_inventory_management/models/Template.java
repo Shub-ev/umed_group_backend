@@ -2,7 +2,10 @@ package online.umedgroup.ug_inventory_management.models;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /*
  * Template Entity
@@ -29,13 +32,25 @@ public class Template {
     @OneToMany(mappedBy = "template", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TemplateField> fields;
 
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean isRestricted = false;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name="template_employees",
+            joinColumns = @JoinColumn(name = "template_id"),
+            inverseJoinColumns = @JoinColumn(name = "employee_id")
+    )
+    private List<Employee> employees = new ArrayList<>();
+
 
     // constructors
     public Template() {
     }
-    public Template(String templateName, String mainField) {
+    public Template(String templateName, String mainField, boolean isRestricted) {
         this.templateName = templateName;
         this.mainField = mainField;
+        this.isRestricted = isRestricted;
     }
 
 
@@ -50,6 +65,8 @@ public class Template {
 
     public String getTemplateName() { return templateName; }
 
+    public boolean isRestricted() { return isRestricted; }
+
 
     // setters
     public void setTemplateName(String templateName) {
@@ -58,14 +75,20 @@ public class Template {
 
     public void setMainField(String mainField) { this.mainField = mainField; }
 
-    // toString
+    public void setRestricted(boolean restricted) { isRestricted = restricted; }
 
+    public void setEmployees(List<Employee> employees) { this.employees = employees; };
+
+
+    // toString
     @Override
     public String toString() {
         return "Template{" +
                 "id=" + id +
                 ", templateName='" + templateName + '\'' +
                 ", mainField='" + mainField + '\'' +
+                ", isRestricted=" + isRestricted +
+                ", employeesCount=" + (employees != null ? employees.size() : 0) +
                 '}';
     }
 }
