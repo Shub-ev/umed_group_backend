@@ -62,6 +62,20 @@ public class TemplateController {
         );
     }
 
+    @GetMapping("/employee/templates")
+    public ResponseEntity<?> getEmployeeTemplates(
+            @RequestParam Long employeeId,
+            @RequestParam(required = false) String templateName,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id,asc") String sort
+    ) {
+        log.info("Extracting templates accessible for Employee: {}", employeeId);
+        return ResponseEntity.ok(
+                templateService.getEmployeeTemplates(employeeId, templateName, page, size, sort)
+        );
+    }
+
     @GetMapping("/{templateId}/fields")
     public List<TemplateField> getFieldsByTemplateId(@PathVariable Long templateId) {
         return templateService.getFieldsByTemplateId(templateId);
@@ -79,11 +93,8 @@ public class TemplateController {
     //delete API
     @DeleteMapping("/{templateId}")
     public ResponseEntity<?> deleteTemplate(@PathVariable Long templateId) {
-
         log.info("Deleting template with id: {}", templateId);
-
         templateService.deleteTemplate(templateId);
-
         log.info("Template deleted successfully!");
 
         return ResponseEntity.ok("Template deleted successfully");
