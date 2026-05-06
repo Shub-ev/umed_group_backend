@@ -83,7 +83,7 @@ public class TemplateService {
         }
 
         // 6. Extract employees for restricted templates
-        List<Employee> employees = employeeRepository.findAllById(request.getEmployeeIds());
+        List<Employee> employees = employeeRepository.findAllByeId(request.getEmployeeIds());
         if(employees.size() != request.getEmployeeIds().size()) {
             throw new IllegalArgumentException("Some employee IDs are invalid");
         }
@@ -305,7 +305,7 @@ public class TemplateService {
         // Extract employees for restricted templates
         List<Employee> employees = List.of();
         if (request.isRestricted()) {
-            employees = employeeRepository.findAllById(request.getEmployeeIds());
+            employees = employeeRepository.findAllByeId(request.getEmployeeIds());
             if (employees.size() != request.getEmployeeIds().size()) {
                 throw new IllegalArgumentException("Some employee IDs are invalid");
             }
