@@ -1,6 +1,7 @@
 package online.umedgroup.ug_inventory_management.controllers;
 
 import online.umedgroup.ug_inventory_management.common.dtos.CreateTemplateDTO;
+import online.umedgroup.ug_inventory_management.common.dtos.UpdateTemplateDTO;
 import online.umedgroup.ug_inventory_management.services.TemplateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import online.umedgroup.ug_inventory_management.models.TemplateField;
 import java.util.List;
+import online.umedgroup.ug_inventory_management.common.dtos.TemplateResponseDTO;
 
 //@CrossOrigin(origins = "http://localhost:5173")
 @RestController
@@ -126,5 +128,21 @@ public class TemplateController {
         );
 
         return ResponseEntity.ok("Template renamed successfully");
+    }
+
+    @PatchMapping("/{templateId}/access")
+    public ResponseEntity<?> updateTemplateAccess(
+            @PathVariable Long templateId,
+            @RequestBody UpdateTemplateDTO request
+    ) {
+        log.info("Updating template access for templateId: {}", templateId);
+        templateService.updateTemplate(templateId, request);
+        log.info("Template access updated successfully!");
+        return ResponseEntity.ok("Template access updated successfully");
+    }
+
+    @GetMapping("/{templateId}")
+    public ResponseEntity<?> getTemplate(@PathVariable Long templateId) {
+        return ResponseEntity.ok(templateService.getTemplateById(templateId));
     }
 }
