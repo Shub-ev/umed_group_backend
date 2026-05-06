@@ -23,7 +23,7 @@ public interface TemplateRepository extends JpaRepository<Template, Long> {
         SELECT t FROM Template t
         LEFT JOIN t.employees e
         WHERE t.isRestricted = false
-        OR e.id = :employeeId
+        OR e.eId = :employeeId
        """)
     Page<Template> findEmployeeAccessibleTemplates(
             @Param("employeeId") Long employeeId,
@@ -33,7 +33,7 @@ public interface TemplateRepository extends JpaRepository<Template, Long> {
     @Query("""
         SELECT t FROM Template t
         LEFT JOIN t.employees e
-        WHERE (t.isRestricted = false OR e.id = :employeeId)
+        WHERE (t.isRestricted = false OR e.eId = :employeeId)
         AND LOWER(t.templateName) LIKE LOWER(CONCAT('%', :name, '%'))
     """)
     Page<Template> findEmployeeAccessibleTemplatesByName(
