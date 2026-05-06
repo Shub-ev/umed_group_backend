@@ -1,6 +1,8 @@
 package online.umedgroup.ug_inventory_management.services;
 
 import online.umedgroup.ug_inventory_management.common.dtos.CreateTemplateDTO;
+import online.umedgroup.ug_inventory_management.common.dtos.UpdateTemplateDTO;
+import online.umedgroup.ug_inventory_management.common.dtos.TemplateResponseDTO;
 import online.umedgroup.ug_inventory_management.common.exceptions.IllegalArgumentException;
 import online.umedgroup.ug_inventory_management.enums.FieldType;
 import online.umedgroup.ug_inventory_management.models.Employee;
@@ -287,5 +289,43 @@ public class TemplateService {
 
     public List<TemplateField> getFieldsByTemplateId(@NotNull Long templateId) {
         return templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(templateId);
+    }
+
+    @Transactional
+    public void updateTemplate(Long templateId, UpdateTemplateDTO request) {
+        Template template = templateRepository.findById(templateId)
+                .orElseThrow(() -> new RuntimeException("Template not found"));
+
+        // Check isRestricted and if corresponding employees are present
+        if (request.isRestricted() && (request.getEmployeeIds() == null ||
+                request.getEmployeeIds().isEmpty())) {
+            throw new IllegalArgumentException("Restricted template must have at least one employee");
+        }
+
+        // Extract employees for restricted templates
+        List<Employee> employees = List.of();
+        if (request.isRestricted()) {
+            employees = employeeRepository.findAllById(request.getEmployeeIds());
+            if (employees.size() != request.getEmployeeIds().size()) {
+                throw new IllegalArgumentException("Some employee IDs are invalid");
+            }
+        }
+
+        // Update template
+        template.setRestricted(request.isRestricted());
+        template.setEmployees(employees);
+        templateRepository.save(template);
+    }
+
+    public TemplateResponseDTO getTemplateById(@NotNull Long templateId) {
+        Template template = templateRepository.findByIdWithEmployees(templateId)
+                .orElseThrow(() -> new RuntimeException("Template not found"));
+        return new TemplateResponseDTO(
+                template.getId(),
+                template.getTemplateName(),
+                template.getMainField(),
+                template.isRestricted(),
+                template.getEmployees()
+        );
     }
 }
