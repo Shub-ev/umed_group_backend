@@ -41,4 +41,7 @@ public interface TemplateRepository extends JpaRepository<Template, Long> {
             @Param("name") String name,
             Pageable pageable
     );
+
+    @Query("SELECT t FROM Template t LEFT JOIN FETCH t.employees WHERE t.id = :id")
+    Optional<Template> findByIdWithEmployees(@Param("id") Long id);
 }
