@@ -67,6 +67,8 @@ public class Template {
 
     public boolean isRestricted() { return isRestricted; }
 
+    public List<Employee> getEmployees() { return employees; }
+
 
     // setters
     public void setTemplateName(String templateName) {
