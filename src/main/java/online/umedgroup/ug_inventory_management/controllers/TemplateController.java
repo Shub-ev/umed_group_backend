@@ -135,7 +135,7 @@ public class TemplateController {
             @PathVariable Long templateId,
             @RequestBody UpdateTemplateDTO request
     ) {
-        log.info("Updating template access for templateId: {}", templateId);
+        log.info("Updating template access for templateId: {} with DTO: {}", templateId, request);
         templateService.updateTemplate(templateId, request);
         log.info("Template access updated successfully!");
         return ResponseEntity.ok("Template access updated successfully");
