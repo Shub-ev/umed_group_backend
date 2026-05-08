@@ -12,6 +12,8 @@
 
 package online.umedgroup.ug_inventory_management.repositories;
 import online.umedgroup.ug_inventory_management.models.Template;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
 import online.umedgroup.ug_inventory_management.models.InventoryRecord;
 import org.springframework.data.jpa.repository.Query;
@@ -23,7 +25,7 @@ import java.util.List;
 
 public interface InventoryRecordRepository extends JpaRepository<InventoryRecord, Long> {
     List<InventoryRecord> findByTemplate_IdAndUnitName(Long templateId, String unitName);
-    List<InventoryRecord> findByTemplate_Id(Long templateId);
+    Page<InventoryRecord> findByTemplate_Id(Long templateId, Pageable pageable);
     boolean existsByRecordHash(String hash);
     List<InventoryRecord> findAllById(Iterable<Long> ids);
 
