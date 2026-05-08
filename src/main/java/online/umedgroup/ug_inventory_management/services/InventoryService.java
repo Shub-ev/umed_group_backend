@@ -23,10 +23,7 @@ import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -221,17 +218,25 @@ public class InventoryService {
         return ResponseEntity.ok("Record deleted successfully");
     }
 
-    public List<Map<String, String>> getInventorySummary(Long templateId) {
+    public Page<Map<String, String>> getInventorySummary(
+            Long templateId,
+            int page,
+            int size
+    ) {
 
+        // 1. Check if template exists
         Template template = templateRepository.findById(templateId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "No template found with id " + templateId
                 ));
 
-        List<InventoryRecord> records =
-                inventoryRecordRepository.findByTemplate_Id(templateId);
+        // 2. Extract records page from records repository
+        Pageable pageable = PageRequest.of(page, size);
+        Page<InventoryRecord> recordsPage =
+                inventoryRecordRepository.findByTemplate_Id(templateId, pageable);
 
+        // 3. Extract fields from template
         List<TemplateField> fields =
                 templateFieldRepository.findByTemplate_IdOrderByDisplayOrderAsc(templateId);
 
@@ -239,7 +244,7 @@ public class InventoryService {
 
         List<Map<String, String>> result = new ArrayList<>();
 
-        for (InventoryRecord record : records) {
+        for (InventoryRecord record : recordsPage) {
 
             List<InventoryValue> values =
                     inventoryValueRepository.findByInventoryRecord_Id(record.getId());
@@ -261,7 +266,11 @@ public class InventoryService {
             result.add(row);
         }
 
-        return result;
+        return new PageImpl<>(
+                result,
+                pageable,
+                recordsPage.getTotalElements()
+        );
     }
 
     public InventorySearchResponseDTO searchFromInventory(Long templateId, String field) {

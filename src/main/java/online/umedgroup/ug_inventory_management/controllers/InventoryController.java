@@ -8,6 +8,7 @@ import online.umedgroup.ug_inventory_management.security.CustomEmployeeDetails;
 import online.umedgroup.ug_inventory_management.services.InventoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -44,8 +45,13 @@ public class InventoryController {
     }
 
     @GetMapping("/summary/{templateId}")
-    public List<Map<String, String>> getSummary(@PathVariable Long templateId) {
-        return inventoryService.getInventorySummary(templateId);
+    public Page<Map<String, String>> getSummary(
+            @PathVariable Long templateId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        log.info("Fetch inventory records for template: {}", templateId);
+        return inventoryService.getInventorySummary(templateId, page, size);
     }
 
     @PostMapping("/update")
